@@ -1,9 +1,9 @@
 # Mozc辞書型式への変換プログラ厶
 
 ## 目的
-mozcのパッケージ作成において、システム辞書として、有志が公開してくださっている辞書を含めることが目的です。  
+[mozc](https://github.com/google/mozc)のパッケージ作成において、システム辞書として、有志が公開してくださっている辞書を含めることが目的です。  
 
-現状、主にSudachiDictをシステム辞書として、組み込むことを目的とします。
+現状、主に[SudachiDict](https://github.com/WorksApplications/SudachiDict)をシステム辞書として、組み込むことを目的とします。
 
 このレポジトリでは、SudachiDictやMecabなどをはじめとする辞書データを、Mozcのシステム辞書およびユーザー辞書型式へ変換するプログラムを配布します。  
 SudachiDictをメインにメンテナンスしていますが、mecab-ipadic-neologdなどの型式のデータも、このプログラムで一応、変換できます。このプログラム自体は、MITライセンスとしています。
@@ -12,13 +12,13 @@ SudachiDictをメインにメンテナンスしていますが、mecab-ipadic-ne
 + Mozcソースのid.defは更新されうるものなので、id.defは最新のものを用意してください。
 + id.defを読み込み、その品詞と、ユーザー辞書で用いられている品詞をマッピングさせます。  
 ユーザー辞書の品詞の分類に変更がない限り有効です。  
-システム辞書型式に変換するためには必要です。
+システム辞書型式に変換するためにも必要です。
 + -Uオプションを用いると、ユーザー辞書型式で出力されます。省略するとシステム辞書に組み込むための型式で出力されます。
 + SudachiDictなどの辞書データの品詞判定が行えなかった場合、普通名詞と判定されます。  
 id.defでの`名詞,一般,*,*,*,*,*`扱いになります。  
 Mozcの内部的な品詞IDは変わることがありますので、その時点でのMozcのid.defを用いることが大事です。ただユーザー辞書型式での出力の場合には、品詞名がそのまま出力されますので、あまり意識することはないでしょう。  
-+ -s SudachiDict型式を指定します。-n Neologd,-u UtDict型式を指定できます。  
-+ Neologdやmecab-ipadicの型式も、多分、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
++ -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary型式を指定できます。  
++ mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
 + Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。  
 + -Pオプションを指定すると、出力データに地名も含めます。  
 ただし、英語名の地名は、オプション指定しなくても、そのまま出力されます。
@@ -26,6 +26,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -Sオプションは、出力に記号を含めます。  
 オプション指定しなくても、固有名詞の場合は出力されます。
 記号、キゴウ、空白として、分類されているデータへの扱いです。
++ データにUnicode Escapeの記述が含まれる場合、それらも変換しています。
 ```
 Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-P] [-S]
 
@@ -48,7 +49,11 @@ https://github.com/WorksApplications/SudachiDict
 SudachiDictのそれぞれのファイルをまとめたものをsudachi.csvファイルとした場合の使用例です。
 ```sh
 # SudachiDictダウンロード例
-_sudachidict_date$(curl -s https://api.github.com/repos/WorksApplications/SudachiDict/releases/latest|jq ".tag_name")
+# 最新版の日付を確認
+# curl -s https://api.github.com/repos/WorksApplications/SudachiDict/releases/latest|jq -r ".tag_name"|tr -d "v"
+# curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | htmlq "tbody tr:first-child td:first-child" --text
+# curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | xmllint --html --xpath '(//tbody/tr[1]/td[1]/text())[1]' - 2>/dev/null
+# curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | tail -n +2 | xq -r '.html.body.table.tbody.tr[0].td[0]'
 
 _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
 curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
@@ -61,7 +66,7 @@ cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
 ```
 
 ```sh
-# id.defの最新のものを取得
+# id.defの最新版を取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
 # rustプログラムのビルド
 cargo build --release
