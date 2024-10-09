@@ -1,6 +1,6 @@
-Mozc辞書型式への変換プログラ厶
+# Mozc辞書型式への変換プログラ厶
 
-# 目的
+## 目的
 mozcのパッケージ作成において、システム辞書として、有志が公開してくださっている辞書を含めることが目的です。  
 
 現状、主にSudachiDictをシステム辞書として、組み込むことを目的とします。
@@ -43,7 +43,7 @@ Options:
   --help            display usage information
 ```
 
-## 使用例
+### 使用例
 https://github.com/WorksApplications/SudachiDict  
 SudachiDictのそれぞれのファイルをまとめたものをsudachi.csvファイルとした場合の使用例です。
 ```sh
@@ -71,7 +71,7 @@ cargo build --release
 ./target/release/dict-to-mozc -s -i ./id.def -f sudachi.csv -U > sudachi-userdict.txt
 ```
 
-## Neologdの例
+### Neologdの例
 https://github.com/neologd/mecab-ipadic-neologd/  
 ```sh
 curl -LO https://github.com/neologd/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
@@ -82,7 +82,7 @@ xz -k -d mecab-user-dict-seed.20200910.csv.xz
 ./target/release/dict-to-mozc -n -i ./id.def -f mecab-user-dict-seed.20200910.csv -U > mecab-userdict.txt
 ```
 
-# プログラムの説明補足
+## 依存ライブラリの補足説明
 読みのカタカナから平仮名への変換は、クレートのkanariaを用いています。  
 なおkanariaについては、依存ライブラリを新しいライブラリへ対応させたものを用いました。  
 クレートのencoding_rsとunicode-normalizationを用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。
