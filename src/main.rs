@@ -422,7 +422,7 @@ fn search_key(def: &HashMap::<String, i32>, search: i32) -> String {
     return "".to_string();
 }
 
-// ユーザー辞書から品詞idの検索
+// 品詞idからユーザー辞書から品詞を判定
 fn u_search_key(mapping: &mut PosMapping, id_def: &mut IdDef, hinshi_id: i32) -> Option<String> {
     get_user_pos_by_id(mapping, id_def, hinshi_id)
 }
