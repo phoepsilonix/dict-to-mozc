@@ -45,16 +45,30 @@ Options:
 
 ## 使用例
 https://github.com/WorksApplications/SudachiDict  
-SudachiDictのそれぞれのファイルをまとめたものをall.csvファイルとした場合の使用例です。
+SudachiDictのそれぞれのファイルをまとめたものをsudachi.csvファイルとした場合の使用例です。
+```sh
+# SudachiDictダウンロード例
+_sudachidict_date$(curl -s https://api.github.com/repos/WorksApplications/SudachiDict/releases/latest|jq ".tag_name")
+
+_sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
+curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
+curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/core_lex.zip"
+curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/notcore_lex.zip"
+unzip small_lex.zip
+unzip core_lex.zip
+unzip notcore_lex.zip
+cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
+```
+
 ```sh
 # id.defの最新のものを取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
 # rustプログラムのビルド
 cargo build --release
 # システム辞書型式への変換
-./target/release/dict-to-mozc -s -i ./id.def -f all.csv > all-dict.txt
+./target/release/dict-to-mozc -s -i ./id.def -f sudachi.csv > sudachi-dict.txt
 # ユーザー辞書型式への変換
-./target/release/dict-to-mozc -s -i ./id.def -f all.csv -U > all-userdict.txt
+./target/release/dict-to-mozc -s -i ./id.def -f sudachi.csv -U > sudachi-userdict.txt
 ```
 
 ## Neologdの例
@@ -72,4 +86,3 @@ xz -k -d mecab-user-dict-seed.20200910.csv.xz
 読みのカタカナから平仮名への変換は、クレートのkanariaを用いています。  
 なおkanariaについては、依存ライブラリを新しいライブラリへ対応させたものを用いました。  
 クレートのencoding_rsとunicode-normalizationを用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。
-
