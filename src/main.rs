@@ -698,7 +698,7 @@ impl DictionaryProcessor for UtDictProcessor {
 
 fn parse_delimiter(s: &str, args: &Config) -> u8 {
     match s {
-        "t" | "\\t" | "\t" => b'\t',
+        "TAB" | "t" | "\\t" | "\t" => b'\t',
         "," => b',',
         ";" => b';',
         " " => b' ',
@@ -783,11 +783,11 @@ use argh::FromArgs;
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
 /// (Mozc辞書型式への変換プログラム)
 struct Args {
-    /// path to the dictionary CSV file
+    /// path to the dictionary CSV file(TSV with -d $'\t' or -d TAB)
     #[argh(option, short = 'f')]
     csv_file: Option<PathBuf>,
 
-    /// path to the Mozc id.def file
+    /// path to the Mozc id.def file(Default is ./id.def)
     #[argh(option, short = 'i')]
     id_def: Option<PathBuf>,
 

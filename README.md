@@ -20,7 +20,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary型式を指定できます。  
 + 辞書型式のどのオプション(-s,-n,-u)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
 + mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
-+ Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。  
++ Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。つまり古めのアーカイブの場合には、その時点のid.defを取得して用いれば、品詞判定が改善するでしょう。実用性において、どの程度影響があるかは別ですが、id.defの番号がずれている場合、そのまま辞書に組み込むと、品詞としてのデータはミスマッチが起きる場合もあるでしょう。
 + -pオプションを指定すると、出力データに地名も含めます。  
 地域、地名として、分類されているデータへの扱いです。  
 ただし、SudachiDictの英語名の地名は、オプション指定しなくても、そのまま出力されます。
@@ -38,8 +38,8 @@ Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-p] [-S] 
 Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (Mozc辞書型式への変換プログラム)
 
 Options:
-  -f, --csv-file    path to the dictionary CSV file
-  -i, --id-def      path to the Mozc id.def file
+  -f, --csv-file    path to the dictionary CSV file(TSV with -d $'\t' or -d TAB)
+  -i, --id-def      path to the Mozc id.def file(Default is ./id.def)
   -U, --user-dict   generate Mozc User Dictionary formats
   -s, --sudachi     target SudachiDict
   -n, --neologd     target NEologd dictionary
