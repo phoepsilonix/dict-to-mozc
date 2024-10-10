@@ -103,6 +103,17 @@ xz -k -d mecab-user-dict-seed.20200910.csv.xz
 ./target/release/dict-to-mozc -n -i ./id.def -f mecab-user-dict-seed.20200910.csv -U > mecab-userdict.txt
 ```
 
+### Ut Dictionaryの例
+```sh
+# 1843が名詞,一般のid.defの取得
+curl -LO https://github.com/google/mozc/raw/8121eb870b66f26256995b42f069c9f4a8788953/src/data/dictionary_oss/id.def
+# 例として、cannaのデータを取得
+curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/refs/heads/main/mozcdic-ut-alt-cannadic.txt.tar.bz2
+tar xf mozcdic-ut-alt-cannadic.txt.tar.bz2
+# ユーザー辞書型式への変換
+./target/release/dict-to-mozc -u -U -i ./id.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
+```
+
 ## 依存ライブラリの補足説明
 読みのカタカナから平仮名への変換は、クレートのkanariaを用いています。  
 なおkanariaについては、依存ライブラリを新しいライブラリへ対応させたものを用いました。  
