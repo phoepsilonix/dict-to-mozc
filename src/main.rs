@@ -309,6 +309,8 @@ fn create_word_class_mapping() -> PosMapping {
     mapping.add_mapping("動詞五段", "動詞,一般,*,*,五段,*,*");
     mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変,可能,*,*,*");
     mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変,接続,*,*,*");
+    mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変可能,*,*,*");
+    mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変接続,*,*,*");
 
     mapping.add_mapping("形容詞", "形容詞,一般,*,*,形容詞,*,*");
     mapping.add_mapping("フィラー", "感動詞,フィラー,*,*,*,*,*");
@@ -457,8 +459,8 @@ enum DictionaryType {
 }
 
 struct DictValues<'a> {
-    _id_def: &'a mut IdDef,
-    _default_noun_id: &'a mut i32,
+    id_def: &'a mut IdDef,
+    default_noun_id: &'a mut i32,
     class_map: &'a mut HashMap::<String, i32>,
     mapping: &'a mut PosMapping,
     pronunciation: &'a mut String,
@@ -497,11 +499,11 @@ impl DictionaryProcessor for DefaultProcessor {
         let word_class;
         word_class = _dict_values.class_map.get(&d);
         if word_class == None {
-            *_dict_values.word_class_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
+            *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
         }
-        if ! _args.places && search_key(_dict_values._id_def, *_dict_values.word_class_id).contains("地名") { return false }
+        if ! _args.places && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return false }
         *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
@@ -540,7 +542,7 @@ impl DictionaryProcessor for SudachiProcessor {
         let word_class;
         word_class = _dict_values.class_map.get(&d);
         if word_class == None {
-            *_dict_values.word_class_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
+            *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
         }
@@ -554,7 +556,7 @@ impl DictionaryProcessor for SudachiProcessor {
 
 fn add_dict_data(_processor: &dyn DictionaryProcessor, _data: &StringRecord, _dict_values: &mut DictValues, dict_data: &mut DictionaryData, _args: &Config) {
         if _args.user_dict {
-            match u_search_key(_dict_values.mapping, _dict_values._id_def, *_dict_values.word_class_id) {
+            match u_search_key(_dict_values.mapping, _dict_values.id_def, *_dict_values.word_class_id) {
                 Some(word_class) => {
                     dict_data.add(DictionaryEntry {
                         key: DictionaryKey {
@@ -621,11 +623,11 @@ impl DictionaryProcessor for NeologdProcessor {
         let word_class;
         word_class = _dict_values.class_map.get(&d);
         if word_class == None {
-            *_dict_values.word_class_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
+            *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
         }
-        if ! _args.places && search_key(_dict_values._id_def, *_dict_values.word_class_id).contains("地名") { return false }
+        if ! _args.places && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return false }
         *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
@@ -641,22 +643,49 @@ impl DictionaryProcessor for UtDictProcessor {
         if ! is_kana(&data[_args.pronunciation_index]) { return false };
         let word_class_id = data[_args.word_class_index].parse::<i32>().unwrap();
         *_dict_values.word_class_id = word_class_id;
-        if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! search_key(_dict_values._id_def, word_class_id).contains("固有名詞") { return false };
-        if ! _args.places && search_key(_dict_values._id_def, word_class_id).contains("地名") { return false }
+        if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! search_key(_dict_values.id_def, word_class_id).contains("固有名詞") { return false };
+        if ! _args.places && search_key(_dict_values.id_def, word_class_id).contains("地名") { return false }
         true
     }
 
     fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
         let word_class_id = data[_args.word_class_index].parse::<i32>().unwrap();
-        let mut _pronunciation: String = convert_to_hiragana(&data[0]);
-        *_dict_values.word_class_id = word_class_id;
+        let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
         let s1 = unicode_escape_to_char(&_pronunciation);
         let s2 = unicode_escape_to_char(&data[_args.notation_index]);
+        let d: String = format!("{}", search_key(_dict_values.id_def, word_class_id));
+        let word_class;
+        word_class = _dict_values.class_map.get(&d);
+        if word_class == None {
+            *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
+        } else {
+            *_dict_values.word_class_id = *word_class.unwrap();
+        }
         *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
+
+        //let _word_class = search_key(_dict_values.id_def, word_class_id);
+        //let d: String = format!("{}", _word_class);
+        //let s1 = unicode_escape_to_char(&_pronunciation);
+        //let s2 = unicode_escape_to_char(&data[_args.notation_index]);
+        //*_dict_values.pronunciation = s1;
+        //*_dict_values.notation = s2;
+        //let cost = data[_args.cost_index].parse::<i32>().unwrap();
+        //*_dict_values.cost = adjust_cost(cost);
+        //eprintln!("{} {} {} {}",*_dict_values.pronunciation, *_dict_values.notation, *_dict_values.cost, _word_class);
+        /*
+        match u_search_key(_dict_values.mapping, _dict_values.id_def, *_dict_values.word_class_id) {
+            Some(word_class) => {
+                eprintln!("{} {} {} {}",*_dict_values.pronunciation, *_dict_values.notation, *_dict_values.word_class_id, word_class);
+            }
+            None => {
+                eprintln!("None:{} {} {}",*_dict_values.pronunciation, *_dict_values.notation, *_dict_values.word_class_id);
+            }
+        }
+        */
         true
     }
 }
@@ -703,8 +732,8 @@ fn process_dictionary<P: AsRef<Path>>(
     let mut cost = -1;
 
     let mut _dict_values = DictValues {
-        _id_def: &mut _id_def,
-        _default_noun_id: &mut _default_noun_id,
+        id_def: &mut _id_def,
+        default_noun_id: &mut _default_noun_id,
         class_map: &mut class_map,
         mapping: &mut mapping,
         pronunciation: &mut pronunciation,
