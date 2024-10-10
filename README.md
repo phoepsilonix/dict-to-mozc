@@ -1,7 +1,7 @@
 # Mozc辞書型式への変換プログラ厶
 
 ## 目的
-[mozc](https://github.com/google/mozc)のパッケージ作成において、システム辞書として、有志が公開してくださっている辞書を含めることが目的です。  
+[Mozc](https://github.com/google/mozc)のパッケージ作成において、システム辞書として、有志が公開してくださっている辞書を含めることが目的です。  
 
 現状、主に[SudachiDict](https://github.com/WorksApplications/SudachiDict)をシステム辞書として、組み込むことを目的とします。
 
@@ -18,17 +18,20 @@ SudachiDictをメインにメンテナンスしていますが、mecab-ipadic-ne
 id.defでの`名詞,一般,*,*,*,*,*`扱いになります。  
 Mozcの内部的な品詞IDは変わることがありますので、その時点でのMozcのid.defを用いることが大事です。ただユーザー辞書型式での出力の場合には、品詞名がそのまま出力されますので、あまり意識することはないでしょう。  
 + -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary型式を指定できます。  
++ 辞書型式のどのオプション(-s,-n,-u)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
 + mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
 + Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。  
 + -pオプションを指定すると、出力データに地名も含めます。  
-ただし、英語名の地名は、オプション指定しなくても、そのまま出力されます。
-地域、地名として、分類されているデータへの扱いです。
+地域、地名として、分類されているデータへの扱いです。  
+ただし、SudachiDictの英語名の地名は、オプション指定しなくても、そのまま出力されます。
 + -Sオプションは、出力に記号を含めます。  
-オプション指定しなくても、固有名詞の場合は出力されます。
-記号、キゴウ、空白として、分類されているデータへの扱いです。
-+ データにUnicode Escapeの記述が含まれる場合、それらも変換しています。
+記号、キゴウ、空白として、分類されているデータへの扱いです。  
+キゴウの読みで、大量の類似のデータがあるため、それらを標準では対象外にしています。
+なおオプション指定しなくても、固有名詞の場合は出力されます。
++ データにUnicode Escapeの記述が含まれる場合、それらも通常の文字に変換しています。
 + -P,-N,-W,-Cオプションを追加しました。読み込みフィールド位置を指定できます。
-+ -dオプションでタブ区切りにも対応できます。
++ -dオプションでタブ区切りにも対応できます。  
+読み込みにつかっているcsvクレートで用いるデリミタを指定できます。
 ```
 Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-C <cost-index>] [-d <delimiter>] [-D]
 
@@ -66,6 +69,7 @@ SudachiDictのそれぞれのファイルをまとめたものをsudachi.csvフ�
 # curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | htmlq "tbody tr:first-child td:first-child" --text
 # curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | xmllint --html --xpath '(//tbody/tr[1]/td[1]/text())[1]' - 2>/dev/null
 # curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | tail -n +2 | xq -r '.html.body.table.tbody.tr[0].td[0]'
+# curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | sed '/<!doctype.*>/Id' | xq -r '.html.body.table.tbody.tr[0].td[0]'
 
 _sudachidict_date=$(curl -s 'http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/' | grep -o '<td>[0-9]*</td>' | grep -o '[0-9]*' | sort -n | tail -n 1)
 curl -LO "http://sudachi.s3-website-ap-northeast-1.amazonaws.com/sudachidict-raw/${_sudachidict_date}/small_lex.zip"
