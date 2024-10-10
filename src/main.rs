@@ -433,7 +433,7 @@ fn u_search_key(mapping: &mut PosMapping, _id_def: &mut IdDef, word_class_id: i3
 }
 
 static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[ぁ-ゖァ-ヺ]+$").unwrap());
-static EISUU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9 ]+$").unwrap());
+static EISUU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9\' ]+$").unwrap());
 static KIGOU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z ]+$").unwrap());
 
 fn is_kana(str: &str) -> bool {
@@ -469,7 +469,7 @@ struct DictValues<'a> {
 
 trait DictionaryProcessor {
     fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
-    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config);
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
 }
 
 struct DefaultProcessor;
@@ -478,16 +478,13 @@ impl DictionaryProcessor for DefaultProcessor {
         let data = &record;
         if ! is_kana(&data[_args.pronunciation_index]) { return false };
         if ! _args.symbols && &data[_args.word_class_index] == "空白" { return false };
-        if ! _args.symbols && &data[_args.pronunciation_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
-        if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! (&data[_args.word_class_index+1] == "固有名詞") { return false };
-        // 地名を含む場合、オプション指定がなければ、英数のみの地名だけ残し、それ以外は省く。
-        if data[_args.word_class_index+2].contains("地名") {
-            if ! _args.places && ! is_eisuu(&data[_args.notation_index]) { return false };
-        };
+        if ! _args.symbols && &data[_args.pronunciation_index] == "キゴウ" { return false };
+        if ! _args.symbols && is_kigou(&data[_args.notation_index]) { return false };
+        if ! _args.places && data[_args.word_class_index+2].contains("地名") { return false };
         true
     }
 
-    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
         let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
         let s1 = unicode_escape_to_char(&_pronunciation);
@@ -504,10 +501,12 @@ impl DictionaryProcessor for DefaultProcessor {
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
         }
+        if ! _args.places && search_key(_dict_values._id_def, *_dict_values.word_class_id).contains("地名") { return false }
         *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
+        true
     }
 }
 
@@ -520,13 +519,15 @@ impl DictionaryProcessor for SudachiProcessor {
         if ! _args.symbols && &data[_args.pronunciation_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
         if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! (&data[_args.word_class_index+1] == "固有名詞") { return false };
         // 地名を含む場合、オプション指定がなければ、英数のみの地名だけ残し、それ以外は省く。
-        if data[_args.word_class_index+2].contains("地名") {
-            if ! _args.places && ! is_eisuu(&data[_args.notation_index]) { return false };
+        if ! _args.places {
+            if ! is_eisuu(&data[_args.notation_index]) && data[_args.word_class_index+2].contains("地名") {
+                return false;
+            }
         };
         true
     }
 
-    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
         let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
         let s1 = unicode_escape_to_char(&_pronunciation);
@@ -547,6 +548,7 @@ impl DictionaryProcessor for SudachiProcessor {
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
+        true
     }
 }
 
@@ -595,13 +597,13 @@ impl DictionaryProcessor for NeologdProcessor {
         let data = &record;
         if ! is_kana(&data[_args.pronunciation_index]) { return false };
         if &data[_args.word_class_index] == "空白" { return false };
-        if &data[_args.pronunciation_index] == "キゴウ" && data[_args.notation_index].contains("記号") { return false };
+        if &data[_args.pronunciation_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
         if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! (&data[_args.word_class_index+1] == "固有名詞") { return false };
         if ! _args.places && data[_args.word_class_index+2].contains("地域") { return false };
         true
     }
 
-    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
         let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
         let s1 = unicode_escape_to_char(&_pronunciation);
@@ -623,10 +625,12 @@ impl DictionaryProcessor for NeologdProcessor {
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
         }
+        if ! _args.places && search_key(_dict_values._id_def, *_dict_values.word_class_id).contains("地名") { return false }
         *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
+        true
     }
 }
 
@@ -642,7 +646,7 @@ impl DictionaryProcessor for UtDictProcessor {
         true
     }
 
-    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
         let word_class_id = data[_args.word_class_index].parse::<i32>().unwrap();
         let mut _pronunciation: String = convert_to_hiragana(&data[0]);
@@ -653,6 +657,7 @@ impl DictionaryProcessor for UtDictProcessor {
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
+        true
     }
 }
 
@@ -728,8 +733,9 @@ fn process_dictionary<P: AsRef<Path>>(
             Ok(record) => {
                 let data = record;
                 if ! processor.should_skip(&mut _dict_values, &data, &_args) { continue };
-                processor.word_class_analyze(&mut _dict_values, &data, &_args);
-                add_dict_data(&*processor, &data, &mut _dict_values, dict_data, &_args);
+                if processor.word_class_analyze(&mut _dict_values, &data, &_args) {
+                    add_dict_data(&*processor, &data, &mut _dict_values, dict_data, &_args);
+                }
             }
         }
     }
