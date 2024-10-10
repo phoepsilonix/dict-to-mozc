@@ -311,16 +311,22 @@ fn create_word_class_mapping() -> PosMapping {
     mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変,接続,*,*,*");
     mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変可能,*,*,*");
     mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変接続,*,*,*");
+    mapping.add_mapping("名詞サ変", "名詞,サ変,可能,*,*,*");
+    mapping.add_mapping("名詞サ変", "名詞,サ変,接続,*,*,*");
+    mapping.add_mapping("名詞サ変", "名詞,サ変可能,*,*,*");
+    mapping.add_mapping("名詞サ変", "名詞,サ変接続,*,*,*");
 
     mapping.add_mapping("形容詞", "形容詞,一般,*,*,形容詞,*,*");
     mapping.add_mapping("フィラー", "感動詞,フィラー,*,*,*,*,*");
     mapping.add_mapping("BOS/EOS", "BOS/EOS,*,*,*,*,*,*");
     mapping.add_mapping("その他", "その他,*,*,*,*,*,*");
+    mapping.add_mapping("その他", "その他,間投,*,*,*,*");
     mapping.add_mapping("感動詞", "感動詞,*,*,*,*,*,*");
     mapping.add_mapping("助詞", "助詞,*,*,*,*,*,*");
     mapping.add_mapping("助動詞", "助動詞,*,*,*,*,*,*");
     mapping.add_mapping("終助詞", "助詞,終助詞,*,*,*,*,*");
     mapping.add_mapping("名詞", "名詞,普通名詞,*,*,*,*,*");
+    mapping.add_mapping("名詞", "名詞,一般,*,*,*,*");
     mapping.add_mapping("固有名詞", "名詞,固有名詞,*,*,*,*,*");
     mapping.add_mapping("数", "名詞,数詞,*,*,*,*,*");
     mapping.add_mapping("助数詞", "名詞,数詞,*,*,*,*,*");
@@ -576,7 +582,7 @@ fn add_dict_data(_processor: &dyn DictionaryProcessor, _data: &StringRecord, _di
                             word_class_id: *_dict_values.word_class_id,
                         },
                         cost: *_dict_values.cost,
-                        word_class: _dict_values.word_class_id.to_string(),
+                        word_class: "名詞".to_string(),
                     }, true);
                 }
             }
