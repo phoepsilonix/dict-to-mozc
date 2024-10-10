@@ -22,9 +22,9 @@ mod utils {
     // カタカナから読みを平仮名へ
     pub fn convert_to_hiragana(text: &str) -> String {
         let target: Vec<char> = text.chars().collect();
-        let mut yomi: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
-        yomi = yomi.replace("ゐ", "い").replace("ゑ", "え");
-        yomi
+        let mut pronunciation: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
+        pronunciation = pronunciation.replace("ゐ", "い").replace("ゑ", "え");
+        pronunciation
     }
 
     // Unicode Escapeの記述が含まれる場合、それを変換する。
@@ -48,12 +48,12 @@ mod utils {
 }
 
 // 結果構造体
-// yomi,notation,hinshi_idの組み合わせで重複チェックされる。
+// pronunciation,notation,word_class_idの組み合わせで重複チェックされる。
 #[derive(Hash, Eq, PartialEq, Clone)]
 struct DictionaryKey {
-    yomi: String,
+    pronunciation: String,
     notation: String,
-    hinshi_id: i32,
+    word_class_id: i32,
 }
 
 // コストと品詞判定で判明した品詞の文字列
@@ -91,7 +91,7 @@ impl DictionaryData {
                 writeln!(
                     writer,
                     "{}\t{}\t{}\t{}\t{}",
-                    entry.key.yomi, entry.key.hinshi_id, entry.key.hinshi_id, entry.cost, entry.key.notation
+                    entry.key.pronunciation, entry.key.word_class_id, entry.key.word_class_id, entry.cost, entry.key.notation
                 )?;
             }
         } else {
@@ -101,7 +101,7 @@ impl DictionaryData {
                     writeln!(
                         writer,
                         "{}\t{}\t{}\t{}",
-                        entry.key.yomi, entry.key.notation, entry.word_class, "".to_string()
+                        entry.key.pronunciation, entry.key.notation, entry.word_class, "".to_string()
                     )?;
                 }
             }
@@ -259,7 +259,7 @@ fn read_id_def(path: &Path) -> Result<(IdDef, i32), CsvError> {
 struct PosMapping {
     user_to_id_def: HashMap<String, Vec<String>>,
     id_def_to_user: HashMap<String, String>,
-    id_to_user_pos_cache: HashMap<i32, String>,
+    id_to_user_word_class_cache: HashMap<i32, String>,
 }
 
 impl PosMapping {
@@ -267,20 +267,20 @@ impl PosMapping {
         Self {
             user_to_id_def: HashMap::new(),
             id_def_to_user: HashMap::new(),
-            id_to_user_pos_cache: HashMap::new(),
+            id_to_user_word_class_cache: HashMap::new(),
         }
     }
 
-    fn add_mapping(&mut self, user_pos: &str, id_def_pos: &str) {
-        self.user_to_id_def.entry(user_pos.to_string())
+    fn add_mapping(&mut self, user_word_class: &str, id_def_word_class: &str) {
+        self.user_to_id_def.entry(user_word_class.to_string())
             .or_insert_with(Vec::new)
-            .push(id_def_pos.to_string());
-        self.id_def_to_user.insert(id_def_pos.to_string(), user_pos.to_string());
+            .push(id_def_word_class.to_string());
+        self.id_def_to_user.insert(id_def_word_class.to_string(), user_word_class.to_string());
     }
 }
 
 // マッピング作成
-fn create_pos_mapping() -> PosMapping {
+fn create_word_class_mapping() -> PosMapping {
     let mut mapping = PosMapping::new();
 
     // ユーザー辞書の品詞とid.defの品詞のマッピングを追加
@@ -336,14 +336,14 @@ fn create_pos_mapping() -> PosMapping {
     mapping
 }
 
-// hinshi_idからユーザー辞書の品詞の判定
-fn get_user_pos_by_id(mapping: &mut PosMapping, _id_def: &IdDef, hinshi_id: i32) -> Option<String> {
+// word_class_idからユーザー辞書の品詞の判定
+fn get_user_word_class_by_id(mapping: &mut PosMapping, _id_def: &IdDef, word_class_id: i32) -> Option<String> {
     // キャッシュをチェック
-    if let Some(cached_pos) = mapping.id_to_user_pos_cache.get(&hinshi_id) {
-        return Some(cached_pos.clone());
+    if let Some(cached_word_class) = mapping.id_to_user_word_class_cache.get(&word_class_id) {
+        return Some(cached_word_class.clone());
     }
     let result = _id_def.iter()
-        .find(|(_, &id)| id == hinshi_id)
+        .find(|(_, &id)| id == word_class_id)
         .and_then(|(word_class, _)| {
             let parts: Vec<&str> = word_class.split(',').collect();
             let mut best_match: Option<(usize, &String)> = None;
@@ -409,7 +409,7 @@ fn get_user_pos_by_id(mapping: &mut PosMapping, _id_def: &IdDef, hinshi_id: i32)
         });
     // 結果をキャッシュに保存
     if let Some(ref word_class) = result {
-        mapping.id_to_user_pos_cache.insert(hinshi_id, word_class.clone());
+        mapping.id_to_user_word_class_cache.insert(word_class_id, word_class.clone());
     }
 
     result
@@ -428,8 +428,8 @@ fn search_key(def: &HashMap::<String, i32>, search: i32) -> String {
 }
 
 // 品詞idからユーザー辞書の品詞を判定
-fn u_search_key(mapping: &mut PosMapping, _id_def: &mut IdDef, hinshi_id: i32) -> Option<String> {
-    get_user_pos_by_id(mapping, _id_def, hinshi_id)
+fn u_search_key(mapping: &mut PosMapping, _id_def: &mut IdDef, word_class_id: i32) -> Option<String> {
+    get_user_word_class_by_id(mapping, _id_def, word_class_id)
 }
 
 static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[ぁ-ゖァ-ヺ]+$").unwrap());
@@ -450,10 +450,10 @@ fn is_kigou(str: &str) -> bool {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 enum DictionaryType {
-    Default,
     Sudachi,
     Neologd,
     UtDict,
+    Default,
 }
 
 struct DictValues<'a> {
@@ -461,50 +461,50 @@ struct DictValues<'a> {
     _default_noun_id: &'a mut i32,
     class_map: &'a mut HashMap::<String, i32>,
     mapping: &'a mut PosMapping,
-    yomi: &'a mut String,
+    pronunciation: &'a mut String,
     notation: &'a mut String,
-    hinshi_id: &'a mut i32,
+    word_class_id: &'a mut i32,
     cost: &'a mut i32,
 }
 
 trait DictionaryProcessor {
     fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
-    fn hinshi_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config);
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config);
 }
 
 struct DefaultProcessor;
 impl DictionaryProcessor for DefaultProcessor {
     fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
-        if ! is_kana(&data[_args.yomi_index]) { return false };
+        if ! is_kana(&data[_args.pronunciation_index]) { return false };
         if ! _args.symbols && &data[_args.word_class_index] == "空白" { return false };
-        if ! _args.symbols && &data[_args.yomi_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
+        if ! _args.symbols && &data[_args.pronunciation_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
         if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! (&data[_args.word_class_index+1] == "固有名詞") { return false };
         // 地名を含む場合、オプション指定がなければ、英数のみの地名だけ残し、それ以外は省く。
         if data[_args.word_class_index+2].contains("地名") {
             if ! _args.places && ! is_eisuu(&data[_args.notation_index]) { return false };
         };
-        return true;
+        true
     }
 
-    fn hinshi_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
         let data = &record;
-        let mut _yomi: String = convert_to_hiragana(&data[_args.yomi_index]);
-        let s1 = unicode_escape_to_char(&_yomi);
+        let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
+        let s1 = unicode_escape_to_char(&_pronunciation);
         let s2 = unicode_escape_to_char(&data[_args.notation_index]);
         let s3 = &data[_args.word_class_index].replace("補助記号", "記号"); //.replace("空白","記号");
         let s4 = &data[_args.word_class_index+1].replace("非自立可能","非自立"); //.replace(r"^数詞$", "数");
         let s5 = &data[_args.word_class_index+4].replace("下一段","一段").replace("一段-","一段,").replace("段-","段・");
         let s6 = &data[_args.word_class_index+5].replace("形-", "形,");
         let d: String = format!("{},{},{},{},{},{}", s3, s4, &data[_args.word_class_index+2], &data[_args.word_class_index+3], s5, s6);
-        let hinshi;
-        hinshi = _dict_values.class_map.get(&d);
-        if hinshi == None {
-            *_dict_values.hinshi_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
+        let word_class;
+        word_class = _dict_values.class_map.get(&d);
+        if word_class == None {
+            *_dict_values.word_class_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
         } else {
-            *_dict_values.hinshi_id = *hinshi.unwrap();
+            *_dict_values.word_class_id = *word_class.unwrap();
         }
-        *_dict_values.yomi = s1;
+        *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
@@ -515,35 +515,35 @@ struct SudachiProcessor;
 impl DictionaryProcessor for SudachiProcessor {
     fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
-        if ! is_kana(&data[_args.yomi_index]) { return false };
+        if ! is_kana(&data[_args.pronunciation_index]) { return false };
         if ! _args.symbols && &data[_args.word_class_index] == "空白" { return false };
-        if ! _args.symbols && &data[_args.yomi_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
+        if ! _args.symbols && &data[_args.pronunciation_index] == "キゴウ" && data[_args.word_class_index].contains("記号") { return false };
         if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! (&data[_args.word_class_index+1] == "固有名詞") { return false };
         // 地名を含む場合、オプション指定がなければ、英数のみの地名だけ残し、それ以外は省く。
         if data[_args.word_class_index+2].contains("地名") {
             if ! _args.places && ! is_eisuu(&data[_args.notation_index]) { return false };
         };
-        return true;
+        true
     }
 
-    fn hinshi_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
         let data = &record;
-        let mut _yomi: String = convert_to_hiragana(&data[_args.yomi_index]);
-        let s1 = unicode_escape_to_char(&_yomi);
+        let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
+        let s1 = unicode_escape_to_char(&_pronunciation);
         let s2 = unicode_escape_to_char(&data[_args.notation_index]);
         let s3 = &data[_args.word_class_index].replace("補助記号", "記号"); //.replace("空白","記号");
         let s4 = &data[_args.word_class_index+1].replace("非自立可能","非自立"); //.replace(r"^数詞$", "数");
         let s5 = &data[_args.word_class_index+4].replace("下一段","一段").replace("一段-","一段,").replace("段-","段・");
         let s6 = &data[_args.word_class_index+5].replace("形-", "形,");
         let d: String = format!("{},{},{},{},{},{}", s3, s4, &data[_args.word_class_index+2], &data[_args.word_class_index+3], s5, s6);
-        let hinshi;
-        hinshi = _dict_values.class_map.get(&d);
-        if hinshi == None {
-            *_dict_values.hinshi_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
+        let word_class;
+        word_class = _dict_values.class_map.get(&d);
+        if word_class == None {
+            *_dict_values.word_class_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
         } else {
-            *_dict_values.hinshi_id = *hinshi.unwrap();
+            *_dict_values.word_class_id = *word_class.unwrap();
         }
-        *_dict_values.yomi = s1;
+        *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
@@ -552,36 +552,36 @@ impl DictionaryProcessor for SudachiProcessor {
 
 fn add_dict_data(_processor: &dyn DictionaryProcessor, _data: &StringRecord, _dict_values: &mut DictValues, dict_data: &mut DictionaryData, _args: &Config) {
         if _args.user_dict {
-            match u_search_key(_dict_values.mapping, _dict_values._id_def, *_dict_values.hinshi_id) {
-                Some(hinshi) => {
+            match u_search_key(_dict_values.mapping, _dict_values._id_def, *_dict_values.word_class_id) {
+                Some(word_class) => {
                     dict_data.add(DictionaryEntry {
                         key: DictionaryKey {
-                            yomi: _dict_values.yomi.to_string(),
+                            pronunciation: _dict_values.pronunciation.to_string(),
                             notation: _dict_values.notation.to_string(),
-                            hinshi_id: *_dict_values.hinshi_id,
+                            word_class_id: *_dict_values.word_class_id,
                         },
                         cost: *_dict_values.cost,
-                        word_class: hinshi,
+                        word_class: word_class,
                     }, true);
                 },
                 None => {
                     dict_data.add(DictionaryEntry {
                         key: DictionaryKey {
-                            yomi: _dict_values.yomi.to_string(),
+                            pronunciation: _dict_values.pronunciation.to_string(),
                             notation: _dict_values.notation.to_string(),
-                            hinshi_id: *_dict_values.hinshi_id,
+                            word_class_id: *_dict_values.word_class_id,
                         },
                         cost: *_dict_values.cost,
-                        word_class: _dict_values.hinshi_id.to_string(),
+                        word_class: _dict_values.word_class_id.to_string(),
                     }, true);
                 }
             }
         } else {
             dict_data.add(DictionaryEntry {
                 key: DictionaryKey {
-                    yomi: _dict_values.yomi.to_string(),
+                    pronunciation: _dict_values.pronunciation.to_string(),
                     notation: _dict_values.notation.to_string(),
-                    hinshi_id: *_dict_values.hinshi_id,
+                    word_class_id: *_dict_values.word_class_id,
                 },
                 cost: *_dict_values.cost,
                 word_class: "".to_string(),
@@ -593,18 +593,18 @@ struct NeologdProcessor;
 impl DictionaryProcessor for NeologdProcessor {
     fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
-        if ! is_kana(&data[_args.yomi_index]) { return false };
+        if ! is_kana(&data[_args.pronunciation_index]) { return false };
         if &data[_args.word_class_index] == "空白" { return false };
-        if &data[_args.yomi_index] == "キゴウ" && data[_args.notation_index].contains("記号") { return false };
+        if &data[_args.pronunciation_index] == "キゴウ" && data[_args.notation_index].contains("記号") { return false };
         if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! (&data[_args.word_class_index+1] == "固有名詞") { return false };
         if ! _args.places && data[_args.word_class_index+2].contains("地域") { return false };
-        return true;
+        true
     }
 
-    fn hinshi_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
         let data = &record;
-        let mut _yomi: String = convert_to_hiragana(&data[_args.yomi_index]);
-        let s1 = unicode_escape_to_char(&_yomi);
+        let mut _pronunciation: String = convert_to_hiragana(&data[_args.pronunciation_index]);
+        let s1 = unicode_escape_to_char(&_pronunciation);
         let s2 = unicode_escape_to_char(&data[_args.notation_index]);
         let s3 = &data[_args.word_class_index];//.replace("補助記号", "記号"); //.replace("空白","記号");
         let s4 = if &data[_args.word_class_index] == "名詞" && &data[_args.word_class_index+1] == "一般" {
@@ -616,14 +616,14 @@ impl DictionaryProcessor for NeologdProcessor {
         };
         let s5 = &data[_args.word_class_index+5];//.replace("形-", "形,");
         let d: String = format!("{},{},{},{},{},{}", s3, s4, &data[_args.word_class_index+2], &data[_args.word_class_index+3], &data[_args.word_class_index+4], s5);
-        let hinshi;
-        hinshi = _dict_values.class_map.get(&d);
-        if hinshi == None {
-            *_dict_values.hinshi_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
+        let word_class;
+        word_class = _dict_values.class_map.get(&d);
+        if word_class == None {
+            *_dict_values.word_class_id = id_expr(&d, _dict_values._id_def, _dict_values.class_map, *_dict_values._default_noun_id);
         } else {
-            *_dict_values.hinshi_id = *hinshi.unwrap();
+            *_dict_values.word_class_id = *word_class.unwrap();
         }
-        *_dict_values.yomi = s1;
+        *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
@@ -634,22 +634,22 @@ struct UtDictProcessor;
 impl DictionaryProcessor for UtDictProcessor {
     fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
         let data = &record;
-        if ! is_kana(&data[_args.yomi_index]) { return false };
-        let hinshi_id = data[_args.word_class_index].parse::<i32>().unwrap();
-        *_dict_values.hinshi_id = hinshi_id;
-        if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! search_key(_dict_values._id_def, hinshi_id).contains("固有名詞") { return false };
-        if ! _args.places && search_key(_dict_values._id_def, hinshi_id).contains("地名") { return false }
-        return true;
+        if ! is_kana(&data[_args.pronunciation_index]) { return false };
+        let word_class_id = data[_args.word_class_index].parse::<i32>().unwrap();
+        *_dict_values.word_class_id = word_class_id;
+        if ! _args.symbols && is_kigou(&data[_args.notation_index]) && ! search_key(_dict_values._id_def, word_class_id).contains("固有名詞") { return false };
+        if ! _args.places && search_key(_dict_values._id_def, word_class_id).contains("地名") { return false }
+        true
     }
 
-    fn hinshi_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
+    fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) {
         let data = &record;
-        let hinshi_id = data[_args.word_class_index].parse::<i32>().unwrap();
-        let mut _yomi: String = convert_to_hiragana(&data[0]);
-        *_dict_values.hinshi_id = hinshi_id;
-        let s1 = unicode_escape_to_char(&_yomi);
+        let word_class_id = data[_args.word_class_index].parse::<i32>().unwrap();
+        let mut _pronunciation: String = convert_to_hiragana(&data[0]);
+        *_dict_values.word_class_id = word_class_id;
+        let s1 = unicode_escape_to_char(&_pronunciation);
         let s2 = unicode_escape_to_char(&data[_args.notation_index]);
-        *_dict_values.yomi = s1;
+        *_dict_values.pronunciation = s1;
         *_dict_values.notation = s2;
         let cost = data[_args.cost_index].parse::<i32>().unwrap();
         *_dict_values.cost = adjust_cost(cost);
@@ -691,10 +691,10 @@ fn process_dictionary<P: AsRef<Path>>(
 
     let (mut _id_def, mut _default_noun_id) = read_id_def(&id_def_path)?;
     let mut class_map = HashMap::<String, i32>::new();
-    let mut mapping = create_pos_mapping();
-    let mut yomi = String::new();
+    let mut mapping = create_word_class_mapping();
+    let mut pronunciation = String::new();
     let mut notation = String::new();
-    let mut hinshi_id = -1;
+    let mut word_class_id = -1;
     let mut cost = -1;
 
     let mut _dict_values = DictValues {
@@ -702,9 +702,9 @@ fn process_dictionary<P: AsRef<Path>>(
         _default_noun_id: &mut _default_noun_id,
         class_map: &mut class_map,
         mapping: &mut mapping,
-        yomi: &mut yomi,
+        pronunciation: &mut pronunciation,
         notation: &mut notation,
-        hinshi_id: &mut hinshi_id,
+        word_class_id: &mut word_class_id,
         cost: &mut cost,
     };
 
@@ -728,7 +728,7 @@ fn process_dictionary<P: AsRef<Path>>(
             Ok(record) => {
                 let data = record;
                 if ! processor.should_skip(&mut _dict_values, &data, &_args) { continue };
-                processor.hinshi_analyze(&mut _dict_values, &data, &_args);
+                processor.word_class_analyze(&mut _dict_values, &data, &_args);
                 add_dict_data(&*processor, &data, &mut _dict_values, dict_data, &_args);
             }
         }
@@ -739,7 +739,8 @@ fn process_dictionary<P: AsRef<Path>>(
 use argh::FromArgs;
 
 #[derive(FromArgs)]
-/// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files
+/// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
+/// (Mozc辞書型式への変換プログラム)
 struct Args {
     /// path to the dictionary CSV file
     #[argh(option, short = 'f')]
@@ -765,35 +766,35 @@ struct Args {
     #[argh(switch, short = 'u')]
     utdict: bool,
 
-    /// include place names (chimei)
-    #[argh(switch, short = 'P')]
+    /// include place names (地名を含める)
+    #[argh(switch, short = 'p')]
     places: bool,
 
-    /// include _symbols (kigou)
+    /// include symbols (記号を含める)
     #[argh(switch, short = 'S')]
     symbols: bool,
 
-    /// yomiフィールドの位置（0から始まる）
-    #[argh(option, short = 'Y')]
-    yomi_index: Option<usize>,
+    /// pronunciation 読みフィールドの位置（0から始まる）
+    #[argh(option, short = 'P')]
+    pronunciation_index: Option<usize>,
 
-    /// notationフィールドの位置（0から始まる）
+    /// notation 表記フィールドの位置（0から始まる）
     #[argh(option, short = 'N')]
     notation_index: Option<usize>,
 
-    /// 品詞判定フィールドの位置（0から始まる）
+    /// word class 品詞判定フィールドの位置（0から始まる）
     #[argh(option, short = 'W')]
     word_class_index: Option<usize>,
 
-    /// コストフィールドの位置（0から始まる）
+    /// cost コストフィールドの位置（0から始まる）
     #[argh(option, short = 'C')]
     cost_index: Option<usize>,
 
-    /// デリミタ
+    /// delimiter デリミタ(初期値 ',' カンマ)
     #[argh(option, short = 'd')]
     delimiter: Option<String>,
 
-    /// debug
+    /// debug デバッグ
     #[argh(switch, short = 'D')]
     debug: bool,
 
@@ -803,7 +804,7 @@ struct Args {
 struct Config {
     csv_file: PathBuf,
     id_def: PathBuf,
-    yomi_index: usize,
+    pronunciation_index: usize,
     notation_index: usize,
     word_class_index: usize,
     cost_index: usize,
@@ -838,11 +839,9 @@ impl Args {
         };
 
         Ok(Config {
-            //csv_file: self.csv_file.unwrap_or_else(|| current_dir.join("all.csv").to_string_lossy().into_owned()),
             csv_file: self.csv_file.unwrap_or_else(|| current_dir.join("all.csv")),
             id_def: self.id_def.unwrap_or_else(|| current_dir.join("id.def")),
-            //id_def: self.id_def.unwrap_or_else(|| current_dir.join("id.def").to_string_lossy().into_owned()),
-            yomi_index: self.yomi_index.unwrap_or_else(|| dict_type.default_yomi_index()),
+            pronunciation_index: self.pronunciation_index.unwrap_or_else(|| dict_type.default_pronunciation_index()),
             notation_index: self.notation_index.unwrap_or_else(|| dict_type.default_notation_index()),
             word_class_index: self.word_class_index.unwrap_or_else(|| dict_type.default_word_class_index()),
             cost_index: self.cost_index.unwrap_or_else(|| dict_type.default_cost_index()),
@@ -859,7 +858,7 @@ impl Args {
 }
 
 impl DictType {
-    fn default_yomi_index(&self) -> usize {
+    fn default_pronunciation_index(&self) -> usize {
         match self {
             DictType::Sudachi => 11,
             DictType::NEologd => 12,

@@ -20,17 +20,19 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary型式を指定できます。  
 + mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
 + Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。  
-+ -Pオプションを指定すると、出力データに地名も含めます。  
++ -pオプションを指定すると、出力データに地名も含めます。  
 ただし、英語名の地名は、オプション指定しなくても、そのまま出力されます。
 地域、地名として、分類されているデータへの扱いです。
 + -Sオプションは、出力に記号を含めます。  
 オプション指定しなくても、固有名詞の場合は出力されます。
 記号、キゴウ、空白として、分類されているデータへの扱いです。
 + データにUnicode Escapeの記述が含まれる場合、それらも変換しています。
++ -P,-N,-W,-Cオプションを追加しました。読み込みフィールド位置を指定できます。
++ -dオプションでタブ区切りにも対応できます。
 ```
-Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-P] [-S]
+Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-C <cost-index>] [-d <delimiter>] [-D]
 
-Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files
+Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (Mozc辞書型式への変換プログラム)
 
 Options:
   -f, --csv-file    path to the dictionary CSV file
@@ -39,9 +41,19 @@ Options:
   -s, --sudachi     target SudachiDict
   -n, --neologd     target NEologd dictionary
   -u, --utdict      target UT dictionary
-  -P, --places      include place names (chimei)
-  -S, --symbols     include symbols (kigou)
+  -p, --places      include place names (地名を含める)
+  -S, --symbols     include symbols (記号を含める)
+  -P, --pronunciation-index
+                    pronunciation 読みフィールドの位置（0から始まる）
+  -N, --notation-index
+                    notation 表記フィールドの位置（0から始まる）
+  -W, --word-class-index
+                    word class 品詞判定フィールドの位置（0から始まる）
+  -C, --cost-index  cost コストフィールドの位置（0から始まる）
+  -d, --delimiter   delimiter デリミタ(初期値 ',' カンマ)
+  -D, --debug       debug デバッグ
   --help            display usage information
+
 ```
 
 ### 使用例
