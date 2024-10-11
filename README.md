@@ -75,11 +75,17 @@ $,5969,5969,2784,$,補助記号,一般,*,*,*,*,キゴウ,$,*,A,*,*,*,*
 .,-1,-1,0,.,名詞,普通名詞,一般,*,*,*,テン,.,*,A,*,*,*,*
 ```
 上記のようなtest.csvがあった場合、下記のような手順でユーザー辞書型式へ変換できます。
+
+```sh
+# ソースの取得
+git clone --filter=tree:0 https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
+cd dict-to-mozc
+# rustプログラムのビルド
+cargo build --release
+```
 ```sh
 # id.defの最新版を取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
-# rustプログラムのビルド
-cargo build --release
 # ユーザー辞書型式への変換
 ./target/release/dict-to-mozc -U -i ./id.def -f test.csv -P 11 -N 4 -W 5 -C 3 > user_dict.txt
 ```
@@ -91,6 +97,14 @@ cargo build --release
 -n -P 12 -N 10 -W 4 -C 3
 # Ut Dictionary
 -u -P 0 -N 4 -W 1 -C 3
+```
+
+## ビルド＆インストール
+Rustはあらかじめインストールしておいてください。  
+`$HOME/.cargo/bin`にインストールされます。
+```sh
+cargo install --git https://github.com/phoepsilonix/dict-to-mozc.git
+which dict-to-mozc
 ```
 
 ### 使用例
@@ -121,9 +135,9 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 # rustプログラムのビルド
 cargo build --release
 # システム辞書型式への変換
-./target/release/dict-to-mozc -s -i ./id.def -f sudachi.csv > sudachi-dict.txt
+dict-to-mozc -s -i ./id.def -f sudachi.csv > sudachi-dict.txt
 # ユーザー辞書型式への変換
-./target/release/dict-to-mozc -s -i ./id.def -f sudachi.csv -U > sudachi-userdict.txt
+dict-to-mozc -U -s -i ./id.def -f sudachi.csv > sudachi-userdict.txt
 ```
 
 ### Neologdの例
@@ -132,9 +146,9 @@ https://github.com/neologd/mecab-ipadic-neologd/
 curl -LO https://github.com/neologd/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
 xz -k -d mecab-user-dict-seed.20200910.csv.xz
 # システム辞書型式への変換
-./target/release/dict-to-mozc -n -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-dict.txt
+dict-to-mozc -n -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-dict.txt
 # ユーザー辞書型式への変換
-./target/release/dict-to-mozc -n -i ./id.def -f mecab-user-dict-seed.20200910.csv -U > mecab-userdict.txt
+dict-to-mozc -U -n -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-userdict.txt
 ```
 
 ### Ut Dictionaryの例
@@ -146,7 +160,7 @@ curl -L -o id2.def https://github.com/google/mozc/raw/8121eb870b66f26256995b42f0
 curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/refs/heads/main/mozcdic-ut-alt-cannadic.txt.tar.bz2
 tar xf mozcdic-ut-alt-cannadic.txt.tar.bz2
 # ユーザー辞書型式への変換
-./target/release/dict-to-mozc -u -U -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
+dict-to-mozc -U -u -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
 ```
 
 ## 依存ライブラリの補足説明
@@ -204,6 +218,7 @@ awk 'BEGIN{
 split --numeric-suffixes=1 -l 1000000 --additional-suffix=.txt user_dict.txt user_dict-
 ls -l user_dict-*.txt
 ```
+
 
 # その他、Mozc関連記事
 [Mozc を応援するいくつかの方法](https://zenn.dev/komatsuh/articles/91def2bc633a8d)
