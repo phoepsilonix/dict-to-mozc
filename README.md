@@ -6,7 +6,7 @@
 現状、主に[SudachiDict](https://github.com/WorksApplications/SudachiDict)をシステム辞書として、組み込むことを目的とします。
 
 このレポジトリでは、SudachiDictやMecabなどをはじめとする辞書データを、Mozcのシステム辞書およびユーザー辞書型式へ変換するプログラムを配布しています。  
-対象としてSudachiDictをメインにメンテナンスしていますが、mecab-ipadic-neologdなどの型式のデータも、このプログラムで一応、変換できます。このプログラム自体は、MITライセンスとしています。
+対象としてSudachiDictをメインにメンテナンスしていますが、mecab-unidic-neologd,mecab-ipadic-neologdなどの型式のデータも、このプログラムで一応、変換できます。このプログラム自体は、MITライセンスとしています。
 
 ## 変換プログラム概要
 + Mozcソースのid.defは更新されうるものなので、id.defは最新のものを用意してください。
@@ -20,7 +20,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary型式を指定できます。  
 + 辞書型式のどのオプション(-s,-n,-u)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
 + 重複チェックは、品詞ID、読み、表記の組み合わせで行っています。
-+ mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
++ mecab-unidic-neologd, mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
 + Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。つまり古めのアーカイブの場合には、その時点のid.defを取得して用いれば、品詞判定が改善するでしょう。実用性において、どの程度影響があるかは別ですが、id.defの番号がずれている場合、そのまま辞書に組み込むと、品詞としてのデータはミスマッチが起きる場合もあるでしょう。
 + -pオプションを指定すると、出力データに地名も含めます。  
 地域、地名として、分類されているデータへの扱いです。  
@@ -93,7 +93,9 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 ```
 # SudachiDict
 -s -P 11 -N 4 -W 5 -C 3
-# Neologd
+# Neologd(unidic)
+-n -P 10 -N 12 -W 4 -C 3
+# Neologd(ipadic)
 -n -P 12 -N 10 -W 4 -C 3
 # Ut Dictionary
 -u -P 0 -N 4 -W 1 -C 3
@@ -141,14 +143,23 @@ dict-to-mozc -U -s -i ./id.def -f sudachi.csv > sudachi-userdict.txt
 ```
 
 ### Neologdの例
+https://github.com/neologd/mecab-unidic-neologd/  
 https://github.com/neologd/mecab-ipadic-neologd/  
 ```sh
-curl -LO https://github.com/neologd/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
+# unidic
+curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
+xz -k -d mecab-unidic-user-dict-seed.20200910.csv.xz
+# システム辞書型式への変換
+dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv > mecab-unidic-dict.txt
+# ユーザー辞書型式への変換
+dict-to-mozc -U -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv > mecab-unidic-userdict.txt
+# ipadic
+curl -LO https://github.com/phoepsilonix/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
 xz -k -d mecab-user-dict-seed.20200910.csv.xz
 # システム辞書型式への変換
-dict-to-mozc -n -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-dict.txt
+dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-ipadic-dict.txt
 # ユーザー辞書型式への変換
-dict-to-mozc -U -n -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-userdict.txt
+dict-to-mozc -U -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-ipadic-userdict.txt
 ```
 
 ### Ut Dictionaryの例

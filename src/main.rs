@@ -1024,7 +1024,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
             match self {
                 DictType::Default => 11,
                 DictType::Sudachi => 11,
-                DictType::NEologd => 12,
+                DictType::NEologd => 10,
                 DictType::UTDict => 0,
             }
         }
@@ -1033,7 +1033,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
             match self {
                 DictType::Default => 4,
                 DictType::Sudachi => 4,
-                DictType::NEologd => 10,
+                DictType::NEologd => 12,
                 DictType::UTDict => 4,
             }
         }
