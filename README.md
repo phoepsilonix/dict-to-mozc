@@ -34,7 +34,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -dオプションでタブ区切りにも対応できます。  
 読み込みにつかっているcsvクレートで用いるデリミタを指定できます。
 ```
-Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-C <cost-index>] [-d <delimiter>] [-D]
+Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-w <word-class-numbers>] [-C <cost-index>] [-d <delimiter>] [-D]
 
 Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (Mozc辞書型式への変換プログラム)
 
@@ -53,11 +53,12 @@ Options:
                     notation 表記フィールドの位置（0から始まる）
   -W, --word-class-index
                     word class 品詞判定フィールドの位置（0から始まる）
+  -w, --word-class-numbers
+                    word class 品詞判定フィールドのフィールド数
   -C, --cost-index  cost コストフィールドの位置（0から始まる）
   -d, --delimiter   delimiter デリミタ(初期値 ',' カンマ)
   -D, --debug       debug デバッグ
   --help            display usage information
-
 ```
 
 ## 動作説明
@@ -92,13 +93,13 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 -s,-n,-uオプションの、フィールドの扱いは、下記オプションと同等です。
 ```
 # SudachiDict
--s -P 11 -N 4 -W 5 -C 3
+-s -P 11 -N 4 -W 5 -w 6 -C 3
 # Neologd(unidic)
--n -P 10 -N 12 -W 4 -C 3
+-n -P 10 -N 12 -W 4 -w 6 -C 3
 # Neologd(ipadic)
--n -P 12 -N 10 -W 4 -C 3
+-n -P 12 -N 10 -W 4 -w 6 -C 3
 # Ut Dictionary
--u -P 0 -N 4 -W 1 -C 3
+-u -P 0 -N 4 -W 1 -w 1 -C 3
 ```
 
 ## ビルド＆インストール
