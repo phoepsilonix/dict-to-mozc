@@ -586,10 +586,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         true
     }
 
-    fn process_word_class(record: &StringRecord, args: &Config, _dict_values: &mut DictValues) -> i32 {
+    fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> i32 {
         let mut word_class_parts = Vec::new();
-        let start_index = args.word_class_index;
-        let end_index = std::cmp::min(start_index + 6, record.len());
+        let start_index = _args.word_class_index;
+        let end_index = std::cmp::min(start_index + _args.word_class_numbers, record.len());
 
         for i in start_index..end_index {
             if let Some(part) = record.get(i) {
@@ -598,12 +598,13 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
                 break;
             }
         }
+        eprintln!("{}", word_class_parts.join(","));
 
-        let processed_class = if args.sudachi {
+        let processed_class = if _args.sudachi {
             process_sudachi_word_class(&word_class_parts)
-        } else if args.neologd {
+        } else if _args.neologd {
             process_neologd_word_class(&word_class_parts)
-        } else if args.utdict {
+        } else if _args.utdict {
             process_utdict_word_class(&word_class_parts)
         } else {
             process_sudachi_word_class(&word_class_parts)
@@ -948,6 +949,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         #[argh(option, short = 'W')]
         word_class_index: Option<usize>,
 
+        /// word class 品詞判定フィールドのフィールド数
+        #[argh(option, short = 'w')]
+        word_class_numbers: Option<usize>,
+
         /// cost コストフィールドの位置（0から始まる）
         #[argh(option, short = 'C')]
         cost_index: Option<usize>,
@@ -969,6 +974,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         pronunciation_index: usize,
         notation_index: usize,
         word_class_index: usize,
+        word_class_numbers: usize,
         cost_index: usize,
         delimiter: String,
         sudachi: bool,
@@ -1006,6 +1012,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
                 pronunciation_index: self.pronunciation_index.unwrap_or_else(|| dict_type.default_pronunciation_index()),
                 notation_index: self.notation_index.unwrap_or_else(|| dict_type.default_notation_index()),
                 word_class_index: self.word_class_index.unwrap_or_else(|| dict_type.default_word_class_index()),
+                word_class_numbers: self.word_class_numbers.unwrap_or_else(|| dict_type.default_word_class_numbers()),
                 cost_index: self.cost_index.unwrap_or_else(|| dict_type.default_cost_index()),
                 delimiter: self.delimiter.unwrap_or_else(|| dict_type.default_delimiter()),
                 sudachi: self.sudachi,
@@ -1043,6 +1050,15 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
                 DictType::Default => 5,
                 DictType::Sudachi => 5,
                 DictType::NEologd => 4,
+                DictType::UTDict => 1,
+            }
+        }
+
+        fn default_word_class_numbers(&self) -> usize {
+            match self {
+                DictType::Default => 6,
+                DictType::Sudachi => 6,
+                DictType::NEologd => 6,
                 DictType::UTDict => 1,
             }
         }
