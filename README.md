@@ -164,9 +164,9 @@ dict-to-mozc -U -u -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.
 ```
 
 ## 依存ライブラリの補足説明
-読みのカタカナから平仮名への変換は、クレートのkanariaを用いています。  
+読みのカタカナから平仮名への変換は、クレートの[kanaria](https://docs.rs/kanaria/latest/kanaria/)[^5]を用いています。  
 なおkanariaについては、依存ライブラリを新しいライブラリへ対応させたものを用いました。  
-クレートのencoding_rsとunicode-normalizationを用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。
+クレートの[encoding_rs](https://docs.rs/encoding_rs/latest/encoding_rs/)と[unicode_normalization](https://docs.rs/unicode-normalization/latest/unicode_normalization/)を用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。
 csvクレートで読み込んでいます。
 
 ## ユーザー辞書として
@@ -211,14 +211,20 @@ awk 'BEGIN{
     }
 }' all.tsv > user_dict.txt
 ```
+
 ### 行数が多いので、分割
-ユーザー辞書の取り込める行数には上限があるので、分割します。  
+1つのユーザー辞書に取り込める行数には上限があるので、分割します。  
 分割したファイルをMozcの辞書ツールで取り込めます。
 ```sh
 split --numeric-suffixes=1 -l 1000000 --additional-suffix=.txt user_dict.txt user_dict-
 ls -l user_dict-*.txt
 ```
 
+## その他のIMEのユーザー辞書型式への変換
+次のサイトのRubyスクリプトを用いれば、Anthyなどの他IMEの辞書の型式へ変換できるみたいです。
+利用には、`ruby`言語とgemの`rexml`が必要です。
+こちらを使う場合にも、それぞれのIMEの仕様にあわせて、上記のような形で`split`コマンドを用いて、件数（行数）を調整したほうがいいかもしれません。  
+[userdic - 日本語入力ユーザー辞書変換スクリプト](https://startide.jp/comp/im/userdic/)[^4]
 
 # その他、Mozc関連記事
 [Mozc を応援するいくつかの方法](https://zenn.dev/komatsuh/articles/91def2bc633a8d)
@@ -230,5 +236,7 @@ ls -l user_dict-*.txt
 [郵便番号辞書 Mozc形式作成手順](https://zenn.dev/phoepsilonix/articles/japanese-zip-code-dictionary)  
 
 [^1]: https://github.com/phoepsilonix/dict-to-mozc
+[^5]: [samunohito/kanaria: このライブラリは、ひらがな・カタカナ、半角・全角の相互変換や判別を始めとした機能を提供します。](https://github.com/samunohito/kanaria)
 [^2]: [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)
 [^3]: [ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch)
+[^4]: [userdic - 日本語入力ユーザー辞書変換スクリプト](https://startide.jp/comp/im/userdic/)
