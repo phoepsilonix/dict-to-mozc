@@ -310,7 +310,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         mapping.add_mapping("名", "名詞,固有名詞,人名,名,*,*,*");
         mapping.add_mapping("姓", "名詞,固有名詞,人名,姓,*,*,*");
         mapping.add_mapping("動詞一段", "動詞,一般,*,*,一段,*,*");
-        mapping.add_mapping("動詞五段", "動詞,一般,*,*,五段,*,*");
         mapping.add_mapping("動詞サ変", "動詞,一般,*,*,サ変,*,*");
         mapping.add_mapping("動詞カ変", "動詞,一般,*,*,カ変,*,*");
         mapping.add_mapping("動詞ラ変", "動詞,自立,*,*,ラ変,*,*");
@@ -318,12 +317,20 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         mapping.add_mapping("動詞カ行五段", "動詞,一般,*,*,五段・カ行,*,*");
         mapping.add_mapping("動詞サ行五段", "動詞,一般,*,*,五段,サ行,*,*");
         mapping.add_mapping("動詞サ行五段", "動詞,一般,*,*,五段・サ行,*,*");
-        mapping.add_mapping("動詞ハ行四", "動詞,非自立,*,*,四段,ハ行,*,*");
-        mapping.add_mapping("動詞ハ行四", "動詞,非自立,*,*,四段・ハ行,*,*");
+        mapping.add_mapping("動詞タ行五段", "動詞,一般,*,*,五段,タ行,*,*");
+        mapping.add_mapping("動詞タ行五段", "動詞,一般,*,*,五段・タ行,*,*");
+        mapping.add_mapping("動詞ナ行五段", "動詞,一般,*,*,五段,ナ行,*,*");
+        mapping.add_mapping("動詞ナ行五段", "動詞,一般,*,*,五段・ナ行,*,*");
+        mapping.add_mapping("動詞ハ行四段", "動詞,非自立,*,*,四段,ハ行,*,*");
+        mapping.add_mapping("動詞ハ行四段", "動詞,非自立,*,*,四段・ハ行,*,*");
         mapping.add_mapping("動詞マ行五段", "動詞,一般,*,*,五段,マ行,*,*");
         mapping.add_mapping("動詞マ行五段", "動詞,一般,*,*,五段・マ行,*,*");
         mapping.add_mapping("動詞ラ行五段", "動詞,一般,*,*,五段,ラ行,*,*");
         mapping.add_mapping("動詞ラ行五段", "動詞,一般,*,*,五段・ラ行,*,*");
+        mapping.add_mapping("動詞ガ行五段", "動詞,一般,*,*,五段,ガ行,*,*");
+        mapping.add_mapping("動詞ガ行五段", "動詞,一般,*,*,五段・ガ行,*,*");
+        mapping.add_mapping("動詞バ行五段", "動詞,一般,*,*,五段,バ行,*,*");
+        mapping.add_mapping("動詞バ行五段", "動詞,一般,*,*,五段・バ行,*,*");
         mapping.add_mapping("動詞ワ行五段", "動詞,自立,*,*,五段,ワ行,*,*");
         mapping.add_mapping("動詞ワ行五段", "動詞,自立,*,*,五段・ワ行,*,*");
 
@@ -338,9 +345,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         mapping.add_mapping("形容詞", "形容詞,一般,*,*,形容詞,*,*");
         mapping.add_mapping("感動詞", "感動詞,*,*,*,*,*,*");
         mapping.add_mapping("感動詞", "感動詞,一般,*,*,*,*,*");
-        mapping.add_mapping("助詞", "助詞,*,*,*,*,*,*");
         mapping.add_mapping("助動詞", "助動詞,*,*,*,*,*,*");
         mapping.add_mapping("助動詞", "助動詞,一般,*,*,*,*,*");
+        mapping.add_mapping("終助詞", "助詞,*,*,*,*,*,*");
         mapping.add_mapping("終助詞", "助詞,終助詞,*,*,*,*,*");
         mapping.add_mapping("数", "名詞,数詞,*,*,*,*,*");
         mapping.add_mapping("助数詞", "名詞,数詞,*,*,*,*,*");
