@@ -188,6 +188,9 @@ dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.
 csvクレートで読み込んでいます。
 
 ## ユーザー辞書として
+SudachiDictをユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。  
+[SudachiDict and Neologd Mozc ユーザー辞書](https://github.com/phoepsilonix/mozc-user-dictionary)
+
 1. あまり巨大なファイルを取り込むと重くなるかもしれません。
 1. 複数の辞書のエントリには、重複項目がかなりあることでしょう。
 
