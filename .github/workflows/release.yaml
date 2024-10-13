@@ -1,0 +1,87 @@
+name: Release
+
+# Releasesへのファイル追加のために書き込み権限が必要
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Release binary
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact_name: dict-to-mozc-x86_64-linux.tar.xz
+            asset_name: dict-to-mozc-x86_64-unknown-linux-musl
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            artifact_name: dict-to-mozc-aarch64-linux.tar.xz
+            asset_name: dict-to-mozc-aarch64-unknown-linux-musl
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: dict-to-mozc-x86_64-linux.tar.xz
+            asset_name: dict-to-mozc-x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact_name: dict-to-mozc-aarch64-linux.tar.xz
+            asset_name: dict-to-mozc-aarch64-unknown-linux-gnu
+
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cross build with all features
+        uses: actions-rs/cargo@v1
+        with:
+          working-directory: .
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
+
+      - name: Get the release version from the Cargo.toml
+        shell: bash
+        run: echo "VERSION=$(grep -E "^version = " Cargo.toml |cut -f 3 -d" "|tr -d '"')" >> $GITHUB_ENV
+
+      - name: Build archive
+        shell: bash
+        run: |
+          binary_name="dict-to-mozc"
+
+          dirname="$binary_name-${{ env.VERSION }}-${{ matrix.target }}"
+          mkdir "$dirname"
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            mv "target/${{ matrix.target }}/release/$binary_name.exe" "$dirname"
+          else
+            mv "target/${{ matrix.target }}/release/$binary_name" "$dirname"
+          fi
+
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            7z a ../"$dirname.zip" "$dirname"
+            7z l ../"$dirname.zip"
+            echo "ASSET=$dirname.zip" >> $GITHUB_ENV
+          else
+            tar -czf "$dirname.tar.gz" "$dirname"
+            tar tvf "$dirname.tar.gz"
+            echo "ASSET=$dirname.tar.gz" >> $GITHUB_ENV
+          fi
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ env.ASSET }}
