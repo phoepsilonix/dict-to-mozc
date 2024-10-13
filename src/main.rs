@@ -598,8 +598,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
                 break;
             }
         }
-        eprintln!("{}", word_class_parts.join(","));
-
         let processed_class = if _args.sudachi {
             process_sudachi_word_class(&word_class_parts)
         } else if _args.neologd {
