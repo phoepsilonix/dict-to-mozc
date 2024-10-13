@@ -173,6 +173,12 @@ curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/refs/heads/mai
 tar xf mozcdic-ut-alt-cannadic.txt.tar.bz2
 # ユーザー辞書型式への変換
 dict-to-mozc -U -u -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
+
+# 例としてskk jisyo
+curl -LO https://github.com/utuhiro78/mozcdic-ut-skk-jisyo/raw/refs/heads/main/mozcdic-ut-skk-jisyo.txt.tar.bz2
+tar xf mozcdic-ut-skk-jisyo.txt.tar.bz2
+# ユーザー辞書型式への変換(id.defは最新のものでOK)
+dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.txt
 ```
 
 ## 依存ライブラリの補足説明
