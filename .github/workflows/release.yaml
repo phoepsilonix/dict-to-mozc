@@ -32,30 +32,49 @@ jobs:
             artifact_name: dict-to-mozc-aarch64-linux.tar.xz
             asset_name: dict-to-mozc-aarch64-unknown-linux-gnu
 
-
     runs-on: ${{ matrix.os }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
+      # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - name: rustup cache
+        run: |
+          mkdir -p /home/runner/.rustup
+          mkdir -p /home/runner/.cargo
+          mkdir -p /home/runner/.cache
 
-      - name: Cross build with all features
-        uses: actions-rs/cargo@v1
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.4
         with:
-          working-directory: .
-          use-cross: true
-          command: build
-          args: --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
+          version: "v0.8.2"
 
       - name: Get the release version from the Cargo.toml
         shell: bash
         run: echo "VERSION=$(grep -E "^version = " Cargo.toml |cut -f 3 -d" "|tr -d '"')" >> $GITHUB_ENV
+
+      - name: Mount rustup cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/.rustup
+            /home/runner/.cargo
+          key: ${{ matrix.os }}-dict-to-mozc-${{ matrix.target }}-${{ env.VERSION }}
+          restore-keys: ${{ matrix.os }}-dict-to-mozc-${{ matrix.target }}-
+
+      - name: Install stable toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "Running Rust program for ${{ matrix.os }}"
+
+      - name: Cross build with all features
+        run: |
+          cargo install cross
+          cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
 
       - name: Build archive
         shell: bash
