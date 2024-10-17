@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: echo "VERSION=$(grep -E "^version = " Cargo.toml |cut -f 3 -d" "|tr -d '"')" >> $GITHUB_ENV
 
-      - name: Mount rustup cache
+      - name: Rust cache rustup
         uses: actions/cache@v4
         with:
           path: |
@@ -100,7 +100,7 @@ jobs:
           fi
 
       - name: Upload binaries to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             ${{ env.ASSET }}
