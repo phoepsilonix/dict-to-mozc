@@ -185,7 +185,7 @@ dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.
 読みのカタカナから平仮名への変換は、クレートの[kanaria](https://docs.rs/kanaria/latest/kanaria/)[^5]を用いています。  
 なおkanariaについては、依存ライブラリを新しいライブラリへ対応させたものを用いました。  
 クレートの[encoding_rs](https://docs.rs/encoding_rs/latest/encoding_rs/)と[unicode_normalization](https://docs.rs/unicode-normalization/latest/unicode_normalization/)を用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。
-csvクレートで読み込んでいます。
+[csv](https://docs.rs/csv/latest/csv/)クレートで読み込んでいます。
 
 ## ユーザー辞書として
 SudachiDictをユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。  
@@ -194,13 +194,15 @@ SudachiDictをユーザー辞書形式へ変換したものと、Neologdのunidi
 1. あまり巨大なファイルを取り込むと重くなるかもしれません。
 1. 複数の辞書のエントリには、重複項目がかなりあることでしょう。
 
-上記2点のことを踏まえると、ユーザー辞書として、すべてを取り込むのは、使い勝手の面からも、よくないかもしれません。
-そのためMozcのシステム辞書として、SudachiDictを組み込んだものを下記に用意しています。
+ただ上記2点のことを踏まえると、ユーザー辞書として、すべてを取り込むのは、使い勝手の面からも、よくないかもしれません。
+実際に、全件を取り込むと、mozc_serverが応答しないなどの問題が発生しました。品詞などを選別して、特定のものに限ったほうがよさそうです。システム辞書に組み込む場合は、そこまで重くなっていないのですが、ユーザー辞書の用途として、やはり大量の件数を取り込むのは悪手なのでしょう。  
+個人的な知り合いの氏名が出にくい、郵便番号辞書が更新されたが反映されていないなど、個別の案件で、そのユーザーが優先的に変換したいものを、登録するのがユーザー辞書のような機能の本来のあり方だとも思います。システム辞書型式に変換するだけでなく、付属的にユーザー辞書への変換機能も追加しましたが、ユーザー辞書型式にして、取り込む場合には、元データをよく選別してから、使うほうが良さそうです。
 
+下記サイトでMozcのシステム辞書として、SudachiDict[^6]とMeCab-unidic-NEologd[^7],MeCab-ipadic-NEologd[^8]を組み込んだものを用意しています。
 [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)[^2]  
 [ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch)[^3]  
 
-タグに```with-jp-dict```がついているものは、[SudachiDict](https://github.com/WorksApplications/SudachiDict)のデータをシステム辞書に組み込んだパッケージです。  
+タグに```with-jp-dict```がついているものが、SudachiDictやMeCab-unidic-neologd、MeCab-ipadic-neolodのデータをシステム辞書に組み込んだパッケージです。
 
 ## ユーザー辞書型式のデータの重複を取り除く場合
 すべてのユーザー辞書のデータを、いったん一つのファイルにまとめておきます。
@@ -241,9 +243,8 @@ split --numeric-suffixes=1 -l 1000000 --additional-suffix=.txt user_dict.txt use
 ls -l user_dict-*.txt
 ```
 
-## その他のIMEのユーザー辞書型式への変換
-次のサイトのRubyスクリプトを用いれば、Anthyなどの他IMEの辞書の型式へ変換できるみたいです。
-利用には、`ruby`言語とgemの`rexml`が必要です。
+## その他のIMEとのユーザー辞書の相互変換
+[Startide Project](https://startide.jp/)さんが公開されているRubyスクリプトを用いれば、Anthyなどの他IMEの辞書の型式との相互変換ができるみたいです。利用には、[オブジェクト指向スクリプト言語 Ruby](https://www.ruby-lang.org/ja/)とその拡張gemの[rexml](https://docs.ruby-lang.org/ja/latest/library/rexml.html)が必要です。
 こちらを使う場合にも、それぞれのIMEの仕様にあわせて、上記のような形で`split`コマンドを用いて、件数（行数）を調整したほうがいいかもしれません。  
 [userdic - 日本語入力ユーザー辞書変換スクリプト](https://startide.jp/comp/im/userdic/)[^4]
 
@@ -257,7 +258,10 @@ ls -l user_dict-*.txt
 [郵便番号辞書 Mozc形式作成手順](https://zenn.dev/phoepsilonix/articles/japanese-zip-code-dictionary)  
 
 [^1]: https://github.com/phoepsilonix/dict-to-mozc
-[^5]: [samunohito/kanaria: このライブラリは、ひらがな・カタカナ、半角・全角の相互変換や判別を始めとした機能を提供します。](https://github.com/samunohito/kanaria)
 [^2]: [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)
 [^3]: [ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch)
 [^4]: [userdic - 日本語入力ユーザー辞書変換スクリプト](https://startide.jp/comp/im/userdic/)
+[^5]: [samunohito/kanaria: このライブラリは、ひらがな・カタカナ、半角・全角の相互変換や判別を始めとした機能を提供します。](https://github.com/samunohito/kanaria)
+[^6]: https://github.com/WorksApplications/SudachiDict
+[^7]: https://github.com/neologd/mecab-unidic-neologd
+[^8]: https://github.com/neologd/mecab-ipadic-neologd
