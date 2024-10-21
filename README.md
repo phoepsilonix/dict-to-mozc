@@ -102,7 +102,30 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 -u -P 0 -N 4 -W 1 -w 1 -C 3
 ```
 
-## ビルド＆インストール
+## インストール
+### ダウンロード
+https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
+```sh
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
+tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
+ls -l ./dict-to-mozc
+cp ./dict-to-mozc /usr/local/bin/
+```
+```sh
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-musl.tar.gz
+tar xf dict-to-mozc-x86_64-unknown-linux-musl.tar.gz --strip-components=1
+ls -l ./dict-to-mozc
+cp ./dict-to-mozc /usr/local/bin/
+```
+
+### cargo binstallでインストール
+cargo binstallをインストールしている場合。
+`$HOME/.cargo/bin`にインストールされます。
+```sh
+cargo binstall --git https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
+```
+
+### ソースからビルド＆インストール
 Rustはあらかじめインストールしておいてください。  
 `$HOME/.cargo/bin`にインストールされます。
 ```sh
