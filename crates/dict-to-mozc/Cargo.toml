@@ -1,0 +1,19 @@
+[package]
+name = "lib-dict-to-mozc"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+argh = { workspace = true }
+csv = { workspace = true }
+kanaria = { workspace = true }
+lazy-regex = { workspace = true }
+regex = { workspace = true }
+
+[package.metadata.release]
+tag = true
+tag-prefix =""

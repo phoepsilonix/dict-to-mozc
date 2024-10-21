@@ -20,7 +20,7 @@ mod utils {
     use super::*;
 
     // カタカナから読みを平仮名へ
-    pub fn convert_to_hiragana(text: &str) -> String {
+    pub(crate) fn convert_to_hiragana(text: &str) -> String {
         let target: Vec<char> = text.chars().collect();
         let mut pronunciation: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
         pronunciation = pronunciation.replace("ゐ", "い").replace("ゑ", "え");
@@ -28,7 +28,7 @@ mod utils {
     }
 
     // Unicode Escapeの記述が含まれる場合、それを変換する。
-    pub fn unicode_escape_to_char(text: &str) -> String {
+    pub(crate) fn unicode_escape_to_char(text: &str) -> String {
         regex_replace_all!(r#"\\u([0-9a-fA-F]{4})"#, text, |_, num: &str| {
             let num: u32 = u32::from_str_radix(num, 16).unwrap();
             std::char::from_u32(num).unwrap().to_string()
@@ -36,7 +36,7 @@ mod utils {
     }
 
     // コスト計算
-    pub fn adjust_cost(cost: i32) -> i32 {
+    pub(crate) fn adjust_cost(cost: i32) -> i32 {
         if cost < MIN_COST {
             8000
         } else if cost > MAX_COST {
@@ -1080,7 +1080,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         }
     }
 
-    fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         let args: Args = argh::from_env();
         let config = args.into_config()?;
 
