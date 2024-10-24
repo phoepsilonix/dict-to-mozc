@@ -68,11 +68,14 @@ jobs:
 
       - name: Install stable toolchain
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          which rustup && rustup update || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y || rustup update
           echo "Running Rust program for ${{ matrix.os }}"
 
       - name: Cross build with all features
         run: |
+          which rustc
+          source $HOME/.cargo/env || $PATH=$HOME/.cargo/bin:$PATH
+          which rustc
           cargo install cross
           cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
 
