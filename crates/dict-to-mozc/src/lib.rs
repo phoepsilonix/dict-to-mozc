@@ -1,7 +1,5 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::collections::HashMap;
-
 use regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
@@ -15,6 +13,8 @@ use kanaria::utils::ConvertTarget;
 use crate::utils::convert_to_hiragana;
 use crate::utils::unicode_escape_to_char;
 use crate::utils::adjust_cost;
+
+use indexmap::IndexMap;
 
 mod utils {
     use super::*;
@@ -65,15 +65,15 @@ struct DictionaryEntry {
 
 // システム辞書型式とユーザー辞書型式
 struct DictionaryData {
-    entries: HashMap<DictionaryKey, DictionaryEntry>,
-    user_entries: HashMap<DictionaryKey, DictionaryEntry>,
+    entries: IndexMap<DictionaryKey, DictionaryEntry>,
+    user_entries: IndexMap<DictionaryKey, DictionaryEntry>,
 }
 
 impl DictionaryData {
     fn new() -> Self {
         Self {
-            entries: HashMap::new(),
-            user_entries: HashMap::new(),
+            entries: IndexMap::new(),
+            user_entries: IndexMap::new(),
         }
     }
 
@@ -112,23 +112,23 @@ impl DictionaryData {
 }
 // Mozc ソースに含まれるsrc/data/dictionary_oss/id.def
 // 更新される可能性がある。
-type IdDef = Vec<(String, i32)>;
+type IdDef = IndexMap<String, i32>;
 
 const DEFAULT_COST: i32 = 6000;
 const MIN_COST: i32 = 0;
 const MAX_COST: i32 = 10000;
 const COST_ADJUSTMENT: i32 = 10;
 
-fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i32>, _default_noun_id: i32) -> i32 {
+fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, i32>, _default_noun_id: i32) -> i32 {
     let mut expr: Vec<&str> = clsexpr.split(',').collect();
     while expr.len() < 7 {
         expr.push("*");
     }
     let normalized_clsexpr = expr.join(",");
 
-    if let Some(r) = _id_def.iter().find(|(key, _)| key == &normalized_clsexpr) {
-        class_map.insert(normalized_clsexpr.to_string(), r.1);
-        return r.1;
+    if let Some(r) = _id_def.iter().find(|(key, _)| *key == &normalized_clsexpr) {
+        class_map.insert(normalized_clsexpr.to_string(), *r.1);
+        return *r.1;
     }
 
     let mut best_match = (0, -1); // (マッチ数, ID)
@@ -210,7 +210,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
     }
 
         let result_id = if best_match.1 == -1 { _default_noun_id } else { best_match.1 };
-        _id_def.push((normalized_clsexpr.to_string(), result_id));
+        _id_def.insert(normalized_clsexpr.to_string(), result_id);
         class_map.insert(normalized_clsexpr.to_string(), result_id);
         result_id
     }
@@ -259,30 +259,30 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
                 .into_owned();
 
 
-            id_def.push((expr, id));
+            id_def.insert(expr, id);
         }
         Ok((id_def, _default_noun_id))
     }
 
     // ユーザー辞書の品詞と、id.defの品詞のマッピングを作成する
     struct WordClassMapping {
-        user_to_id_def: Vec<(String, String)>,
-        id_def_to_user: Vec<(String, String)>,
-        id_to_user_word_class_cache: HashMap<i32, String>,
+        user_to_id_def: IndexMap<String, String>,
+        id_def_to_user: IndexMap<String, String>,
+        id_to_user_word_class_cache: IndexMap<i32, String>,
     }
 
     impl WordClassMapping {
         fn new() -> Self {
             Self {
-                user_to_id_def: Vec::new(),
-                id_def_to_user: Vec::new(),
-                id_to_user_word_class_cache: HashMap::new(),
+                user_to_id_def: IndexMap::new(),
+                id_def_to_user: IndexMap::new(),
+                id_to_user_word_class_cache: IndexMap::new(),
             }
         }
 
         fn add_mapping(&mut self, user_word_class: &str, id_def_word_class: &str) {
-            self.user_to_id_def.push((user_word_class.to_string(), id_def_word_class.to_string()));
-            self.id_def_to_user.push((id_def_word_class.to_string(), user_word_class.to_string()));
+            self.user_to_id_def.insert(user_word_class.to_string(), id_def_word_class.to_string());
+            self.id_def_to_user.insert(id_def_word_class.to_string(), user_word_class.to_string());
         }
 
     }
@@ -350,7 +350,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         mapping.add_mapping("終助詞", "助詞,*,*,*,*,*,*");
         mapping.add_mapping("終助詞", "助詞,終助詞,*,*,*,*,*");
         mapping.add_mapping("数", "名詞,数詞,*,*,*,*,*");
-        mapping.add_mapping("助数詞", "名詞,数詞,*,*,*,*,*");
         mapping.add_mapping("助数詞", "接尾辞,名詞的,助数詞,*,*,*,*");
         mapping.add_mapping("助数詞", "名詞,普通名詞,助数詞可能,*,*,*");
         mapping.add_mapping("接尾一般", "接尾辞,*,*,*,*,*,*");
@@ -386,7 +385,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
             return Some(cached_word_class.clone());
         }
         let result = _id_def.iter()
-            .find(|(_, id)| *id == word_class_id)
+            .find(|(_, id)| **id == word_class_id)
             .and_then(|(word_class, _)| {
                 let parts: Vec<&str> = word_class.split(',').collect();
                 let mut best_match: Option<(usize, &String)> = None;
@@ -501,7 +500,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
     struct DictValues<'a> {
         id_def: &'a mut IdDef,
         default_noun_id: &'a mut i32,
-        class_map: &'a mut HashMap::<String, i32>,
+        class_map: &'a mut IndexMap::<String, i32>,
         mapping: &'a mut WordClassMapping,
         pronunciation: &'a mut String,
         notation: &'a mut String,
@@ -849,7 +848,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut HashMap<String, i
         };
 
         let (mut _id_def, mut _default_noun_id) = read_id_def(&id_def_path)?;
-        let mut class_map = HashMap::<String, i32>::new();
+        let mut class_map = IndexMap::<String, i32>::new();
         let mut mapping = create_word_class_mapping();
         let mut pronunciation = String::new();
         let mut notation = String::new();

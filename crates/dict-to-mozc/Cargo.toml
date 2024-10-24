@@ -13,6 +13,7 @@ csv = { workspace = true }
 kanaria = { workspace = true }
 lazy-regex = { workspace = true }
 regex = { workspace = true }
+indexmap = { workspace = true }
 
 [package.metadata.release]
 tag = true
