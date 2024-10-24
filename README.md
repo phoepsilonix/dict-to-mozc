@@ -221,7 +221,7 @@ SudachiDictをユーザー辞書形式へ変換したものと、Neologdのunidi
 実際に、全件を取り込むと、mozc_serverが応答しないなどの問題が発生しました。品詞などを選別して、特定のものに限ったほうがよさそうです。システム辞書に組み込む場合は、そこまで重くなっていないのですが、ユーザー辞書の用途として、やはり大量の件数を取り込むのは悪手なのでしょう。  
 個人的な知り合いの氏名が出にくい、郵便番号辞書が更新されたが反映されていないなど、個別の案件で、そのユーザーが優先的に変換したいものを、登録するのがユーザー辞書のような機能の本来のあり方だとも思います。システム辞書型式に変換するだけでなく、付属的にユーザー辞書への変換機能も追加しましたが、ユーザー辞書型式にして、取り込む場合には、元データをよく選別してから、使うほうが良さそうです。
 
-下記サイトでMozcのシステム辞書として、SudachiDict[^6]とMeCab-unidic-NEologd[^7],MeCab-ipadic-NEologd[^8]を組み込んだものを用意しています。
+下記サイトでMozcのシステム辞書として、SudachiDict[^6]とMeCab-unidic-NEologd[^7],MeCab-ipadic-NEologd[^8]を組み込んだものを用意しています。  
 [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)[^2]  
 [ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch)[^3]  
 
