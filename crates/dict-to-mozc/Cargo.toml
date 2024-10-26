@@ -14,6 +14,10 @@ kanaria = { workspace = true }
 lazy-regex = { workspace = true }
 regex = { workspace = true }
 indexmap = { workspace = true }
+hashbrown = { workspace = true }
+
+#foldhash = { workspace = true }
+#fxhash = { workspace = true }
 
 [package.metadata.release]
 tag = true

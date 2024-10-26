@@ -15,6 +15,57 @@ use crate::utils::unicode_escape_to_char;
 use crate::utils::adjust_cost;
 
 use indexmap::IndexMap;
+use std::ops::{Deref, DerefMut};
+
+use hashbrown::DefaultHashBuilder as RandomState;
+//use fxhash::FxBuildHasher as RandomState;
+
+//use foldhash::fast::RandomState;
+//use std::hash::RandomState;
+
+pub struct MyIndexMap<K, V, S = RandomState>(IndexMap<K, V, S>);
+
+impl<K, V> MyIndexMap<K, V, RandomState> {
+    pub fn new() -> Self {
+        Self(IndexMap::with_hasher(RandomState::default()))
+    }
+}
+
+impl<K, V, S> MyIndexMap<K, V, S>
+where
+    S: std::hash::BuildHasher + Default,
+{
+    pub fn with_hasher(hash_builder: S) -> Self {
+        Self(IndexMap::with_hasher(hash_builder))
+    }
+}
+
+impl<K, V, S> Deref for MyIndexMap<K, V, S> {
+    type Target = IndexMap<K, V, S>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<K, V, S> DerefMut for MyIndexMap<K, V, S> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<'a, K, V, S> IntoIterator for &'a MyIndexMap<K, V, S>
+where
+    K: 'a,
+    V: 'a,
+{
+    type Item = (&'a K, &'a V);
+    type IntoIter = indexmap::map::Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
 
 mod utils {
     use super::*;
@@ -65,15 +116,15 @@ struct DictionaryEntry {
 
 // システム辞書型式とユーザー辞書型式
 struct DictionaryData {
-    entries: IndexMap<DictionaryKey, DictionaryEntry>,
-    user_entries: IndexMap<DictionaryKey, DictionaryEntry>,
+    entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
+    user_entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
 }
 
 impl DictionaryData {
     fn new() -> Self {
         Self {
-            entries: IndexMap::new(),
-            user_entries: IndexMap::new(),
+            entries: MyIndexMap::with_hasher(RandomState::default()),
+            user_entries: MyIndexMap::with_hasher(RandomState::default()),
         }
     }
 
@@ -112,14 +163,14 @@ impl DictionaryData {
 }
 // Mozc ソースに含まれるsrc/data/dictionary_oss/id.def
 // 更新される可能性がある。
-type IdDef = IndexMap<String, i32>;
+type IdDef = MyIndexMap<String, i32>;
 
 const DEFAULT_COST: i32 = 6000;
 const MIN_COST: i32 = 0;
 const MAX_COST: i32 = 10000;
 const COST_ADJUSTMENT: i32 = 10;
 
-fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, i32>, _default_noun_id: i32) -> i32 {
+fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String, i32>, _default_noun_id: i32) -> i32 {
     let mut expr: Vec<&str> = clsexpr.split(',').collect();
     while expr.len() < 7 {
         expr.push("*");
@@ -219,7 +270,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, 
     // 品詞判定が出来なかった場合、普通名詞とみなす。
     // _default_noun_idは、その普通名詞のIDを格納しておく。
     fn read_id_def(path: &Path) -> Result<(IdDef, i32), CsvError> {
-        let mut id_def = IdDef::new();
+        let mut id_def = IdDef::with_hasher(RandomState::default());
         let mut reader = ReaderBuilder::new()
             .has_headers(false)
             .delimiter(b' ')
@@ -266,17 +317,17 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, 
 
     // ユーザー辞書の品詞と、id.defの品詞のマッピングを作成する
     struct WordClassMapping {
-        user_to_id_def: IndexMap<String, String>,
-        id_def_to_user: IndexMap<String, String>,
-        id_to_user_word_class_cache: IndexMap<i32, String>,
+        user_to_id_def: MyIndexMap<String, String>,
+        id_def_to_user: MyIndexMap<String, String>,
+        id_to_user_word_class_cache: MyIndexMap<i32, String>,
     }
 
     impl WordClassMapping {
         fn new() -> Self {
             Self {
-                user_to_id_def: IndexMap::new(),
-                id_def_to_user: IndexMap::new(),
-                id_to_user_word_class_cache: IndexMap::new(),
+                user_to_id_def: MyIndexMap::with_hasher(RandomState::default()),
+                id_def_to_user: MyIndexMap::with_hasher(RandomState::default()),
+                id_to_user_word_class_cache: MyIndexMap::with_hasher(RandomState::default()),
             }
         }
 
@@ -500,7 +551,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, 
     struct DictValues<'a> {
         id_def: &'a mut IdDef,
         default_noun_id: &'a mut i32,
-        class_map: &'a mut IndexMap::<String, i32>,
+        class_map: &'a mut MyIndexMap::<String, i32>,
         mapping: &'a mut WordClassMapping,
         pronunciation: &'a mut String,
         notation: &'a mut String,
@@ -848,7 +899,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, 
         };
 
         let (mut _id_def, mut _default_noun_id) = read_id_def(&id_def_path)?;
-        let mut class_map = IndexMap::<String, i32>::new();
+        let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
         let mut mapping = create_word_class_mapping();
         let mut pronunciation = String::new();
         let mut notation = String::new();
@@ -869,9 +920,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut IndexMap<String, 
 
         let delimiter_char = parse_delimiter(&_args.delimiter, &_args);
 
-        let delimiter_str = if delimiter_char == b'\t' { 
-            "TAB".to_string() 
-        } else { 
+        let delimiter_str = if delimiter_char == b'\t' {
+            "TAB".to_string()
+        } else {
             String::from_utf8(vec![delimiter_char]).unwrap_or_else(|_| "?".to_string())
         };
         if _args.debug { eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char.to_string()); }

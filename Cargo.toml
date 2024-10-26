@@ -5,7 +5,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2021"
 rust-version = "1.82"
@@ -16,12 +16,18 @@ license = "MIT"
 
 [workspace.dependencies]
 lib-dict-to-mozc = { path = "./crates/dict-to-mozc" }
-argh = "0.1.12"
-csv = "1.3.0"
-kanaria = { git = "https://github.com/phoepsilonix/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8", version = "0.2.1" }
-lazy-regex = "3.1.0"
-regex = "1.10.3"
-indexmap = "2.6.0"
+argh = { version = "0.1.12", default-features = false }
+csv = { version = "1.3.0", default-features = true }
+#kanaria = "0.2.0"
+kanaria = { git = "https://github.com/phoepsilonix/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8", version = "0.2.1", default-features = false }
+lazy-regex = { version = "3.3.0", default-features = true }
+regex = { version = "1.11.1", default-features = true }
+
+indexmap = { version = "2.6.0", default-features = false, features = [] }
+hashbrown = { version = "0.15.0", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+
+foldhash = { version = "0.1.3", default-features = false }
+fxhash = { version = "0.2.1", default-features = false }
 
 [profile.release]
 strip = true
