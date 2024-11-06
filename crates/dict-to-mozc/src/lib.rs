@@ -528,8 +528,13 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[ぁ-ゖァ-ヺ・]+$").unwrap());
     //static EISUU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9' ]+$").unwrap());
     static KIGOU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z' ]+$").unwrap());
-    //static JAPANESE_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\p{Hiragana}\p{Katakana}\p{Han}\p{Punct}ー\- 　0-9]+$").unwrap());
-    static JAPANESE_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\x{3005}\x{3007}\x{303b}\x{3400}-\x{9FFF}\x{F900}-\x{FAFF}\x{20000}-\x{2FFFF}\p{Hiragana}\p{Katakana}\p{Punct}ー\- 　0-9]+$").unwrap());
+    // 地名チェックに用いる日本語判定
+    // 漢字、ひらがな、カタカナから始まる単語を日本語とみなす。
+    // ２文字目以降は、漢字、ひらがな、カタカナ以外に、
+    // 句読点(Punct)、長音ー記号を含む修飾文字(Letter Modifier),
+    // (全角含む)空白(Zs),ラテン文字、数字などを容認する。
+    // (２文字目以降は任意の文字列にしてもいいかもしれない。)
+    static JAPANESE_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\x{3005}\x{3007}\x{303b}\x{3400}-\x{9FFF}\x{F900}-\x{FAFF}\x{20000}-\x{2FFFF}\p{Hiragana}\p{Katakana}][\x{3005}\x{3007}\x{303b}\x{3400}-\x{9FFF}\x{F900}-\x{FAFF}\x{20000}-\x{2FFFF}\p{Hiragana}\p{Katakana}\p{Lm}\p{Punct}\p{Zs}\p{Latin}\p{Number}]*$").unwrap());
 
     fn is_kana(str: &str) -> bool {
         KANA_CHECK.is_match(&str)
