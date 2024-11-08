@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
-
 use csv::{ReaderBuilder, Error as CsvError};
 use csv::StringRecord;
 
@@ -22,6 +21,7 @@ use hashbrown::DefaultHashBuilder as RandomState;
 
 //use foldhash::fast::RandomState;
 //use std::hash::RandomState;
+use pico_args::Arguments;
 
 pub struct MyIndexMap<K, V, S = RandomState>(IndexMap<K, V, S>);
 
@@ -963,192 +963,120 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         Ok(())
     }
 
-    use argh::FromArgs;
+    #[derive(Debug)]
+struct Config {
+    csv_file: PathBuf,
+    id_def: PathBuf,
+    pronunciation_index: usize,
+    notation_index: usize,
+    word_class_index: usize,
+    word_class_numbers: usize,
+    cost_index: usize,
+    delimiter: String,
+    sudachi: bool,
+    utdict: bool,
+    neologd: bool,
+    user_dict: bool,
+    places: bool,
+    symbols: bool,
+    debug: bool,
+}
 
-#[derive(FromArgs)]
-    /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
-    /// (Mozc辞書型式への変換プログラム)
-    struct Args {
-        /// path to the dictionary CSV file(TSV with -d $'\t' or -d TAB)
-        #[argh(option, short = 'f')]
-        csv_file: Option<PathBuf>,
+enum DictType {
+    Default,
+    Sudachi,
+    UTDict,
+    NEologd,
+}
 
-        /// path to the Mozc id.def file(Default is ./id.def)
-        #[argh(option, short = 'i')]
-        id_def: Option<PathBuf>,
-
-        /// generate Mozc User Dictionary formats
-        #[argh(switch, short = 'U')]
-        user_dict: bool,
-
-        /// target SudachiDict
-        #[argh(switch, short = 's')]
-        sudachi: bool,
-
-        /// target NEologd dictionary
-        #[argh(switch, short = 'n')]
-        neologd: bool,
-
-        /// target UT dictionary
-        #[argh(switch, short = 'u')]
-        utdict: bool,
-
-        /// include place names (地名を含める)
-        #[argh(switch, short = 'p')]
-        places: bool,
-
-        /// include symbols (記号を含める)
-        #[argh(switch, short = 'S')]
-        symbols: bool,
-
-        /// pronunciation 読みフィールドの位置（0から始まる）
-        #[argh(option, short = 'P')]
-        pronunciation_index: Option<usize>,
-
-        /// notation 表記フィールドの位置（0から始まる）
-        #[argh(option, short = 'N')]
-        notation_index: Option<usize>,
-
-        /// word class 品詞判定フィールドの位置（0から始まる）
-        #[argh(option, short = 'W')]
-        word_class_index: Option<usize>,
-
-        /// word class 品詞判定フィールドのフィールド数
-        #[argh(option, short = 'w')]
-        word_class_numbers: Option<usize>,
-
-        /// cost コストフィールドの位置（0から始まる）
-        #[argh(option, short = 'C')]
-        cost_index: Option<usize>,
-
-        /// delimiter デリミタ(初期値 ',' カンマ)
-        #[argh(option, short = 'd')]
-        delimiter: Option<String>,
-
-        /// debug デバッグ
-        #[argh(switch, short = 'D')]
-        debug: bool,
-
-    }
-
-#[derive(Debug)]
-    struct Config {
-        csv_file: PathBuf,
-        id_def: PathBuf,
-        pronunciation_index: usize,
-        notation_index: usize,
-        word_class_index: usize,
-        word_class_numbers: usize,
-        cost_index: usize,
-        delimiter: String,
-        sudachi: bool,
-        utdict: bool,
-        neologd: bool,
-        user_dict: bool,
-        places: bool,
-        symbols: bool,
-        debug: bool,
-    }
-
-    enum DictType {
-        Default,
-        Sudachi,
-        UTDict,
-        NEologd,
-    }
-
-    impl Args {
-        fn into_config(self) -> std::io::Result<Config> {
-            let current_dir = std::env::current_dir()?;
-            let dict_type = if self.sudachi {
-                DictType::Sudachi
-            } else if self.utdict {
-                DictType::UTDict
-            } else if self.neologd {
-                DictType::NEologd
-            } else {
-                DictType::Default
-            };
-
-            Ok(Config {
-                csv_file: self.csv_file.unwrap_or_else(|| current_dir.join("all.csv")),
-                id_def: self.id_def.unwrap_or_else(|| current_dir.join("id.def")),
-                pronunciation_index: self.pronunciation_index.unwrap_or_else(|| dict_type.default_pronunciation_index()),
-                notation_index: self.notation_index.unwrap_or_else(|| dict_type.default_notation_index()),
-                word_class_index: self.word_class_index.unwrap_or_else(|| dict_type.default_word_class_index()),
-                word_class_numbers: self.word_class_numbers.unwrap_or_else(|| dict_type.default_word_class_numbers()),
-                cost_index: self.cost_index.unwrap_or_else(|| dict_type.default_cost_index()),
-                delimiter: self.delimiter.unwrap_or_else(|| dict_type.default_delimiter()),
-                sudachi: self.sudachi,
-                utdict: self.utdict,
-                neologd: self.neologd,
-                user_dict: self.user_dict,
-                places: self.places,
-                symbols: self.symbols,
-                debug: self.debug,
-            })
+impl DictType {
+    fn from_args(args: &mut Arguments) -> DictType {
+        if args.contains(["-s", "--sudachi"]) {
+            DictType::Sudachi
+        } else if args.contains(["-u", "--utdict"]) {
+            DictType::UTDict
+        } else if args.contains(["-n", "--neologd"]) {
+            DictType::NEologd
+        } else {
+            DictType::Default
         }
     }
 
-    impl DictType {
-        fn default_pronunciation_index(&self) -> usize {
-            match self {
-                DictType::Default => 11,
-                DictType::Sudachi => 11,
-                DictType::NEologd => 10,
-                DictType::UTDict => 0,
-            }
-        }
-
-        fn default_notation_index(&self) -> usize {
-            match self {
-                DictType::Default => 4,
-                DictType::Sudachi => 4,
-                DictType::NEologd => 12,
-                DictType::UTDict => 4,
-            }
-        }
-
-        fn default_word_class_index(&self) -> usize {
-            match self {
-                DictType::Default => 5,
-                DictType::Sudachi => 5,
-                DictType::NEologd => 4,
-                DictType::UTDict => 1,
-            }
-        }
-
-        fn default_word_class_numbers(&self) -> usize {
-            match self {
-                DictType::Default => 6,
-                DictType::Sudachi => 6,
-                DictType::NEologd => 6,
-                DictType::UTDict => 1,
-            }
-        }
-
-        fn default_cost_index(&self) -> usize {
-            match self {
-                DictType::Default => 3,
-                DictType::Sudachi => 3,
-                DictType::NEologd => 3,
-                DictType::UTDict => 3,
-            }
-        }
-
-        fn default_delimiter(&self) -> String {
-            match self {
-                DictType::Default => ",".to_string(),
-                DictType::Sudachi => ",".to_string(),
-                DictType::NEologd => ",".to_string(),
-                DictType::UTDict => "\t".to_string(),
-            }
+    fn default_pronunciation_index(&self) -> usize {
+        match self {
+            DictType::Default | DictType::Sudachi => 11,
+            DictType::NEologd => 10,
+            DictType::UTDict => 0,
         }
     }
 
+    fn default_notation_index(&self) -> usize {
+        match self {
+            DictType::Default | DictType::Sudachi | DictType::UTDict => 4,
+            DictType::NEologd => 12,
+        }
+    }
+
+    fn default_word_class_index(&self) -> usize {
+        match self {
+            DictType::Default | DictType::Sudachi => 5,
+            DictType::NEologd => 4,
+            DictType::UTDict => 1,
+        }
+    }
+
+    fn default_word_class_numbers(&self) -> usize {
+        match self {
+            DictType::Default | DictType::Sudachi | DictType::NEologd => 6,
+            DictType::UTDict => 1,
+        }
+    }
+
+    fn default_cost_index(&self) -> usize {
+        3
+    }
+
+    fn default_delimiter(&self) -> String {
+        match self {
+            DictType::UTDict => "\t".to_string(),
+            _ => ",".to_string(),
+        }
+    }
+}
+
+impl Config {
+    fn from_args() -> std::io::Result<Self> {
+        let mut args = Arguments::from_env();
+        let current_dir = std::env::current_dir()?;
+        let dict_type = DictType::from_args(&mut args);
+
+        Ok(Config {
+            csv_file: args.opt_value_from_str(["-f", "--csv-file"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| current_dir.join("all.csv")),
+            id_def: args.opt_value_from_str(["-i", "--id-def"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| current_dir.join("id.def")),
+            pronunciation_index: args.opt_value_from_str(["-P", "--pronunciation-index"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| dict_type.default_pronunciation_index()),
+            notation_index: args.opt_value_from_str(["-N", "--notation-index"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| dict_type.default_notation_index()),
+            word_class_index: args.opt_value_from_str(["-W", "--word-class-index"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| dict_type.default_word_class_index()),
+            word_class_numbers: args.opt_value_from_str(["-w", "--word-class-numbers"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| dict_type.default_word_class_numbers()),
+            cost_index: args.opt_value_from_str(["-C", "--cost-index"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| dict_type.default_cost_index()),
+            delimiter: args.opt_value_from_str(["-d", "--delimiter"]).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?.unwrap_or_else(|| dict_type.default_delimiter()),
+            sudachi: matches!(dict_type, DictType::Sudachi),
+            utdict: matches!(dict_type, DictType::UTDict),
+            neologd: matches!(dict_type, DictType::NEologd),
+            user_dict: args.contains(["-U", "--user-dict"]),
+            places: args.contains(["-p", "--places"]),
+            symbols: args.contains(["-S", "--symbols"]),
+            debug: args.contains(["-D", "--debug"]),
+        })
+    }
+}
     pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-        let args: Args = argh::from_env();
-        let config = args.into_config()?;
+        let config = match Config::from_args() {
+            Ok(config) => config,
+            Err(e) => {
+                eprintln!("Failed to parse arguments: {}", e);
+                return Err(e.into());
+            }
+        };
 
         if config.debug { eprintln!("Config: {:?}", config); }
 
