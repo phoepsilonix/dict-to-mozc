@@ -67,6 +67,17 @@ where
     }
 }
 
+use std::fmt;
+impl<K, V, S> fmt::Debug for MyIndexMap<K, V, S>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_map().entries(self.0.iter()).finish()
+    }
+}
+
 mod utils {
     use super::*;
 
@@ -316,6 +327,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     }
 
     // ユーザー辞書の品詞と、id.defの品詞のマッピングを作成する
+    #[derive(Debug)]
     struct WordClassMapping {
         user_to_id_def: MyIndexMap<String, String>,
         id_def_to_user: MyIndexMap<String, String>,
@@ -336,6 +348,15 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             self.id_def_to_user.insert(id_def_word_class.to_string(), user_word_class.to_string());
         }
 
+        fn get_first_id_def(&self, user_word_class: &String) -> Option<&String> {
+            // id_def_to_userから最初にマッチしたものを取得
+            for (id_def, user_class) in &self.id_def_to_user {
+                if user_class == user_word_class {
+                    return Some(id_def);
+                }
+            }
+            None
+        }
     }
 
     // マッピング作成
@@ -343,9 +364,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut mapping = WordClassMapping::new();
 
         // ユーザー辞書の品詞とid.defの品詞のマッピングを追加
+        mapping.add_mapping("名詞", "名詞,普通名詞,一般,*,*,*,*");
         mapping.add_mapping("名詞", "名詞,一般,*,*,*,*");
         mapping.add_mapping("名詞", "名詞,普通名詞,*,*,*,*,*");
-        mapping.add_mapping("名詞", "名詞,普通名詞,一般,*,*,*,*");
         mapping.add_mapping("名詞", "名詞,代名詞,一般,*,*,*,*");
         mapping.add_mapping("固有名詞", "名詞,固有名詞,*,*,*,*,*");
         mapping.add_mapping("固有名詞", "名詞,固有名詞,一般,*,*,*,*");
@@ -353,11 +374,11 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         mapping.add_mapping("接尾人名", "接尾辞,人名,*,*,*,*,女史");
         mapping.add_mapping("接尾地名", "接尾辞,地名,*,*,*,*,*");
         mapping.add_mapping("接尾一般", "名詞,接尾,一般,*,*,*,*");
+        mapping.add_mapping("地名", "名詞,固有名詞,地名,一般,*,*,*");
+        mapping.add_mapping("地名", "名詞,固有名詞,地域,一般,*,*,*");
         mapping.add_mapping("地名", "名詞,接尾,地域,*,*,*,*");
         mapping.add_mapping("地名", "名詞,固有名詞,国,*,*,*,*");
         mapping.add_mapping("組織", "名詞,固有名詞,組織,*,*,*,*");
-        mapping.add_mapping("地名", "名詞,固有名詞,地名,一般,*,*,*");
-        mapping.add_mapping("地名", "名詞,固有名詞,地域,一般,*,*,*");
         mapping.add_mapping("人名", "名詞,固有名詞,人名,一般,*,*,*");
         mapping.add_mapping("名", "名詞,固有名詞,人名,名,*,*,*");
         mapping.add_mapping("姓", "名詞,固有名詞,人名,姓,*,*,*");
@@ -385,43 +406,45 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         mapping.add_mapping("動詞バ行五段", "動詞,一般,*,*,五段・バ行,*,*");
         mapping.add_mapping("動詞ワ行五段", "動詞,自立,*,*,五段,ワ行,*,*");
         mapping.add_mapping("動詞ワ行五段", "動詞,自立,*,*,五段・ワ行,*,*");
-
-        mapping.add_mapping("名詞サ変", "名詞,サ変接続,*,*,*");
-        mapping.add_mapping("名詞サ変", "名詞,サ変可能,*,*,*");
-        mapping.add_mapping("名詞サ変", "名詞,サ変,可能,*,*,*");
-        mapping.add_mapping("名詞サ変", "名詞,サ変,接続,*,*,*");
         mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変,可能,*,*,*");
         mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変,接続,*,*,*");
         mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変可能,*,*,*");
         mapping.add_mapping("名詞サ変", "名詞,普通名詞,サ変接続,*,*,*");
+        mapping.add_mapping("名詞サ変", "名詞,サ変,可能,*,*,*");
+        mapping.add_mapping("名詞サ変", "名詞,サ変,接続,*,*,*");
+        mapping.add_mapping("名詞サ変", "名詞,サ変接続,*,*,*");
+        mapping.add_mapping("名詞サ変", "名詞,サ変可能,*,*,*");
+        mapping.add_mapping("形容詞", "形容詞,接尾,*,*,*,文語基本形,*");
         mapping.add_mapping("形容詞", "形容詞,一般,*,*,形容詞,*,*");
-        mapping.add_mapping("感動詞", "感動詞,*,*,*,*,*,*");
+        mapping.add_mapping("形容詞", "形容詞,一般,*,*,*,*,*");
         mapping.add_mapping("感動詞", "感動詞,一般,*,*,*,*,*");
-        mapping.add_mapping("助動詞", "助動詞,*,*,*,*,*,*");
+        mapping.add_mapping("感動詞", "感動詞,*,*,*,*,*,*");
         mapping.add_mapping("助動詞", "助動詞,一般,*,*,*,*,*");
-        mapping.add_mapping("終助詞", "助詞,*,*,*,*,*,*");
+        mapping.add_mapping("助動詞", "助動詞,*,*,*,*,*,*");
         mapping.add_mapping("終助詞", "助詞,終助詞,*,*,*,*,*");
+        mapping.add_mapping("終助詞", "助詞,*,*,*,*,*,*");
         mapping.add_mapping("数", "名詞,数詞,*,*,*,*,*");
-        mapping.add_mapping("助数詞", "接尾辞,名詞的,助数詞,*,*,*,*");
         mapping.add_mapping("助数詞", "名詞,普通名詞,助数詞可能,*,*,*");
-        mapping.add_mapping("接尾一般", "接尾辞,*,*,*,*,*,*");
+        mapping.add_mapping("助数詞", "接尾辞,名詞的,助数詞,*,*,*,*");
         mapping.add_mapping("接続詞", "接続詞,*,*,*,*,*,*");
         mapping.add_mapping("接頭語", "接頭辞,*,*,*,*,*,*");
         mapping.add_mapping("副詞", "副詞,一般,*,*,*,*,*");
+        mapping.add_mapping("副詞", "名詞,接尾,副詞可能,*,*,*,*");
+        mapping.add_mapping("副詞", "接尾辞,名詞的,副詞可能,*,*,*,*");
         mapping.add_mapping("副詞", "副詞,*,*,*,*,*,*");
         mapping.add_mapping("形容詞", "形容詞,*,*,*,*,*,*");
+        mapping.add_mapping("記号", "記号,*,*,*,*,*,*");
         mapping.add_mapping("記号", "補助記号,*,*,*,*,*,*");
-        mapping.add_mapping("名詞形動", "形状詞,*,*,*,*,*,*");
         mapping.add_mapping("名詞形動", "形状詞,一般,*,*,*,*,*");
+        mapping.add_mapping("名詞形動", "形状詞,*,*,*,*,*,*");
         mapping.add_mapping("接頭語", "形状詞,タリ,*,*,*,*,*");
         mapping.add_mapping("接尾一般","接尾辞,名詞的,一般,*,*,*,*");
         mapping.add_mapping("接尾一般", "接尾辞,動詞的,*,*,*,*,*");
         mapping.add_mapping("接尾一般", "接尾辞,形状詞的,*,*,*,*,*");
-        mapping.add_mapping("副詞", "接尾辞,名詞的,副詞可能,*,*,*,*");
+        mapping.add_mapping("接尾一般", "接尾辞,*,*,*,*,*,*");
         mapping.add_mapping("形容詞", "接尾辞,形状詞的,*,*,*,*,*");
         mapping.add_mapping("連体詞", "連体詞,*,*,*,*,*,*");
         mapping.add_mapping("動詞", "動詞,*,*,*,*,*,*");
-        mapping.add_mapping("記号", "記号,*,*,*,*,*,*");
         mapping.add_mapping("フィラー", "感動詞,フィラー,*,*,*,*,*");
         mapping.add_mapping("BOS/EOS", "BOS/EOS,*,*,*,*,*,*");
         mapping.add_mapping("その他", "その他,*,*,*,*,*,*");
@@ -508,6 +531,16 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         result
     }
 
+    // ユーザー辞書の品詞からid_defの品詞文字列へ
+    fn get_user_word_class(mapping: &mut WordClassMapping, _id_def: &IdDef, user_word_class: String) -> String {
+        // キャッシュをチェック
+        let word_class:String = match mapping.get_first_id_def(&user_word_class) {
+            Some(class) => class.clone(),
+            None => "名詞,一般,*,*,*,*,*".to_string(),
+        };
+        word_class
+    }
+
     // id.defからキーを検索
     fn search_key(def: &IdDef, search: i32) -> String {
         for (key, value) in def {
@@ -523,6 +556,11 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     // 品詞idからユーザー辞書の品詞を判定
     fn u_search_key(mapping: &mut WordClassMapping, _id_def: &mut IdDef, word_class_id: i32) -> Option<String> {
         get_user_word_class_by_id(mapping, _id_def, word_class_id)
+    }
+
+    // ユーザー辞書の品詞からid.defの品詞文字列へ
+    fn u_search_word_class(mapping: &mut WordClassMapping, _id_def: &mut IdDef, word_class: String) -> String {
+        get_user_word_class(mapping, _id_def, word_class)
     }
 
     static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[ぁ-ゖァ-ヺ・]+$").unwrap());
@@ -559,6 +597,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         Sudachi,
         Neologd,
         UtDict,
+        MozcUserDict,
     }
 
     struct DictValues<'a> {
@@ -604,6 +643,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             return process_neologd_skip(_args, _pronunciation, _notation, &word_class_parts)
         } else if _args.utdict {
             return process_utdict_skip(_args, _dict_values, _pronunciation, _notation, &word_class_parts)
+        } else if _args.mozcuserdict {
+            return process_mozcuserdict_skip(_args, _dict_values, _pronunciation, _notation, &word_class_parts)
         } else {
             return process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts);
         };
@@ -649,6 +690,21 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         false
     }
 
+    fn process_mozcuserdict_skip(_args: &Config, _dict_values: &mut DictValues, _pronunciation: String, _notation: &str, word_class: &[&str]) -> bool {
+        let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+
+        if ! is_kana(&_pronunciation) { return true };
+        // ユーザー辞書の品詞からID.defの品詞文字列へ
+        let word_class = u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
+        *_dict_values.word_class_id = id_expr(&word_class, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
+        if _args.debug && *_dict_values.word_class_id == -1 {
+            eprintln!("{}\t{}\t{}\t{}", _pronunciation, _notation, word_class, _parts.join(""));
+        }
+        if (! _args.symbols) && is_kigou(&_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
+        if (! _args.places) && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return true }
+        false
+    }
+
     fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> i32 {
         let mut word_class_parts = Vec::new();
         let start_index = _args.word_class_index;
@@ -667,6 +723,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             process_neologd_word_class(&word_class_parts)
         } else if _args.utdict {
             process_utdict_word_class(&word_class_parts)
+        } else if _args.mozcuserdict {
+            u_search_word_class(_dict_values.mapping, _dict_values.id_def, process_mozcuserdict_word_class(&word_class_parts))
         } else {
             process_sudachi_word_class(&word_class_parts)
         };
@@ -724,6 +782,11 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
     fn process_utdict_word_class(parts: &[&str]) -> String {
         let processed = parts.join(",");
+        processed
+    }
+
+    fn process_mozcuserdict_word_class(parts: &[&str]) -> String {
+        let processed = parts.join("");
         processed
     }
 
@@ -843,6 +906,52 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    struct MozcUserDictProcessor;
+    impl DictionaryProcessor for MozcUserDictProcessor {
+        fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
+            return skip_analyze(record, _args, _dict_values);
+        }
+
+        fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
+            // ユーザー辞書型式から品詞IDに
+            let mut word_class_parts = Vec::new();
+            let start_index = _args.word_class_index;
+            let end_index = std::cmp::min(start_index + _args.word_class_numbers, record.len());
+
+            for i in start_index..end_index {
+                if let Some(part) = record.get(i) {
+                    word_class_parts.push(part.trim());
+                } else {
+                    break;
+                }
+            }
+            // ユーザー辞書型式から品詞IDに
+            *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+            let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
+                Some(p) => convert_to_hiragana(p),
+                None => return false,
+            };
+            let _notation = match record.get(_args.notation_index) {
+                Some(n) => n,
+                None => return false,
+            };
+            *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+            *_dict_values.notation = unicode_escape_to_char(&_notation);
+            let d: String = format!("{}", search_key(_dict_values.id_def, *_dict_values.word_class_id));
+            let word_class;
+            word_class = _dict_values.class_map.get(&d);
+            if word_class == None {
+                *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
+            } else {
+                *_dict_values.word_class_id = *word_class.unwrap();
+            }
+            let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
+            let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
+            *_dict_values.cost = adjust_cost(cost);
+            true
+        }
+    }
+
     fn add_dict_data(_processor: &dyn DictionaryProcessor, _data: &StringRecord, _dict_values: &mut DictValues, dict_data: &mut DictionaryData, _args: &Config) {
         if _args.user_dict {
             match u_search_key(_dict_values.mapping, _dict_values.id_def, *_dict_values.word_class_id) {
@@ -913,6 +1022,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             DictionaryType::Sudachi => Box::new(SudachiProcessor),
             DictionaryType::Neologd => Box::new(NeologdProcessor),
             DictionaryType::UtDict => Box::new(UtDictProcessor),
+            DictionaryType::MozcUserDict => Box::new(MozcUserDictProcessor),
         };
 
         let (mut _id_def, mut _default_noun_id) = read_id_def(&id_def_path)?;
@@ -993,6 +1103,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         #[argh(switch, short = 'u')]
         utdict: bool,
 
+        /// target Mozc User Dictionary
+        #[argh(switch, short = 'M')]
+        mozcuserdict: bool,
+
         /// include place names (地名を含める)
         #[argh(switch, short = 'p')]
         places: bool,
@@ -1044,6 +1158,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         sudachi: bool,
         utdict: bool,
         neologd: bool,
+        mozcuserdict: bool,
         user_dict: bool,
         places: bool,
         symbols: bool,
@@ -1055,6 +1170,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         Sudachi,
         UTDict,
         NEologd,
+        MozcUserDict,
     }
 
     impl Args {
@@ -1066,6 +1182,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 DictType::UTDict
             } else if self.neologd {
                 DictType::NEologd
+            } else if self.mozcuserdict {
+                DictType::MozcUserDict
             } else {
                 DictType::Default
             };
@@ -1082,6 +1200,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 sudachi: self.sudachi,
                 utdict: self.utdict,
                 neologd: self.neologd,
+                mozcuserdict: self.mozcuserdict,
                 user_dict: self.user_dict,
                 places: self.places,
                 symbols: self.symbols,
@@ -1097,15 +1216,17 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 DictType::Sudachi => 11,
                 DictType::NEologd => 10,
                 DictType::UTDict => 0,
+                DictType::MozcUserDict => 0,
             }
         }
 
         fn default_notation_index(&self) -> usize {
             match self {
                 DictType::Default => 4,
-                DictType::Sudachi => 4,
+                DictType::Sudachi => 12,
                 DictType::NEologd => 12,
                 DictType::UTDict => 4,
+                DictType::MozcUserDict => 1,
             }
         }
 
@@ -1115,6 +1236,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 DictType::Sudachi => 5,
                 DictType::NEologd => 4,
                 DictType::UTDict => 1,
+                DictType::MozcUserDict => 2,
             }
         }
 
@@ -1124,6 +1246,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 DictType::Sudachi => 6,
                 DictType::NEologd => 6,
                 DictType::UTDict => 1,
+                DictType::MozcUserDict => 1,
             }
         }
 
@@ -1133,6 +1256,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 DictType::Sudachi => 3,
                 DictType::NEologd => 3,
                 DictType::UTDict => 3,
+                DictType::MozcUserDict => 3,
             }
         }
 
@@ -1142,6 +1266,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 DictType::Sudachi => ",".to_string(),
                 DictType::NEologd => ",".to_string(),
                 DictType::UTDict => "\t".to_string(),
+                DictType::MozcUserDict => "\t".to_string(),
             }
         }
     }
@@ -1150,7 +1275,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let args: Args = argh::from_env();
         let config = args.into_config()?;
 
-        if config.debug { eprintln!("Config: {:?}", config); }
+        if config.debug { eprintln!("Config: {:?}", config);
+            let mapping = create_word_class_mapping();
+            dbg!(mapping);
+        }
 
         // CSVファイルのパスを取得
         let csv_path = config.csv_file.clone();
@@ -1178,6 +1306,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             process_dictionary(&csv_path, &NeologdProcessor, &id_def_path, &mut dict_data, DictionaryType::Neologd, &config)?;
         } else if config.utdict {
             process_dictionary(&csv_path, &UtDictProcessor, &id_def_path, &mut dict_data, DictionaryType::UtDict, &config)?;
+        } else if config.mozcuserdict {
+            process_dictionary(&csv_path, &MozcUserDictProcessor, &id_def_path, &mut dict_data, DictionaryType::MozcUserDict, &config)?;
         } else {
             process_dictionary(&csv_path, &DefaultProcessor, &id_def_path, &mut dict_data, DictionaryType::Default, &config)?;
         }
