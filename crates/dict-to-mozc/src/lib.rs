@@ -1275,9 +1275,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let args: Args = argh::from_env();
         let config = args.into_config()?;
 
-        if config.debug { eprintln!("Config: {:?}", config);
-            let mapping = create_word_class_mapping();
-            dbg!(mapping);
+        if config.debug {
+            eprintln!("{:?}", config);
         }
 
         // CSVファイルのパスを取得
