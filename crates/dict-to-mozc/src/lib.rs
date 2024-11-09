@@ -690,6 +690,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
         if ! is_kana(&_pronunciation) { return true };
         *_dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
+        if *_dict_values.word_class_id == -1 || *_dict_values.word_class_id == 0 {
+            *_dict_values.word_class_id = *_dict_values.default_noun_id;
+        }
         if (! _args.symbols) && is_kigou(&_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
         if (! _args.places) && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return true }
         false
@@ -724,7 +727,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         } else if _args.neologd {
             process_neologd_word_class(&word_class_parts)
         } else if _args.utdict {
-            process_utdict_word_class(&word_class_parts)
+            return *_dict_values.default_noun_id;
+        //    process_utdict_word_class(&word_class_parts)
         } else if _args.mozcuserdict {
             u_search_word_class(_dict_values.mapping, _dict_values.id_def, process_mozcuserdict_word_class(&word_class_parts))
         } else {
@@ -781,12 +785,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
         parts.join(",")
     }
-
+/*
     fn process_utdict_word_class(parts: &[&str]) -> String {
         let processed = parts.join(",");
         processed
     }
-
+*/
     fn process_mozcuserdict_word_class(parts: &[&str]) -> String {
         let processed = parts.join("");
         processed
