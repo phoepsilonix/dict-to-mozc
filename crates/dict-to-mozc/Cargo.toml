@@ -12,7 +12,6 @@ argh = { workspace = true }
 csv = { workspace = true }
 kanaria = { workspace = true }
 lazy-regex = { workspace = true }
-regex = { workspace = true }
 indexmap = { workspace = true }
 hashbrown = { workspace = true }
 

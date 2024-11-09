@@ -1,6 +1,6 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use regex::Regex;
+use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
 
@@ -84,8 +84,7 @@ mod utils {
     // カタカナから読みを平仮名へ
     pub(crate) fn convert_to_hiragana(text: &str) -> String {
         let target: Vec<char> = text.chars().collect();
-        let mut pronunciation: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
-        pronunciation = pronunciation.replace("ゐ", "い").replace("ゑ", "え");
+        let pronunciation: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
         pronunciation
     }
 
@@ -439,6 +438,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         mapping.add_mapping("形容詞", "形容詞,*,*,*,*,*,*");
         mapping.add_mapping("記号", "記号,*,*,*,*,*,*");
         mapping.add_mapping("記号", "補助記号,*,*,*,*,*,*");
+        mapping.add_mapping("名詞形動", "名詞,形容動詞語幹,*,*,*,*,*");
         mapping.add_mapping("名詞形動", "形状詞,一般,*,*,*,*,*");
         mapping.add_mapping("名詞形動", "形状詞,*,*,*,*,*,*");
         mapping.add_mapping("接頭語", "形状詞,タリ,*,*,*,*,*");
@@ -567,7 +567,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         get_user_word_class(mapping, _id_def, word_class)
     }
 
-    static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[ぁ-ゖァ-ヺ・]+$").unwrap());
+    static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\p{Hiragana}\p{Katakana}ーゝゞヽヾ゛゜・]+$").unwrap());
     //static EISUU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9' ]+$").unwrap());
     static KIGOU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z' ]+$").unwrap());
     // 地名チェックに用いる日本語判定
@@ -760,13 +760,13 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             .replace("段-", "段,")
             .replace("接尾辞,名詞的,一般,", "名詞,接尾,一般,")
             .replace("接尾辞,名詞的,副詞可能,", "名詞,接尾,副詞可能,")
-            .replace("接尾辞,名詞的,助数詞,", "名詞,接尾,助数詞,")
+            .replace("接尾辞,名詞的,助数詞,", "名詞,普通名詞,助数詞可能,")
             .replace("接尾辞,名詞的,サ変可能,", "名詞,接尾,サ変接続,")
             .replace("接尾辞,動詞的,","動詞,接尾,")
             .replace("接尾辞,形容詞的,","形容詞,接尾,")
             .replace("接尾辞,形状詞的,","名詞,接尾,助動詞語幹,")
             .replace("形状詞,助動詞語幹,","名詞,接尾,助動詞語幹,")
-            .replace("形状詞,一般,", "名詞,形容詞語幹,")
+            .replace("形状詞,一般,", "名詞,形容動詞語幹,")
             .replace("形状詞,タリ,", "接頭辞,形容詞接続,")
             .replace("代名詞,", "名詞,代名詞,一般,")
             .replace("接頭辞,", "接頭詞,");
