@@ -22,7 +22,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + 重複チェックは、品詞ID、読み、表記の組み合わせで行っています。
 ユーザー辞書型式への変換は、品詞IDが異なっても、同じ品詞名になりえるので、重複が残る場合があります。
 + mecab-unidic-neologd, mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
-+ Ut Dictionaryは、それ自体が独自の品詞判定を行った上で、Mozcの内部型式の品詞IDを含めたデータとして配布されています。その品詞IDデータを用いて、ユーザー辞書型式に変換できます。同じ時点のid.defが使われている限りにおいて、それなりに品詞判定のマッピングが有効だと思います。つまり古めのアーカイブの場合には、その時点のid.defを取得して用いれば、品詞判定が改善するでしょう。実用性において、どの程度影響があるかは別ですが、id.defの番号がずれている場合、そのまま辞書に組み込むと、品詞としてのデータはミスマッチが起きる場合もあるでしょう。ただ最新のid.defを用いるように、スクリプトは更新されていますので、レポジトリのデータ自体も、そのうち更新されるのだと思います。
++ Ut Dictionaryは、以前は、Mozcの内部型式のその時点のid.defの名詞の品詞IDを含めたデータとして配布されていましたが、現在は品詞IDは0となっているようです。品詞IDが0だと`BOS/EOS`として品詞判定していまいますが、それよりは名詞として扱ったほうが無難でしょうから、名詞判定にしています。
 + -pオプションを指定すると、出力データに地名も含めます。  
 地域、地名として、分類されているデータへの扱いです。  
 ただし、SudachiDictの英語名の地名は、オプション指定しなくても、そのまま出力されます。
@@ -103,6 +103,8 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 -n -P 12 -N 10 -W 4 -w 6 -C 3
 # Ut Dictionary
 -u -P 0 -N 4 -W 1 -w 1 -C 3
+# Mozc User Dictionary
+-M -O 0 -N 1 -W 2 -w 1 -C 3 -d $'\t'
 ```
 
 ## インストール
@@ -196,11 +198,13 @@ https://github.com/utuhiro78/merge-ut-dictionaries
 # 1843が名詞,一般のid.defの取得
 curl -L -o id2.def https://github.com/google/mozc/raw/8121eb870b66f26256995b42f069c9f4a8788953/src/data/dictionary_oss/id.def
 # 例として、cannaのデータを取得
-curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/refs/heads/main/mozcdic-ut-alt-cannadic.txt.bz2
-bzip2 -d mozcdic-ut-alt-cannadic.txt.bz2
+curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/b35f78867c2853b552851f6ebba975860d938b55/mozcdic-ut-alt-cannadic.txt.tar.bz2
+tar xf mozcdic-ut-alt-cannadic.txt.tar.bz2
 # ユーザー辞書型式への変換
 dict-to-mozc -U -u -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
 # Mozcユーザー辞書型式からシステム辞書型式への変換も加えたので、下記startideさんのスクリプトでcanna型式をMozcユーザー辞書型式に変換してから、dict-to-mozcでシステ厶辞書型式へ変換すれば品詞情報も、それなりに残せます。
+# また次のレポジトリでは、startideさんの品詞情報の対応表を元にした品詞判定を加えた変換スクリプトで、canna型式の辞書をMozcユーザー辞書型式に変換したあと、dict-to-mozcでシステム辞書型式に変換することで、品詞情報をある程度残しています。
+# https://github.com/phoepsilonix/mozcdic-ut-alt-cannadic
 
 # 例としてskk jisyo
 curl -LO https://github.com/utuhiro78/mozcdic-ut-skk-jisyo/raw/refs/heads/main/mozcdic-ut-skk-jisyo.txt.bz2

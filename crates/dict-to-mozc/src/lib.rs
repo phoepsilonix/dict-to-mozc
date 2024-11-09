@@ -954,8 +954,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             } else {
                 *_dict_values.word_class_id = *word_class.unwrap();
             }
-            let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
-            let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
+            //let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
+            //let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
+            let cost = DEFAULT_COST;
             *_dict_values.cost = adjust_cost(cost);
             true
         }
