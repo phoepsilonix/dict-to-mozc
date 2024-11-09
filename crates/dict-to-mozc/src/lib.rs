@@ -329,7 +329,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     // ユーザー辞書の品詞と、id.defの品詞のマッピングを作成する
     #[derive(Debug)]
     struct WordClassMapping {
-        user_to_id_def: MyIndexMap<String, String>,
+        //user_to_id_def: MyIndexMap<String, String>,
         id_def_to_user: MyIndexMap<String, String>,
         id_to_user_word_class_cache: MyIndexMap<i32, String>,
     }
@@ -337,14 +337,18 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     impl WordClassMapping {
         fn new() -> Self {
             Self {
-                user_to_id_def: MyIndexMap::with_hasher(RandomState::default()),
+                //user_to_id_def: MyIndexMap::with_hasher(RandomState::default()),
                 id_def_to_user: MyIndexMap::with_hasher(RandomState::default()),
                 id_to_user_word_class_cache: MyIndexMap::with_hasher(RandomState::default()),
             }
         }
 
         fn add_mapping(&mut self, user_word_class: &str, id_def_word_class: &str) {
-            self.user_to_id_def.insert(user_word_class.to_string(), id_def_word_class.to_string());
+            /*
+             if self.user_to_id_def.get(user_word_class) == None {
+                self.user_to_id_def.insert(user_word_class.to_string(), id_def_word_class.to_string());
+            }
+            */
             self.id_def_to_user.insert(id_def_word_class.to_string(), user_word_class.to_string());
         }
 
@@ -698,9 +702,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         // ユーザー辞書の品詞からID.defの品詞文字列へ
         let word_class = u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
         *_dict_values.word_class_id = id_expr(&word_class, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
-        if _args.debug && *_dict_values.word_class_id == -1 {
-            eprintln!("{}\t{}\t{}\t{}", _pronunciation, _notation, word_class, _parts.join(""));
-        }
         if (! _args.symbols) && is_kigou(&_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
         if (! _args.places) && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return true }
         false
@@ -1045,10 +1046,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             cost: &mut cost,
         };
 
-        if _args.debug {
-            dbg!(&_dict_values);
-        }
-
         let delimiter_char = parse_delimiter(&_args.delimiter, &_args);
 
         let delimiter_str = if delimiter_char == b'\t' {
@@ -1056,7 +1053,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         } else {
             String::from_utf8(vec![delimiter_char]).unwrap_or_else(|_| "?".to_string())
         };
-        if _args.debug { eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char.to_string()); }
+        if _args.debug {
+            eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char.to_string());
+            dbg!(&_dict_values);
+        }
 
         let reader = csv::ReaderBuilder::new()
             .has_headers(false)
