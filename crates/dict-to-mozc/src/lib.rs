@@ -569,7 +569,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     }
 
     //static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\p{Hiragana}\p{Katakana}ーゝゞヽヾ゛゜・]+$").unwrap());
-    static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[(ぁ-ゖ)ゐゑゐ゙ゑ゙(ァ-ヺ)ーゝゞヽヾ゛゜・]+$").unwrap());
+    static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[(ぁ-ゖ)ゐゑゐ゙ゑ゙(ァ-ヺ)ー・]+$").unwrap());
     //static EISUU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9' ]+$").unwrap());
     static KIGOU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z' ]+$").unwrap());
     // 地名チェックに用いる日本語判定
