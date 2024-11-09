@@ -306,7 +306,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 .replace("地域,","地名,");
 
             // 名詞、一般名詞のIDを保存
-            if expr == "名詞,普通名詞,*,*,*,*,*" || expr == "名詞,一般,*,*,*,*,*" {
+            if expr == "名詞,普通名詞,一般,*,*,*,*" || expr == "名詞,一般,*,*,*,*,*" {
                 _default_noun_id = id;
             }
             expr = regex_replace_all!(r"カ行([^,]*),", &expr, "カ行,$1")
@@ -600,6 +600,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         MozcUserDict,
     }
 
+    #[derive(Debug)]
     struct DictValues<'a> {
         id_def: &'a mut IdDef,
         default_noun_id: &'a mut i32,
@@ -1044,6 +1045,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             cost: &mut cost,
         };
 
+        if _args.debug {
+            dbg!(&_dict_values);
+        }
 
         let delimiter_char = parse_delimiter(&_args.delimiter, &_args);
 
