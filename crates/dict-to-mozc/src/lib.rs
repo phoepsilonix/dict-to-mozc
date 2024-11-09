@@ -659,6 +659,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
+        if _notation.len() == 0 { return true };
         if _parts[0] == "空白" { return true };
         if (! _args.symbols) && _pronunciation == "キゴウ" && _parts[0].contains("記号") { return true };
         if _parts.len() > 1 {
@@ -674,6 +675,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
+        if _notation.len() == 0 { return true };
         if _parts[0] == "空白" { return true };
         if (! _args.symbols) && _pronunciation == "キゴウ" && _parts[0].contains("記号") { return true };
         if _parts.len() > 1 {
@@ -689,6 +691,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
+        if _notation.len() == 0 { return true };
         *_dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
         if *_dict_values.word_class_id == -1 || *_dict_values.word_class_id == 0 {
             *_dict_values.word_class_id = *_dict_values.default_noun_id;
@@ -702,6 +705,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
+        if _notation.len() == 0 { return true };
         // ユーザー辞書の品詞からID.defの品詞文字列へ
         let word_class = u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
         *_dict_values.word_class_id = id_expr(&word_class, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
