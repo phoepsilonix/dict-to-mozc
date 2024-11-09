@@ -17,7 +17,7 @@
 + SudachiDictなどの辞書データの品詞判定が行えなかった場合、普通名詞と判定されます。  
 id.defでの`名詞,一般,*,*,*,*,*`扱いになります。  
 Mozcの内部的な品詞IDは変わることがありますので、その時点でのMozcのid.defを用いることが大事です。ただユーザー辞書型式での出力の場合には、品詞名がそのまま出力されますので、あまり意識することはないでしょう。  
-+ -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary型式を指定できます。  
++ -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary,-M Mozcユーザー辞書型式を指定できます。  
 + 辞書型式のどのオプション(-s,-n,-u)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
 + 重複チェックは、品詞ID、読み、表記の組み合わせで行っています。
 ユーザー辞書型式への変換は、品詞IDが異なっても、同じ品詞名になりえるので、重複が残る場合があります。
@@ -35,7 +35,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -dオプションでタブ区切りにも対応できます。  
 読み込みにつかっているcsvクレートで用いるデリミタを指定できます。
 ```
-Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-w <word-class-numbers>] [-C <cost-index>] [-d <delimiter>] [-D]
+Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-M] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-w <word-class-numbers>] [-C <cost-index>] [-d <delimiter>] [-D]
 
 Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (Mozc辞書型式への変換プログラム)
 
@@ -46,6 +46,8 @@ Options:
   -s, --sudachi     target SudachiDict
   -n, --neologd     target NEologd dictionary
   -u, --utdict      target UT dictionary
+  -M, --mozcuserdict
+                    target Mozc User Dictionary
   -p, --places      include place names (地名を含める)
   -S, --symbols     include symbols (記号を含める)
   -P, --pronunciation-index
@@ -190,17 +192,19 @@ dict-to-mozc -U -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv 
 ### Ut Dictionaryの例
 https://github.com/utuhiro78/merge-ut-dictionaries
 ```sh
+# 現在、品詞IDが0とされているので、0の場合には普通名詞と判定します。
 # 1843が名詞,一般のid.defの取得
 curl -L -o id2.def https://github.com/google/mozc/raw/8121eb870b66f26256995b42f069c9f4a8788953/src/data/dictionary_oss/id.def
 # 例として、cannaのデータを取得
-curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/refs/heads/main/mozcdic-ut-alt-cannadic.txt.tar.bz2
-tar xf mozcdic-ut-alt-cannadic.txt.tar.bz2
+curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/refs/heads/main/mozcdic-ut-alt-cannadic.txt.bz2
+bzip2 -d mozcdic-ut-alt-cannadic.txt.bz2
 # ユーザー辞書型式への変換
 dict-to-mozc -U -u -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
+# Mozcユーザー辞書型式からシステム辞書型式への変換も加えたので、下記startideさんのスクリプトでcanna型式をMozcユーザー辞書型式に変換してから、dict-to-mozcでシステ厶辞書型式へ変換すれば品詞情報も、それなりに残せます。
 
 # 例としてskk jisyo
-curl -LO https://github.com/utuhiro78/mozcdic-ut-skk-jisyo/raw/refs/heads/main/mozcdic-ut-skk-jisyo.txt.tar.bz2
-tar xf mozcdic-ut-skk-jisyo.txt.tar.bz2
+curl -LO https://github.com/utuhiro78/mozcdic-ut-skk-jisyo/raw/refs/heads/main/mozcdic-ut-skk-jisyo.txt.bz2
+bzip2 -d mozcdic-ut-skk-jisyo.txt.bz2
 # ユーザー辞書型式への変換(id.defは最新のものでOK)
 dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.txt
 ```
