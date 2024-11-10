@@ -1311,12 +1311,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
     pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         let args: Vec<String> = std::env::args().collect();
+        // 引数がない場合は、arghのヘルプメッセージを表示
         // --helpまたは-hが明示的に指定された場合、arghのヘルプメッセージを表示
-        if args.len() > 1 && (args.contains(&"--help".to_string()) || args.contains(&"-h".to_string())) {
-            print_help();
-            process::exit(1);
-        } else if args.len() <= 1 {
-            // 引数がない場合も、arghのヘルプメッセージを表示
+        if args.len() <= 1 || args.contains(&"--help".to_string()) || args.contains(&"-h".to_string()) {
             print_help();
             process::exit(1);
         }
