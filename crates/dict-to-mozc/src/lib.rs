@@ -573,7 +573,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     static KANA_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[(ぁ-ゖ)ゐゑゐ゙ゑ゙(ァ-ヺ)ー・゛゜]+$").unwrap());
     //static START_SUUJI_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(?:\d|￥\d|¥\d|第\d)+").unwrap());
     static START_SUUJI_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d|￥\d|¥\d|第\d)+").unwrap());
-    //static EISUU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z0-9' ]+$").unwrap());
     static KIGOU_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z' ]+$").unwrap());
     // 地名チェックに用いる日本語判定
     // 漢字、ひらがな、カタカナから始まる単語を日本語とみなす。
@@ -590,11 +589,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     fn is_start_suuji(str: &str) -> bool {
         START_SUUJI_CHECK.is_match(&str)
     }
-    /*
-       fn is_eisuu(str: &str) -> bool {
-       EISUU_CHECK.is_match(&str)
-       }
-       */
+
     fn is_kigou(str: &str) -> bool {
         KIGOU_CHECK.is_match(&str)
     }
@@ -603,15 +598,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         JAPANESE_CHECK.is_match(&str)
     }
 
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-    enum DictionaryType {
-        Default,
-        Sudachi,
-        Neologd,
-        UtDict,
-        MozcUserDict,
-    }
 
     #[derive(Debug)]
     struct DictValues<'a> {
@@ -801,12 +787,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
         parts.join(",")
     }
-    /*
-       fn process_utdict_word_class(parts: &[&str]) -> String {
-       let processed = parts.join(",");
-       processed
-       }
-       */
     fn process_mozcuserdict_word_class(parts: &[&str]) -> String {
         let processed = parts.join("");
         processed
@@ -1040,17 +1020,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         _processor: &dyn DictionaryProcessor,
         id_def_path: &Path,
         dict_data: &mut DictionaryData,
-        dict_type: DictionaryType,
         _args: &Config,
     ) -> ioResult<()> {
-        let processor: Box<dyn DictionaryProcessor> = match dict_type {
-            DictionaryType::Default => Box::new(DefaultProcessor),
-            DictionaryType::Sudachi => Box::new(SudachiProcessor),
-            DictionaryType::Neologd => Box::new(NeologdProcessor),
-            DictionaryType::UtDict => Box::new(UtDictProcessor),
-            DictionaryType::MozcUserDict => Box::new(MozcUserDictProcessor),
-        };
-
         let (mut _id_def, mut _default_noun_id) = read_id_def(&id_def_path)?;
         let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
         let mut mapping = create_word_class_mapping();
@@ -1091,9 +1062,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 Err(_err) => continue,
                 Ok(record) => {
                     let data = record;
-                    if processor.should_skip(&mut _dict_values, &data, &_args) { continue };
-                    if processor.word_class_analyze(&mut _dict_values, &data, &_args) {
-                        add_dict_data(&*processor, &data, &mut _dict_values, dict_data, &_args);
+                    if _processor.should_skip(&mut _dict_values, &data, &_args) { continue };
+                    if _processor.word_class_analyze(&mut _dict_values, &data, &_args) {
+                        add_dict_data(&*_processor, &data, &mut _dict_values, dict_data, &_args);
                     }
                 }
             }
@@ -1308,52 +1279,52 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             }
         }
     }
-
-    pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pub fn main() {
         let args: Vec<String> = std::env::args().collect();
-        // 引数がない場合は、arghのヘルプメッセージを表示
-        // --helpまたは-hが明示的に指定された場合、arghのヘルプメッセージを表示
+        // 引数がない場合やヘルプオプションの場合はヘルプメッセージを表示
         if args.len() <= 1 || args.contains(&"--help".to_string()) || args.contains(&"-h".to_string()) {
             print_help();
             process::exit(1);
         }
+
         let args: Args = argh::from_env();
-        let config = args.into_config()?;
+        let config = args.into_config().expect("Failed to parse config");
 
         if config.debug {
             eprintln!("{:?}", config);
         }
 
-        // CSVファイルのパスを取得
+        // CSVファイルとid.defファイルのパス取得
         let csv_path = config.csv_file.clone();
-
-        // id.defファイルのパスを取得
         let id_def_path = config.id_def.clone();
 
         // ファイルの存在チェック
         if !csv_path.exists() {
-            return Err(format!("CSV file not found at {:?}", csv_path).into());
+            eprintln!("Error: CSV file not found at {:?}", csv_path);
+            process::exit(1);
         }
 
         if !id_def_path.exists() {
-            return Err(format!("id.def file not found at {:?}", id_def_path).into());
+            eprintln!("Error: id.def file not found at {:?}", id_def_path);
+            process::exit(1);
         }
 
         let mut dict_data = DictionaryData::new();
 
         // 辞書の読み込み処理
-        if config.sudachi {
-            process_dictionary(&csv_path, &SudachiProcessor, &id_def_path, &mut dict_data, DictionaryType::Sudachi, &config)?;
+        let _processor: Box<dyn DictionaryProcessor> = if config.sudachi {
+            Box::new(SudachiProcessor)
         } else if config.neologd {
-            process_dictionary(&csv_path, &NeologdProcessor, &id_def_path, &mut dict_data, DictionaryType::Neologd, &config)?;
+            Box::new(NeologdProcessor)
         } else if config.utdict {
-            process_dictionary(&csv_path, &UtDictProcessor, &id_def_path, &mut dict_data, DictionaryType::UtDict, &config)?;
+            Box::new(UtDictProcessor)
         } else if config.mozcuserdict {
-            process_dictionary(&csv_path, &MozcUserDictProcessor, &id_def_path, &mut dict_data, DictionaryType::MozcUserDict, &config)?;
+            Box::new(MozcUserDictProcessor)
         } else {
-            process_dictionary(&csv_path, &DefaultProcessor, &id_def_path, &mut dict_data, DictionaryType::Default, &config)?;
-        }
-        dict_data.output(config.user_dict)?;
+            Box::new(DefaultProcessor)
+        };
 
-        Ok(())
+        let _ = process_dictionary(&csv_path, _processor.as_ref(), &id_def_path, &mut dict_data, &config);
+
+        let _ = dict_data.output(config.user_dict);
     }
