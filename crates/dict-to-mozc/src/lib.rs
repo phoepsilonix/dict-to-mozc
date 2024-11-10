@@ -1332,13 +1332,11 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
         // ファイルの存在チェック
         if !csv_path.exists() {
-            eprintln!("Error: CSV file not found at {:?}", csv_path);
-            return Err("CSV file not found".into());
+            return Err(format!("CSV file not found at {:?}", csv_path).into());
         }
 
         if !id_def_path.exists() {
-            eprintln!("Error: id.def file not found at {:?}", id_def_path);
-            return Err("id.def file not found".into());
+            return Err(format!("id.def file not found at {:?}", id_def_path).into());
         }
 
         let mut dict_data = DictionaryData::new();
