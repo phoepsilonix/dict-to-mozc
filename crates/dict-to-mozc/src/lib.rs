@@ -1,5 +1,6 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
 use std::path::{Path, PathBuf};
+use std::process;
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
@@ -269,7 +270,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             if match_count > best_match.0 {
                 best_match = (match_count, *id);
             }
-    }
+        }
 
         let result_id = if best_match.1 == -1 { _default_noun_id } else { best_match.1 };
         _id_def.insert(normalized_clsexpr.to_string(), result_id);
@@ -345,10 +346,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
         fn add_mapping(&mut self, user_word_class: &str, id_def_word_class: &str) {
             /*
-             if self.user_to_id_def.get(user_word_class) == None {
-                self.user_to_id_def.insert(user_word_class.to_string(), id_def_word_class.to_string());
-            }
-            */
+               if self.user_to_id_def.get(user_word_class) == None {
+               self.user_to_id_def.insert(user_word_class.to_string(), id_def_word_class.to_string());
+               }
+               */
             self.id_def_to_user.insert(id_def_word_class.to_string(), user_word_class.to_string());
         }
 
@@ -589,11 +590,11 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     fn is_start_suuji(str: &str) -> bool {
         START_SUUJI_CHECK.is_match(&str)
     }
-/*
-    fn is_eisuu(str: &str) -> bool {
-        EISUU_CHECK.is_match(&str)
-    }
-*/
+    /*
+       fn is_eisuu(str: &str) -> bool {
+       EISUU_CHECK.is_match(&str)
+       }
+       */
     fn is_kigou(str: &str) -> bool {
         KIGOU_CHECK.is_match(&str)
     }
@@ -743,7 +744,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             process_neologd_word_class(&word_class_parts)
         } else if _args.utdict {
             return *_dict_values.default_noun_id;
-        //    process_utdict_word_class(&word_class_parts)
+            //    process_utdict_word_class(&word_class_parts)
         } else if _args.mozcuserdict {
             u_search_word_class(_dict_values.mapping, _dict_values.id_def, process_mozcuserdict_word_class(&word_class_parts))
         } else {
@@ -800,12 +801,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
         parts.join(",")
     }
-/*
-    fn process_utdict_word_class(parts: &[&str]) -> String {
-        let processed = parts.join(",");
-        processed
-    }
-*/
+    /*
+       fn process_utdict_word_class(parts: &[&str]) -> String {
+       let processed = parts.join(",");
+       processed
+       }
+       */
     fn process_mozcuserdict_word_class(parts: &[&str]) -> String {
         let processed = parts.join("");
         processed
@@ -1105,6 +1106,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 #[derive(FromArgs)]
     /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
     /// (Mozc辞書型式への変換プログラム)
+    #[derive(Debug)]
     struct Args {
         /// path to the dictionary CSV file(TSV with -d $'\t' or -d TAB)
         #[argh(option, short = 'f')]
@@ -1114,7 +1116,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         #[argh(option, short = 'i')]
         id_def: Option<PathBuf>,
 
-        /// generate Mozc User Dictionary formats
+        /// generate Mozc User Dictionary formats(指定しない場合、Mozcシステム辞書型式で出力)
         #[argh(switch, short = 'U')]
         user_dict: bool,
 
@@ -1298,7 +1300,26 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    fn print_help() {
+        match Args::from_args(&["dict-to-mozc"], &["--help"]) {
+            Ok(_) => unreachable!(),
+            Err(early_exit) => {
+                eprintln!("{}", early_exit.output);
+            }
+        }
+    }
+
     pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let args: Vec<String> = std::env::args().collect();
+        // --helpまたは-hが明示的に指定された場合、arghのヘルプメッセージを表示
+        if args.len() > 1 && (args.contains(&"--help".to_string()) || args.contains(&"-h".to_string())) {
+            print_help();
+            process::exit(1);
+        } else if args.len() <= 1 {
+            // 引数がない場合も、arghのヘルプメッセージを表示
+            print_help();
+            process::exit(1);
+        }
         let args: Args = argh::from_env();
         let config = args.into_config()?;
 
