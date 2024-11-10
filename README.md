@@ -42,7 +42,8 @@ Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (
 Options:
   -f, --csv-file    path to the dictionary CSV file(TSV with -d $'\t' or -d TAB)
   -i, --id-def      path to the Mozc id.def file(Default is ./id.def)
-  -U, --user-dict   generate Mozc User Dictionary formats
+  -U, --user-dict   generate Mozc User Dictionary
+                    formats(指定しない場合、Mozcシステム辞書型式で出力)
   -s, --sudachi     target SudachiDict
   -n, --neologd     target NEologd dictionary
   -u, --utdict      target UT dictionary
