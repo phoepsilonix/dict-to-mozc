@@ -1,6 +1,7 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process;
+use std::ffi::OsString;
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
@@ -1271,27 +1272,46 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    fn print_help(cmd: &str) {
-        let early_exit = Args::from_args(&[cmd], &["--help"]).unwrap_err();
-        eprintln!("{}", early_exit.output);
+    fn filter_args() -> Vec<OsString> {
+        let args: Vec<OsString> = std::env::args_os().collect();
+
+        let mut filtered_args = vec![args[0].clone()];
+
+        let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into()];
+
+        if args.len() <= 1 || args.iter().any(|arg| help_flags.contains(arg)) {
+            filtered_args.push("--help".into());
+        } else {
+            filtered_args.extend(args.iter().skip(1).cloned());
+        }
+
+        filtered_args
     }
 
     pub fn main() {
-        let strings: Vec<String> = std::env::args_os()
-            .map(|s| s.into_string())
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap_or_else(|arg| {
-                eprintln!("Invalid utf8: {}", arg.to_string_lossy());
-                std::process::exit(1)
-            });
-        let strs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
-        // 引数がない場合やヘルプオプションの場合はヘルプメッセージを表示
-        if strs.len() <= 1 || strs[1..].contains(&"--help") || strs[1..].contains(&"-h") {
-            print_help(&strs[0]);
-            process::exit(1);
-        }
+        let filtered_args = filter_args();
+        // OsStringを&strに変換する
+        let args_slice: Vec<&str> = filtered_args
+            .iter()
+            .filter_map(|os_str| os_str.to_str())
+            .collect();
 
-        let args: Args = argh::from_env();
+        let cmd = args_slice.first().map(|&s| s).unwrap_or("");
+
+        // コマンド名のみでオプション指定がない場合、またはヘルプが指定されている場合、`--help`を渡す
+        // それ以外は、すべてのオプションを渡す。
+        let args: Args = Args::from_args(&[cmd], &args_slice[1..]).unwrap_or_else(|early_exit| {
+            std::process::exit(match early_exit.status {
+                Ok(()) => {
+                    println!("{}", early_exit.output);
+                    0
+                }
+                Err(()) => {
+                    eprintln!("{}\nRun {} --help for more information.", early_exit.output, cmd);
+                    1
+                },
+            });
+        });
         let config = args.into_config().expect("Failed to parse config");
 
         if config.debug {
