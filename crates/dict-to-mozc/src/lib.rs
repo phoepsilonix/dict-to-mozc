@@ -1271,19 +1271,23 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    fn print_help() {
-        match Args::from_args(&["dict-to-mozc"], &["--help"]) {
-            Ok(_) => unreachable!(),
-            Err(early_exit) => {
-                eprintln!("{}", early_exit.output);
-            }
-        }
+    fn print_help(cmd: &str) {
+        let early_exit = Args::from_args(&[cmd], &["--help"]).unwrap_err();
+        eprintln!("{}", early_exit.output);
     }
+
     pub fn main() {
-        let args: Vec<String> = std::env::args().collect();
+        let strings: Vec<String> = std::env::args_os()
+            .map(|s| s.into_string())
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap_or_else(|arg| {
+                eprintln!("Invalid utf8: {}", arg.to_string_lossy());
+                std::process::exit(1)
+            });
+        let strs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
         // 引数がない場合やヘルプオプションの場合はヘルプメッセージを表示
-        if args.len() <= 1 || args.contains(&"--help".to_string()) || args.contains(&"-h".to_string()) {
-            print_help();
+        if strs.len() <= 1 || strs[1..].contains(&"--help") || strs[1..].contains(&"-h") {
+            print_help(&strs[0]);
             process::exit(1);
         }
 
