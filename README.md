@@ -18,14 +18,13 @@
 id.defでの`名詞,一般,*,*,*,*,*`扱いになります。  
 Mozcの内部的な品詞IDは変わることがありますので、その時点でのMozcのid.defを用いることが大事です。ただユーザー辞書型式での出力の場合には、品詞名がそのまま出力されますので、あまり意識することはないでしょう。  
 + -s SudachiDict型式を指定します。-n Neologd,-u Ut Dictionary,-M Mozcユーザー辞書型式を指定できます。  
-+ 辞書型式のどのオプション(-s,-n,-u)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
++ 辞書型式のどのオプション(-s,-n,-u,-M)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
 + 重複チェックは、品詞ID、読み、表記の組み合わせで行っています。
 ユーザー辞書型式への変換は、品詞IDが異なっても、同じ品詞名になりえるので、重複が残る場合があります。
-+ mecab-unidic-neologd, mecab-ipadic-neologdの型式も、そのまま読み込んで、変換できます。品詞判定もそれなりにされると思います。
-+ Ut Dictionaryは、以前は、Mozcの内部型式のその時点のid.defの名詞の品詞IDを含めたデータとして配布されていましたが、現在は品詞IDは0となっているようです。品詞IDが0だと`BOS/EOS`として品詞判定していまいますが、それよりは名詞として扱ったほうが無難でしょうから、名詞判定にしています。
++ Ut Dictionaryは、その時点のid.defの名詞の品詞IDを含めたデータとして以前は配布されていましたが、現在は品詞IDは0となっているようです。品詞IDが0だと`BOS/EOS`として品詞判定していまいますが、それよりは名詞として扱ったほうが無難でしょうから、名詞判定にしています。
 + -pオプションを指定すると、出力データに地名も含めます。  
 地域、地名として、分類されているデータへの扱いです。  
-ただし、SudachiDictの英語名の地名は、オプション指定しなくても、そのまま出力されます。
+ただし日本語以外の地名は、オプション指定しなくても、そのまま出力されます。
 + -Sオプションは、出力に記号を含めます。  
 記号、キゴウ、空白として、分類されているデータへの扱いです。  
 キゴウの読みで、大量の類似のデータがあるため、それらを標準では対象外にしています。
@@ -94,7 +93,7 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 # ユーザー辞書型式への変換
 ./target/release/dict-to-mozc -U -i ./id.def -f test.csv -P 11 -N 4 -W 5 -C 3 > user_dict.txt
 ```
--s,-n,-uオプションの、フィールドの扱いは、下記オプションと同等です。
+-s,-n,-u,-Mオプションの、フィールドの扱いは、下記オプションと同等です。
 ```
 # SudachiDict
 -s -P 11 -N 12 -W 5 -w 6 -C 3
@@ -112,13 +111,13 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 ### ダウンロード
 https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 ```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.0/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
 tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
 ls -l ./dict-to-mozc
 cp ./dict-to-mozc /usr/local/bin/
 ```
 ```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.3.1/dict-to-mozc-x86_64-unknown-linux-musl.tar.gz
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.0/dict-to-mozc-x86_64-unknown-linux-musl.tar.gz
 tar xf dict-to-mozc-x86_64-unknown-linux-musl.tar.gz --strip-components=1
 ls -l ./dict-to-mozc
 cp ./dict-to-mozc /usr/local/bin/
@@ -233,7 +232,7 @@ SudachiDictをユーザー辞書形式へ変換したものと、Neologdのunidi
 
 下記サイトでMozcのシステム辞書として、SudachiDict[^6]とMeCab-unidic-NEologd[^7],MeCab-ipadic-NEologd[^8]を組み込んだものを用意しています。  
 [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)[^2]  
-[ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch)[^3]  
+[ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch/releases)[^3]  
 
 タグに```with-jp-dict```がついているものが、SudachiDictやMeCab-unidic-neologd、MeCab-ipadic-neolodのデータをシステム辞書に組み込んだパッケージです。
 
@@ -292,7 +291,7 @@ ls -l user_dict-*.txt
 
 [^1]: https://github.com/phoepsilonix/dict-to-mozc
 [^2]: [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)
-[^3]: [ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch)
+[^3]: [ArchLinux and ManjaroLinux向け Mozcパッケージ](https://github.com/phoepsilonix/mozc-arch/releases)
 [^4]: [userdic - 日本語入力ユーザー辞書変換スクリプト](https://startide.jp/comp/im/userdic/)
 [^5]: [samunohito/kanaria: このライブラリは、ひらがな・カタカナ、半角・全角の相互変換や判別を始めとした機能を提供します。](https://github.com/samunohito/kanaria)
 [^6]: https://github.com/WorksApplications/SudachiDict
