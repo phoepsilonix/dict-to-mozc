@@ -883,8 +883,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
             let data = &record;
-            let mut word_class_id = data[_args.word_class_index].parse::<i32>().unwrap();
-            if word_class_id == -1 || word_class_id == 0 {
+            let word_class = &data[_args.word_class_index];
+            let mut word_class_id = word_class.parse::<i32>().unwrap();
+            if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
                 word_class_id = *_dict_values.default_noun_id;
             }
             let mut _pronunciation: String = match record.get(_args.pronunciation_index) {

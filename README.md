@@ -21,7 +21,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + 辞書型式のどのオプション(-s,-n,-u,-M)も指定しない場合にも、若干、SudachiDictとスキップ条件を変更した基準で、データの変換を行います。
 + 重複チェックは、品詞ID、読み、表記の組み合わせで行っています。
 ユーザー辞書型式への変換は、品詞IDが異なっても、同じ品詞名になりえるので、重複が残る場合があります。
-+ Ut Dictionaryは、その時点のid.defの名詞の品詞IDを含めたデータとして以前は配布されていましたが、現在は品詞IDは0となっているようです。品詞IDが0だと`BOS/EOS`として品詞判定していまいますが、それよりは名詞として扱ったほうが無難でしょうから、名詞判定にしています。
++ Ut Dictionaryは、その時点のid.defの名詞の品詞IDを含めたデータとして以前は配布されていましたが、現在は品詞IDは`0000`となっているようです。品詞IDを`0`と判定すると品詞を`BOS/EOS`として扱ってしまいますが、それよりは名詞として扱ったほうが無難でしょうから、名詞判定にしています。
 + -pオプションを指定すると、出力データに地名も含めます。  
 地域、地名として、分類されているデータへの扱いです。  
 ただし日本語以外の地名は、オプション指定しなくても、そのまま出力されます。
@@ -104,7 +104,7 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 # Ut Dictionary
 -u -P 0 -N 4 -W 1 -w 1 -C 3
 # Mozc User Dictionary
--M -O 0 -N 1 -W 2 -w 1 -C 3 -d $'\t'
+-M -P 0 -N 1 -W 2 -w 1 -C 3 -d $'\t'
 ```
 
 ## インストール
@@ -165,9 +165,9 @@ cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
 # rustプログラムのビルド
 cargo build --release
-# システム辞書型式への変換
+# Mozcシステム辞書型式への変換
 dict-to-mozc -s -i ./id.def -f sudachi.csv > sudachi-dict.txt
-# ユーザー辞書型式への変換
+# Mozcユーザー辞書型式への変換
 dict-to-mozc -U -s -i ./id.def -f sudachi.csv > sudachi-userdict.txt
 ```
 
@@ -178,38 +178,38 @@ https://github.com/neologd/mecab-ipadic-neologd/
 # unidic
 curl -LO https://github.com/phoepsilonix/mecab-unidic-neologd/raw/refs/heads/master/seed/mecab-unidic-user-dict-seed.20200910.csv.xz
 xz -k -d mecab-unidic-user-dict-seed.20200910.csv.xz
-# システム辞書型式への変換
+# Mozcシステム辞書型式への変換
 dict-to-mozc -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv > mecab-unidic-dict.txt
-# ユーザー辞書型式への変換
+# Mozcユーザー辞書型式への変換
 dict-to-mozc -U -n -i ./id.def -f mecab-unidic-user-dict-seed.20200910.csv > mecab-unidic-userdict.txt
 # ipadic
 curl -LO https://github.com/phoepsilonix/mecab-ipadic-neologd/raw/refs/heads/master/seed/mecab-user-dict-seed.20200910.csv.xz
 xz -k -d mecab-user-dict-seed.20200910.csv.xz
-# システム辞書型式への変換
+# Mozcシステム辞書型式への変換
 dict-to-mozc -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-ipadic-dict.txt
-# ユーザー辞書型式への変換
+# Mozcユーザー辞書型式への変換
 dict-to-mozc -U -n -P 12 -N 10 -i ./id.def -f mecab-user-dict-seed.20200910.csv > mecab-ipadic-userdict.txt
 ```
 
 ### Ut Dictionaryの例
 https://github.com/utuhiro78/merge-ut-dictionaries
 ```sh
-# 現在、品詞IDが0とされているので、0の場合には普通名詞と判定します。
+# 現在、品詞IDが`0000`とされているので、`0000`の場合には普通名詞と判定します。
 # 1843が名詞,一般のid.defの取得
 curl -L -o id2.def https://github.com/google/mozc/raw/8121eb870b66f26256995b42f069c9f4a8788953/src/data/dictionary_oss/id.def
 # 例として、cannaのデータを取得
 curl -LO https://github.com/utuhiro78/mozcdic-ut-alt-cannadic/raw/b35f78867c2853b552851f6ebba975860d938b55/mozcdic-ut-alt-cannadic.txt.tar.bz2
 tar xf mozcdic-ut-alt-cannadic.txt.tar.bz2
-# ユーザー辞書型式への変換
+# Mozcユーザー辞書型式への変換
 dict-to-mozc -U -u -i ./id2.def -f mozcdic-ut-alt-cannadic.txt > canna-userdict.txt
-# Mozcユーザー辞書型式からシステム辞書型式への変換も加えたので、下記startideさんのスクリプトでcanna型式をMozcユーザー辞書型式に変換してから、dict-to-mozcでシステ厶辞書型式へ変換すれば品詞情報も、それなりに残せます。
-# また次のレポジトリでは、startideさんの品詞情報の対応表を元にした品詞判定を加えた変換スクリプトで、canna型式の辞書をMozcユーザー辞書型式に変換したあと、dict-to-mozcでシステム辞書型式に変換することで、品詞情報をある程度残しています。
+# Mozcユーザー辞書型式からMozcシステム辞書型式への変換も加えたので、下記startideさんのスクリプトでcanna型式をMozcユーザー辞書型式に変換してから、dict-to-mozcでMozcシステ厶辞書型式へ変換すれば品詞情報も、それなりに残せます。
+# また次のレポジトリでは、startideさんの品詞情報の対応表を元にした品詞判定を加えた変換スクリプトで、canna型式の辞書をMozcユーザー辞書型式に変換したあと、dict-to-mozcでMozcシステム辞書型式に変換することで、品詞情報をある程度残しています。
 # https://github.com/phoepsilonix/mozcdic-ut-alt-cannadic
 
 # 例としてskk jisyo
 curl -LO https://github.com/utuhiro78/mozcdic-ut-skk-jisyo/raw/refs/heads/main/mozcdic-ut-skk-jisyo.txt.bz2
 bzip2 -d mozcdic-ut-skk-jisyo.txt.bz2
-# ユーザー辞書型式への変換(id.defは最新のものでOK)
+# Mozcユーザー辞書型式への変換(id.defは最新のものでOK)
 dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.txt
 ```
 
@@ -220,7 +220,7 @@ dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.
 [csv](https://docs.rs/csv/latest/csv/)クレートで読み込んでいます。
 
 ## ユーザー辞書として
-SudachiDictをユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。  
+SudachiDictをMozcユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのMozcユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。(Mozcのid.defに依存せずに品詞情報を含めた対応表として残せることが利点です。)
 [SudachiDict and Neologd Mozc ユーザー辞書](https://github.com/phoepsilonix/mozc-user-dictionary)
 
 1. あまり巨大なファイルを取り込むと重くなるかもしれません。
