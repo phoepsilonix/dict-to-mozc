@@ -31,6 +31,10 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact_name: dict-to-mozc-aarch64-linux.tar.xz
             asset_name: dict-to-mozc-aarch64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-pc-windows-gnu
+            artifact_name: dict-to-mozc-x86_64-pc-windows-gnu.zip
+            asset_name: dict-to-mozc-x86_64-pc-windows-gnu
 
     runs-on: ${{ matrix.os }}
     env:
@@ -70,13 +74,17 @@ jobs:
         run: |
           which rustup && rustup update || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y || rustup update
           echo "Running Rust program for ${{ matrix.os }}"
+          curl -Lo mold.tar.gz https://github.com/rui314/mold/releases/download/v2.34.1/mold-2.34.1-x86_64-linux.tar.gz
+          sudo tar -xf mold.tar.gz --strip-component=1 -C /usr/local/
 
       - name: Cross build with all features
         run: |
           which rustc
           source $HOME/.cargo/env || $PATH=$HOME/.cargo/bin:$PATH
           which rustc
+          rm $HOME/.cargo/config* -f
           cargo install cross
+          cp config.toml $HOME/.cargo/ -f
           cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
 
       - name: Build archive
@@ -86,15 +94,15 @@ jobs:
 
           dirname="$binary_name-${{ matrix.target }}"
           mkdir "$dirname"
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          if [ "${{ matrix.target }}" == "x86_64-pc-windows-gnu" ]; then
             mv "target/${{ matrix.target }}/release/$binary_name.exe" "$dirname"
           else
             mv "target/${{ matrix.target }}/release/$binary_name" "$dirname"
           fi
 
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            7z a ../"$dirname.zip" "$dirname"
-            7z l ../"$dirname.zip"
+          if [ "${{ matrix.target }}" == "x86_64-pc-windows-gnu" ]; then
+            7z a "$dirname.zip" "$dirname"
+            7z l "$dirname.zip"
             echo "ASSET=$dirname.zip" >> $GITHUB_ENV
           else
             tar -czf "$dirname.tar.gz" "$dirname"
