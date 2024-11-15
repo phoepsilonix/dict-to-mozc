@@ -85,10 +85,11 @@ mod utils {
 
     // カタカナから読みを平仮名へ
     pub(crate) fn convert_to_hiragana(text: &str) -> String {
-        let target: Vec<char> = text.chars().collect();
-        let mut pronunciation: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
-        pronunciation = pronunciation.replace("ゐ", "い").replace("ゑ", "え");
-        pronunciation
+        // 半角カタカナを全角カタカナへ
+        let yomi = UCSStr::convert(&text.chars().collect::<Vec<char>>(), ConvertType::Wide, ConvertTarget::KATAKANA);
+        // ひらがなへ
+        let hiragana: String = UCSStr::convert(&yomi, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
+        hiragana.replace("ゐ", "い").replace("ゑ", "え")
     }
 
     // Unicode Escapeの記述が含まれる場合、それを変換する。

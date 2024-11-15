@@ -2,13 +2,13 @@
 #target = "x86_64-unknown-linux-musl"
 #rustc-wrapper = "sccache"
 
-[stable]
-build-std = ["core", "compiler_builtins", "alloc", "std", "panic_abort"]
-build-std-features = ["llvm-libunwind"]
+#[stable]
+#build-std = ["core", "compiler_builtins", "alloc", "std", "panic_abort"]
+#build-std-features = ["llvm-libunwind"]
 
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc", "std", "panic_abort"]
-build-std-features = ["llvm-libunwind"]
+#build-std-features = ["llvm-libunwind"]
 
 [target.x86_64-unknown-linux-gnu]
 linker = "gcc"
@@ -38,6 +38,34 @@ rustflags = [
 "-C", "control-flow-guard=y",
 "-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
+[target.aarch64-unknown-linux-gnu]
+linker = "gcc"
+rustflags = [
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=y",
+"-C", "lto=fat",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=z",
+"-C", "control-flow-guard=y",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.aarch64-unknown-linux-musl]
+linker = "gcc"
+rustflags = [
+"-Clink-self-contained=on",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=y",
+"-C", "lto=fat",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=z",
+"-C", "control-flow-guard=y",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
 
 [target.x86_64-pc-windows-gnu]
 #linker = "clang"
@@ -54,9 +82,10 @@ rustflags = [
 ]
 
 [target.x86_64-apple-darwin]
-#linker = "clang"
+linker = "x86_64-apple-darwin22.4-clang"
+ar = "x86_64-apple-darwin22.4-ar"
 rustflags = [
-"-C", "strip=symbols",
+"-C", "strip=none",
 "-C", "no-redzone=y",
 "-C", "overflow-checks=y",
 "-C", "lto=fat",
@@ -64,13 +93,14 @@ rustflags = [
 "-C", "codegen-units=1",
 "-C", "opt-level=z",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie",
 ]
 
 [target.aarch64-apple-darwin]
-#linker = "clang"
+linker = "aarch64-apple-darwin22.4-clang"
+ar = "aarch64-apple-darwin22.4-ar"
 rustflags = [
-"-C", "strip=symbols",
+"-C", "strip=none",
 "-C", "no-redzone=y",
 "-C", "overflow-checks=y",
 "-C", "lto=fat",
@@ -78,5 +108,5 @@ rustflags = [
 "-C", "codegen-units=1",
 "-C", "opt-level=z",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie",
 ]

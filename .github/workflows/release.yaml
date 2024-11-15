@@ -35,6 +35,14 @@ jobs:
             target: x86_64-pc-windows-gnu
             artifact_name: dict-to-mozc-x86_64-pc-windows-gnu.zip
             asset_name: dict-to-mozc-x86_64-pc-windows-gnu
+          - os: ubuntu-latest
+            target: x86_64-apple-darwin
+            artifact_name: md2html-x86_64-x86_64-apple-darwin.tar.xz
+            asset_name: md2html-x86_64-x86_64-apple-darwin
+          - os: ubuntu-latest
+            target: aarch64-apple-darwin
+            artifact_name: md2html-aarch64-apple-darwin.tar.xz
+            asset_name: md2html-aarch64-x86_64-apple-darwin
 
     runs-on: ${{ matrix.os }}
     env:
@@ -71,6 +79,7 @@ jobs:
           restore-keys: ${{ matrix.os }}-dict-to-mozc-${{ matrix.target }}-
 
       - name: Install stable toolchain
+        shell: bash
         run: |
           which rustup && rustup update || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y || rustup update
           echo "Running Rust program for ${{ matrix.os }}"
@@ -82,10 +91,27 @@ jobs:
           which rustc
           source $HOME/.cargo/env || $PATH=$HOME/.cargo/bin:$PATH
           which rustc
-          rm $HOME/.cargo/config* -f
-          cargo install cross
-          cp config.toml $HOME/.cargo/ -f
-          cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
+          if [[ ${{ matrix.target }} =~ apple ]];then
+            docker run \
+              --volume "${PWD}":/root/src \
+              --workdir /root/src \
+              --name rust-builder \
+              -d joseluisq/rust-linux-darwin-builder:1.82.0 \
+              sleep infinity
+            docker exec rust-builder rm /root/.cargo/config -f
+            docker cp config.toml rust-builder:/root/.cargo/config.toml
+            docker exec rust-builder sh -c "cargo build --release --target ${{ matrix.target }}"
+            docker exec rust-builder ${{ matrix.target }}22.4-strip -v target/${{ matrix.target }}/release/dict-to-mozc
+            docker stop rust-builder
+            docker rm rust-builder
+            sudo chown $USER:$USER -R ${PWD}/*
+          else
+            rm $HOME/.cargo/config* -f
+            cargo install cross
+            cp config.toml $HOME/.cargo/ -f
+            cp Cross.toml $HOME/.cargo/ -f
+            cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
+          fi
 
       - name: Build archive
         shell: bash
