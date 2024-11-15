@@ -10,7 +10,7 @@ license.workspace = true
 [dependencies]
 argh = { workspace = true }
 csv = { workspace = true }
-kanaria = { workspace = true }
+unicode-normalization = { workspace = true }
 lazy-regex = { workspace = true }
 indexmap = { workspace = true }
 hashbrown = { workspace = true }

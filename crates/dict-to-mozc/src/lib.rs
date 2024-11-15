@@ -9,9 +9,6 @@ use lazy_regex::Lazy;
 use csv::{ReaderBuilder, Error as CsvError};
 use csv::StringRecord;
 
-use kanaria::string::{UCSStr, ConvertType};
-use kanaria::utils::ConvertTarget;
-
 use crate::utils::convert_to_hiragana;
 use crate::utils::unicode_escape_to_char;
 use crate::utils::adjust_cost;
@@ -83,12 +80,22 @@ where
 mod utils {
     use super::*;
 
+    use unicode_normalization::UnicodeNormalization;
     // カタカナから読みを平仮名へ
     pub(crate) fn convert_to_hiragana(text: &str) -> String {
-        let target: Vec<char> = text.chars().collect();
-        let mut pronunciation: String = UCSStr::convert(&target, ConvertType::Hiragana, ConvertTarget::ALL).iter().collect();
-        pronunciation = pronunciation.replace("ゐ", "い").replace("ゑ", "え");
-        pronunciation
+        text.nfc()
+            .map(|c| {
+                match c {
+                    'ァ'..='ヶ' => char::from_u32(c as u32 - 0x60).unwrap_or(c),
+                    'ヷ'..='ヺ' => char::from_u32(c as u32 - 0x62).unwrap_or(c),
+                    'ヰ' => 'ゐ',
+                    'ヱ' => 'ゑ',
+                    'ヲ' => 'を',
+                    'ヴ' => 'ゔ',
+                    _ => c,
+                }
+            })
+        .collect::<String>()
     }
 
     // Unicode Escapeの記述が含まれる場合、それを変換する。

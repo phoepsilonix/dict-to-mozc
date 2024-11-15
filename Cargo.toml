@@ -18,7 +18,7 @@ license = "MIT"
 lib-dict-to-mozc = { path = "./crates/dict-to-mozc" }
 argh = { version = "0.1.12", default-features = false }
 csv = { version = "1.3.0", default-features = true }
-kanaria = { git = "https://github.com/phoepsilonix/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8", version = "0.2.1", default-features = false }
+unicode-normalization = "0.1.24"
 lazy-regex = { version = "3.3.0", default-features = false, features = ["unicode"] }
 
 indexmap = { version = "2.6.0", default-features = false, features = [] }
