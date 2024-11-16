@@ -85,6 +85,8 @@ jobs:
           echo "Running Rust program for ${{ matrix.os }}"
           curl -Lo mold.tar.gz https://github.com/rui314/mold/releases/download/v2.34.1/mold-2.34.1-x86_64-linux.tar.gz
           sudo tar -xf mold.tar.gz --strip-component=1 -C /usr/local/
+          rustup install nightly
+          rustup target add ${{ matrix.target }} --toolchain nightly
 
       - name: Cross build with all features
         run: |
@@ -100,7 +102,10 @@ jobs:
               sleep infinity
             docker exec rust-builder rm /root/.cargo/config -f
             docker cp config.toml rust-builder:/root/.cargo/config.toml
-            docker exec rust-builder sh -c "cargo build --release --target ${{ matrix.target }}"
+            docker exec rust-builder rustup install nightly
+            docker exec rust-builder rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+            docker exec rust-builder rustup target add ${{ matrix.target }} --toolchain nightly
+            docker exec rust-builder sh -c "cargo +nightly build --release --target ${{ matrix.target }} || cargo +stable build --release --target ${{ matrix.target }}"
             docker exec rust-builder ${{ matrix.target }}22.4-strip -v target/${{ matrix.target }}/release/dict-to-mozc
             docker stop rust-builder
             docker rm rust-builder
@@ -108,8 +113,10 @@ jobs:
           else
             rm $HOME/.cargo/config* -f
             cargo install cross
+            rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
             cp config.toml $HOME/.cargo/ -f
             cp Cross.toml $HOME/.cargo/ -f
+            rustup run nightly cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml || \
             cross build --release --target ${{ matrix.target }} --all-features --verbose --manifest-path ./Cargo.toml
           fi
 

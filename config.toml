@@ -1,14 +1,10 @@
 [build]
-#target = "x86_64-unknown-linux-musl"
+target = "x86_64-unknown-linux-gnu"
 #rustc-wrapper = "sccache"
 
-#[stable]
-#build-std = ["core", "compiler_builtins", "alloc", "std", "panic_abort"]
-#build-std-features = ["llvm-libunwind"]
-
 [unstable]
-build-std = ["core", "compiler_builtins", "alloc", "std", "panic_abort"]
-#build-std-features = ["llvm-libunwind"]
+build-std = ["std", "panic_abort"]
+build-std-features = ["panic_immediate_abort"]
 
 [target.x86_64-unknown-linux-gnu]
 linker = "gcc"
@@ -19,9 +15,9 @@ rustflags = [
 "-C", "lto=fat",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 
 [target.x86_64-unknown-linux-musl]
@@ -36,7 +32,7 @@ rustflags = [
 "-C", "codegen-units=1",
 "-C", "opt-level=z",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 [target.aarch64-unknown-linux-gnu]
 linker = "gcc"
@@ -47,9 +43,9 @@ rustflags = [
 "-C", "lto=fat",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 
 [target.aarch64-unknown-linux-musl]
@@ -62,9 +58,9 @@ rustflags = [
 "-C", "lto=fat",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 
 [target.x86_64-pc-windows-gnu]
@@ -76,9 +72,9 @@ rustflags = [
 "-C", "lto=fat",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
 "-C", "control-flow-guard=y",
-"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,-O1 -Wl,--sort-common -Wl,--as-needed",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed",
 ]
 
 [target.x86_64-apple-darwin]
@@ -91,7 +87,7 @@ rustflags = [
 "-C", "lto=fat",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
 "-C", "control-flow-guard=y",
 "-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie",
 ]
@@ -106,7 +102,7 @@ rustflags = [
 "-C", "lto=fat",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
 "-C", "control-flow-guard=y",
 "-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie",
 ]
