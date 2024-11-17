@@ -5,7 +5,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.5.3"
+version = "0.5.4"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2021"
 rust-version = "1.82"
@@ -25,6 +25,7 @@ indexmap = { version = "2.6.0", default-features = false, features = [] }
 hashbrown = { version = "0.15.0", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
 
 [profile.release]
+debug = true
 strip = true
 lto = true
 overflow-checks = true
