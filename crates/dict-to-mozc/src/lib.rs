@@ -1279,7 +1279,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
         let mut filtered_args = vec![args[0].clone()];
 
-        let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into()];
+        let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into()];
 
         if args.len() <= 1 || args.iter().any(|arg| help_flags.contains(arg)) {
             filtered_args.push("--help".into());
