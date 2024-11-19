@@ -5,7 +5,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.5.4"
+version = "0.5.5"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2021"
 rust-version = "1.82"
@@ -27,8 +27,9 @@ hashbrown = { version = "0.15.0", default-features = false, features = [ "alloca
 [profile.release]
 debug = true
 strip = true
-lto = true
-overflow-checks = true
+overflow-checks = false
+opt-level = 3
+lto = "fat"
 codegen-units = 1
 panic = "abort"
 
