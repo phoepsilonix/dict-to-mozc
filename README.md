@@ -130,6 +130,12 @@ cargo binstallをインストールしている場合。
 cargo binstall --git https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
 ```
 
+### cargo-distで生成されたスクリプトでインストール
+v0.5.6以降
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/phoepsilonix/dict-to-mozc/releases/latest/download/dict-to-mozc-installer.sh | sh
+```
+
 ### ソースからビルド＆インストール
 Rustはあらかじめインストールしておいてください。  
 `$HOME/.cargo/bin`にインストールされます。
