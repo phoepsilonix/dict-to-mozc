@@ -1,0 +1,18 @@
+- name: Install armv7 and aarch64 Linkers
+  if: runner.os == 'Linux'
+  shell: sh
+  run: |
+    case "${{ join(matrix.targets) }}" in
+      *aarch64*)
+        sudo apt-get install gcc-aarch64-linux-gnu -y
+        ;;
+      *arm*)
+        sudo apt-get install gcc-arm-linux-gnueabihf -y
+        ;;
+    esac
+
+- name: Install rust and rust-src
+  shell: sh
+  run: |
+    rustup update nightly
+    rustup component add rust-src --toolchain nightly

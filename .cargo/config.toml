@@ -7,7 +7,7 @@ build-std = ["std", "panic_abort"]
 build-std-features = ["panic_immediate_abort"]
 
 [target.x86_64-unknown-linux-gnu]
-linker = "gcc"
+#linker = "gcc"
 rustflags = [
 "-C", "panic=abort",
 "-C", "strip=symbols",
@@ -22,7 +22,7 @@ rustflags = [
 ]
 
 [target.x86_64-unknown-linux-musl]
-linker = "gcc"
+#linker = "gcc"
 rustflags = [
 "-Clink-self-contained=on",
 "-C", "panic=abort",
@@ -37,7 +37,8 @@ rustflags = [
 "-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 [target.aarch64-unknown-linux-gnu]
-linker = "gcc"
+linker = "aarch64-linux-gnu-gcc"
+#linker = "gcc"
 rustflags = [
 "-C", "panic=abort",
 "-C", "strip=symbols",
@@ -52,7 +53,39 @@ rustflags = [
 ]
 
 [target.aarch64-unknown-linux-musl]
-linker = "gcc"
+linker = "aarch64-linux-gnu-gcc"
+#linker = "gcc"
+rustflags = [
+"-Clink-self-contained=on",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "lto=fat",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+rustflags = [
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "lto=fat",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.armv7-unknown-linux-musleabihf]
+linker = "arm-linux-gnueabihf-gcc"
 rustflags = [
 "-Clink-self-contained=on",
 "-C", "panic=abort",
@@ -83,11 +116,11 @@ rustflags = [
 ]
 
 [target.x86_64-apple-darwin]
-linker = "x86_64-apple-darwin22.4-clang"
-ar = "x86_64-apple-darwin22.4-ar"
+#linker = "x86_64-apple-darwin22.4-clang"
+#ar = "x86_64-apple-darwin22.4-ar"
 rustflags = [
 "-C", "panic=abort",
-"-C", "strip=none",
+"-C", "strip=symbols",
 "-C", "no-redzone=y",
 "-C", "overflow-checks=n",
 "-C", "control-flow-guard=y",
@@ -99,11 +132,11 @@ rustflags = [
 ]
 
 [target.aarch64-apple-darwin]
-linker = "aarch64-apple-darwin22.4-clang"
-ar = "aarch64-apple-darwin22.4-ar"
+#linker = "aarch64-apple-darwin22.4-clang"
+#ar = "aarch64-apple-darwin22.4-ar"
 rustflags = [
 "-C", "panic=abort",
-"-C", "strip=none",
+"-C", "strip=symbols",
 "-C", "no-redzone=y",
 "-C", "overflow-checks=n",
 "-C", "control-flow-guard=y",
