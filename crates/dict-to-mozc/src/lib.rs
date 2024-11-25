@@ -191,9 +191,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     }
     let normalized_clsexpr = expr.join(",");
 
-    if let Some(r) = _id_def.iter().find(|(key, _)| *key == &normalized_clsexpr) {
-        class_map.insert(normalized_clsexpr.to_string(), *r.1);
-        return *r.1;
+    if let Some((_, id)) = _id_def.iter().find(|(key, _)| *key == &normalized_clsexpr) {
+        class_map.insert(normalized_clsexpr.to_string(), *id);
+        return *id;
     }
 
     let mut best_match = (0, -1); // (マッチ数, ID)
