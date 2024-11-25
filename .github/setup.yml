@@ -14,5 +14,6 @@
 - name: Install rust and rust-src
   shell: sh
   run: |
+    sed -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
     rustup update nightly
     rustup component add rust-src --toolchain nightly

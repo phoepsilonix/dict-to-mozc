@@ -131,6 +131,7 @@ jobs:
         shell: "sh"
       - name: "Install rust and rust-src"
         run: |
+          sed -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
           rustup update nightly
           rustup component add rust-src --toolchain nightly
         shell: "sh"
