@@ -186,6 +186,7 @@ const COST_ADJUSTMENT: i32 = 10;
 
 fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String, i32>, _default_noun_id: i32) -> i32 {
     let mut expr: Vec<&str> = clsexpr.split(',').collect();
+    // id.defの品詞文字列は7フィールド
     while expr.len() < 7 {
         expr.push("*");
     }
