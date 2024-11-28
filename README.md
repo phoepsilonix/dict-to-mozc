@@ -111,13 +111,13 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 ### ダウンロード
 https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 ```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.0/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.7/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
 tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
 ls -l ./dict-to-mozc
 cp ./dict-to-mozc /usr/local/bin/
 ```
 ```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.0/dict-to-mozc-x86_64-unknown-linux-musl.tar.gz
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.7/dict-to-mozc-x86_64-unknown-linux-musl.tar.gz
 tar xf dict-to-mozc-x86_64-unknown-linux-musl.tar.gz --strip-components=1
 ls -l ./dict-to-mozc
 cp ./dict-to-mozc /usr/local/bin/
@@ -226,7 +226,7 @@ dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.
 [csv](https://docs.rs/csv/latest/csv/)クレートで読み込んでいます。
 
 ## ユーザー辞書として
-SudachiDictをMozcユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのMozcユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。(Mozcのid.defに依存せずに品詞情報を含めた対応表として残せることが利点です。)
+SudachiDictをMozcユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのMozcユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。(Mozcのid.defに依存せずに品詞情報を含めた対応表として残せることが利点です。)  
 [SudachiDict and Neologd Mozc ユーザー辞書](https://github.com/phoepsilonix/mozc-user-dictionary)
 
 1. あまり巨大なファイルを取り込むと重くなるかもしれません。
