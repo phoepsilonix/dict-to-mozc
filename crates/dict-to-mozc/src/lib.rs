@@ -27,6 +27,12 @@ use hashbrown::DefaultHashBuilder as RandomState;
 
 pub struct MyIndexMap<K, V, S = RandomState>(IndexMap<K, V, S>);
 
+impl<K, V> Default for MyIndexMap<K, V, RandomState> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K, V> MyIndexMap<K, V, RandomState> {
     pub fn new() -> Self {
         Self(IndexMap::with_hasher(RandomState::default()))
@@ -165,8 +171,8 @@ impl DictionaryData {
                 if !self.entries.contains_key(&entry.key) {
                     writeln!(
                         writer,
-                        "{}\t{}\t{}\t{}",
-                        entry.key.pronunciation, entry.key.notation, entry.word_class, "".to_string()
+                        "{}\t{}\t{}\t",
+                        entry.key.pronunciation, entry.key.notation, entry.word_class
                     )?;
                 }
             }
@@ -230,55 +236,54 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             } else {
                 // 部分一致をチェック
                 let mut found_partial_match = false;
-                for i in key_idx..key_parts.len() {
-                    if expr[expr_idx] == key_parts[i] {
-                        //if expr[expr_idx].contains(key_parts[i]) || key_parts[i].contains(expr[expr_idx]) {
+                for (i, key_part) in key_parts.iter().enumerate().skip(key_idx) {
+                    if expr[expr_idx] == *key_part {
                         match_count += 1;
                         key_idx = i + 1;
                         found_partial_match = true;
                         break;
-                        }
                     }
-                    if !found_partial_match {
+                }
+                if !found_partial_match {
+                    break;
+                }
+                expr_idx += 1;
+            }
+        }
+        // 動詞の特殊処理
+        if expr[0] == "動詞" {
+            let verb_type = expr.get(4).unwrap_or(&"");
+            let key_verb_type = key_parts.get(4).unwrap_or(&"");
+
+            if *key_verb_type != "一般" && verb_type == key_verb_type {
+                match_count += 2; // 完全一致の場合、より高いスコアを与える
+            } else {
+                let verb_categories = ["五段", "一段", "四段", "カ変", "サ変", "ラ変"];
+                let verb_rows = ["カ行", "ガ行", "サ行", "タ行", "ナ行", "バ行", "マ行", "ラ行", "ワ行"];
+                for category in verb_categories.iter() {
+                    if verb_type.contains(category) && key_verb_type.contains(category) {
+                        match_count += 1;
                         break;
                     }
-                    expr_idx += 1;
                 }
-            }
-            // 動詞の特殊処理
-            if expr[0] == "動詞" {
-                let verb_type = expr.get(4).unwrap_or(&"");
-                let key_verb_type = key_parts.get(4).unwrap_or(&"");
-
-                if *key_verb_type != "一般" && verb_type == key_verb_type {
-                    match_count += 2; // 完全一致の場合、より高いスコアを与える
-                } else {
-                    let verb_categories = ["五段", "一段", "四段", "カ変", "サ変", "ラ変"];
-                    let verb_rows = ["カ行", "ガ行", "サ行", "タ行", "ナ行", "バ行", "マ行", "ラ行", "ワ行"];
-                    for category in verb_categories.iter() {
-                        if verb_type.contains(category) && key_verb_type.contains(category) {
-                            match_count += 1;
-                            break;
-                        }
-                    }
-                    for row in verb_rows.iter() {
-                        if verb_type.contains(row) && key_verb_type.contains(row) {
-                            match_count += 1;
-                            break;
-                        }
+                for row in verb_rows.iter() {
+                    if verb_type.contains(row) && key_verb_type.contains(row) {
+                        match_count += 1;
+                        break;
                     }
                 }
-            }
-
-            if match_count > best_match.0 {
-                best_match = (match_count, *id);
             }
         }
 
-        let result_id = if best_match.1 == -1 { _default_noun_id } else { best_match.1 };
-        _id_def.insert(normalized_clsexpr.to_string(), result_id);
-        class_map.insert(normalized_clsexpr.to_string(), result_id);
-        result_id
+        if match_count > best_match.0 {
+            best_match = (match_count, *id);
+        }
+    }
+
+    let result_id = if best_match.1 == -1 { _default_noun_id } else { best_match.1 };
+    _id_def.insert(normalized_clsexpr.to_string(), result_id);
+    class_map.insert(normalized_clsexpr.to_string(), result_id);
+    result_id
     }
 
     // id.defは更新されうるので、毎回、最新のものを読み込む。
@@ -487,18 +492,16 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                     }
 
                     // 全項目のマッチングを試みる
-                    for (_i, (a, b)) in parts.iter().zip(key_parts.iter()).enumerate() {
+                    for (a, b) in parts.iter().zip(key_parts.iter()) {
                         if *b != "*" && *a == *b {
                             match_count += 1;
+                        } else if *b != "*" && (a.contains(b) || b.contains(a)) {
+                            match_count += 1;
+                            continue;
+                        } else if *b == "*" && *a == "*" {
+                            continue;
                         } else {
-                            if *b != "*" && (a.contains(b) || b.contains(a)) {
-                                match_count += 1;
-                                continue;
-                            } else if *b == "*" && *a == "*" {
-                                continue;
-                            } else {
-                                break;
-                            }
+                            break;
                         }
                     }
 
@@ -510,18 +513,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                     // 動詞の活用型のマッチング
                     if parts[0] == "動詞" {
                         let verb_type = parts.get(4).unwrap_or(&"");
-                        if verb_type.contains("五段") && key_parts.iter().any(|&k| k.contains("五段")) {
-                            match_count += 1;
-                        } else if verb_type.contains("四段") && key_parts.iter().any(|&k| k.contains("四段")) {
-                            match_count += 1;
-                        } else if verb_type.contains("一段") && key_parts.iter().any(|&k| k.contains("一段")) {
-                            match_count += 1;
-                        } else if verb_type.contains("カ変") && key_parts.iter().any(|&k| k.contains("カ変")) {
-                            match_count += 1;
-                        } else if verb_type.contains("サ変") && key_parts.iter().any(|&k| k.contains("サ変")) {
-                            match_count += 1;
-                        } else if verb_type.contains("ラ変") && key_parts.iter().any(|&k| k.contains("ラ変")) {
-                            match_count += 1;
+                        let verb_categories = ["五段", "一段", "四段", "カ変", "サ変", "ラ変"];
+                        for category in verb_categories.iter() {
+                            if verb_type.contains(category) && key_parts.iter().any(|&k| k.contains(category)) {
+                                match_count += 1;
+                                break;  // 最初にマッチしたら終了
+                            }
                         }
                     }
 
@@ -559,7 +556,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 continue;
             }
         }
-        return "".to_string();
+        "".to_string()
     }
 
     // 品詞idからユーザー辞書の品詞を判定
@@ -586,19 +583,19 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     static JAPANESE_CHECK: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[\x{3005}\x{3007}\x{303b}\x{3400}-\x{9FFF}\x{F900}-\x{FAFF}\x{20000}-\x{2FFFF}\p{Hiragana}\p{Katakana}][\x{3005}\x{3007}\x{303b}\x{3400}-\x{9FFF}\x{F900}-\x{FAFF}\x{20000}-\x{2FFFF}\p{Hiragana}\p{Katakana}\p{Lm}\p{Punct}\p{Zs}\p{Latin}\p{Number}]*$").unwrap());
 
     fn is_kana(str: &str) -> bool {
-        KANA_CHECK.is_match(&str)
+        KANA_CHECK.is_match(str)
     }
 
     fn is_start_suuji(str: &str) -> bool {
-        START_SUUJI_CHECK.is_match(&str)
+        START_SUUJI_CHECK.is_match(str)
     }
 
     fn is_kigou(str: &str) -> bool {
-        KIGOU_CHECK.is_match(&str)
+        KIGOU_CHECK.is_match(str)
     }
 
     fn is_japanese(str: &str) -> bool {
-        JAPANESE_CHECK.is_match(&str)
+        JAPANESE_CHECK.is_match(str)
     }
 
 
@@ -640,32 +637,28 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             }
         }
 
-        let _processed_class = if _args.sudachi {
-            return process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts);
+        if _args.sudachi {
+            process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts)
         } else if _args.neologd {
-            return process_neologd_skip(_args, _pronunciation, _notation, &word_class_parts)
+            process_neologd_skip(_args, _pronunciation, _notation, &word_class_parts)
         } else if _args.utdict {
-            return process_utdict_skip(_args, _dict_values, _pronunciation, _notation, &word_class_parts)
+            process_utdict_skip(_args, _dict_values, _pronunciation, _notation, &word_class_parts)
         } else if _args.mozcuserdict {
-            return process_mozcuserdict_skip(_args, _dict_values, _pronunciation, _notation, &word_class_parts)
+            process_mozcuserdict_skip(_args, _dict_values, _pronunciation, _notation, &word_class_parts)
         } else {
-            return process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts);
-        };
+            process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts)
+        }
     }
 
     fn process_sudachi_skip(_args: &Config, _pronunciation: String, _notation: &str, word_class: &[&str]) -> bool {
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
-        if _notation.len() == 0 { return true };
+        if _notation.is_empty() { return true };
         if _parts[0] == "空白" { return true };
         if (! _args.symbols) && _pronunciation == "キゴウ" && _parts[0].contains("記号") { return true };
-        if _parts.len() > 1 {
-            if (! _args.symbols) && is_kigou(&_notation) && _parts[1] != "固有名詞" { return true };
-        }
-        if _parts.len() > 2 {
-            if (! _args.places) && is_japanese(&_notation) && _parts[2].contains("地名") { return true };
-        }
+        if _parts.len() > 1 && (! _args.symbols) && is_kigou(_notation) && _parts[1] != "固有名詞" { return true };
+        if _parts.len() > 2 && (! _args.places) && is_japanese(_notation) && _parts[2].contains("地名") { return true };
         false
     }
 
@@ -673,18 +666,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
-        if _notation.len() == 0 { return true };
+        if _notation.is_empty() { return true };
         if _parts[0] == "空白" { return true };
         if (! _args.symbols) && _pronunciation == "キゴウ" && _parts[0].contains("記号") { return true };
-        if _parts.len() > 1 {
-            if (! _args.symbols) && is_kigou(&_notation) && _parts[1] != "固有名詞" { return true };
-        }
-        if _parts.len() > 2 {
-            if (! _args.places) && _parts[2].contains("地域") { return true };
-        }
-        if _parts.len() > 2 {
-            if _parts[0] == "名詞" && _parts[1] == "固有名詞" && _parts[2] == "一般" && is_start_suuji(&_notation) { return true };
-        }
+        if _parts.len() > 1 && (! _args.symbols) && is_kigou(_notation) && _parts[1] != "固有名詞" { return true };
+        if _parts.len() > 2 && (! _args.places) && _parts[2].contains("地域") { return true };
+        if _parts.len() > 2 && _parts[0] == "名詞" && _parts[1] == "固有名詞" && _parts[2] == "一般" && is_start_suuji(_notation) { return true };
         false
     }
 
@@ -692,12 +679,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
-        if _notation.len() == 0 { return true };
+        if _notation.is_empty() { return true };
         *_dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
         if *_dict_values.word_class_id == -1 || *_dict_values.word_class_id == 0 {
             *_dict_values.word_class_id = *_dict_values.default_noun_id;
         }
-        if (! _args.symbols) && is_kigou(&_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
+        if (! _args.symbols) && is_kigou(_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
         if (! _args.places) && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return true }
         false
     }
@@ -706,11 +693,11 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
 
         if ! is_kana(&_pronunciation) { return true };
-        if _notation.len() == 0 { return true };
+        if _notation.is_empty() { return true };
         // ユーザー辞書の品詞からID.defの品詞文字列へ
         let word_class = u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
         *_dict_values.word_class_id = id_expr(&word_class, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
-        if (! _args.symbols) && is_kigou(&_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
+        if (! _args.symbols) && is_kigou(_notation) && ! search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞") { return true };
         if (! _args.places) && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return true }
         false
     }
@@ -740,8 +727,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             process_sudachi_word_class(&word_class_parts)
         };
 
-        let word_class_id = id_expr(&processed_class, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
-        word_class_id
+        id_expr(&processed_class, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id)
     }
 
     fn process_sudachi_word_class(word_class: &[&str]) -> String {
@@ -783,22 +769,19 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
     fn process_neologd_word_class(word_class: &[&str]) -> String {
         let mut parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
-        if parts.len() > 1 {
-            if parts[0] == "名詞" && parts[1] == "一般" {
-                parts[1]="普通名詞".to_string();
-            }
+        if parts.len() > 1 && parts[0] == "名詞" && parts[1] == "一般" {
+            parts[1]="普通名詞".to_string();
         }
         parts.join(",")
     }
     fn process_mozcuserdict_word_class(parts: &[&str]) -> String {
-        let processed = parts.join("");
-        processed
+        parts.join("")
     }
 
     struct DefaultProcessor;
     impl DictionaryProcessor for DefaultProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
-            return skip_analyze(record, _args, _dict_values);
+            skip_analyze(record, _args, _dict_values)
         }
 
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -815,7 +798,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 return false
             }
             *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-            *_dict_values.notation = unicode_escape_to_char(&_notation);
+            *_dict_values.notation = unicode_escape_to_char(_notation);
             let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
             let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
             *_dict_values.cost = adjust_cost(cost);
@@ -826,7 +809,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     struct SudachiProcessor;
     impl DictionaryProcessor for SudachiProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
-            return skip_analyze(record, _args, _dict_values);
+            skip_analyze(record, _args, _dict_values)
         }
 
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -843,7 +826,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 return false
             }
             *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-            *_dict_values.notation = unicode_escape_to_char(&_notation);
+            *_dict_values.notation = unicode_escape_to_char(_notation);
             let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
             let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
             *_dict_values.cost = adjust_cost(cost);
@@ -854,7 +837,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     struct NeologdProcessor;
     impl DictionaryProcessor for NeologdProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
-            return skip_analyze(record, _args, _dict_values);
+            skip_analyze(record, _args, _dict_values)
         }
 
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -869,7 +852,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
             if (! _args.places) && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名") { return false }
             *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-            *_dict_values.notation = unicode_escape_to_char(&_notation);
+            *_dict_values.notation = unicode_escape_to_char(_notation);
             let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
             let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
             *_dict_values.cost = adjust_cost(cost);
@@ -880,7 +863,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     struct UtDictProcessor;
     impl DictionaryProcessor for UtDictProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
-            return skip_analyze(record, _args, _dict_values);
+            skip_analyze(record, _args, _dict_values)
         }
 
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -899,11 +882,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 None => return false,
             };
             *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-            *_dict_values.notation = unicode_escape_to_char(&_notation);
-            let d: String = format!("{}", search_key(_dict_values.id_def, word_class_id));
-            let word_class;
-            word_class = _dict_values.class_map.get(&d);
-            if word_class == None {
+            *_dict_values.notation = unicode_escape_to_char(_notation);
+            let d: String = search_key(_dict_values.id_def, word_class_id).to_string();
+            let word_class = _dict_values.class_map.get(&d);
+            if word_class.is_none() {
                 *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
             } else {
                 *_dict_values.word_class_id = *word_class.unwrap();
@@ -918,7 +900,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     struct MozcUserDictProcessor;
     impl DictionaryProcessor for MozcUserDictProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
-            return skip_analyze(record, _args, _dict_values);
+            skip_analyze(record, _args, _dict_values)
         }
 
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -945,11 +927,10 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 None => return false,
             };
             *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-            *_dict_values.notation = unicode_escape_to_char(&_notation);
-            let d: String = format!("{}", search_key(_dict_values.id_def, *_dict_values.word_class_id));
-            let word_class;
-            word_class = _dict_values.class_map.get(&d);
-            if word_class == None {
+            *_dict_values.notation = unicode_escape_to_char(_notation);
+            let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_string();
+            let word_class = _dict_values.class_map.get(&d);
+            if word_class.is_none() {
                 *_dict_values.word_class_id = id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id);
             } else {
                 *_dict_values.word_class_id = *word_class.unwrap();
@@ -965,7 +946,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     fn add_dict_data(_processor: &dyn DictionaryProcessor, _data: &StringRecord, _dict_values: &mut DictValues, dict_data: &mut DictionaryData, _args: &Config) {
         if _args.user_dict {
             match u_search_key(_dict_values.mapping, _dict_values.id_def, *_dict_values.word_class_id) {
-                Some(word_class) => {
+                Some(_word_class) => {
                     dict_data.add(DictionaryEntry {
                         key: DictionaryKey {
                             pronunciation: _dict_values.pronunciation.to_string(),
@@ -973,7 +954,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                             word_class_id: *_dict_values.word_class_id,
                         },
                         cost: *_dict_values.cost,
-                        word_class: word_class,
+                        word_class: _word_class,
                     }, true);
                 },
                 None => {
@@ -1026,7 +1007,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         dict_data: &mut DictionaryData,
         _args: &Config,
     ) -> ioResult<()> {
-        let (mut _id_def, mut _default_noun_id) = read_id_def(&id_def_path)?;
+        let (mut _id_def, mut _default_noun_id) = read_id_def(id_def_path)?;
         let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
         let mut mapping = create_word_class_mapping();
         let mut pronunciation = String::new();
@@ -1045,7 +1026,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             cost: &mut cost,
         };
 
-        let delimiter_char = parse_delimiter(&_args.delimiter, &_args);
+        let delimiter_char = parse_delimiter(&_args.delimiter, _args);
 
         let delimiter_str = if delimiter_char == b'\t' {
             "TAB".to_string()
@@ -1053,7 +1034,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             String::from_utf8(vec![delimiter_char]).unwrap_or_else(|_| "?".to_string())
         };
         if _args.debug {
-            eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char.to_string());
+            eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char);
             dbg!(&_dict_values);
         }
 
@@ -1066,9 +1047,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 Err(_err) => continue,
                 Ok(record) => {
                     let data = record;
-                    if _processor.should_skip(&mut _dict_values, &data, &_args) { continue };
-                    if _processor.word_class_analyze(&mut _dict_values, &data, &_args) {
-                        add_dict_data(&*_processor, &data, &mut _dict_values, dict_data, &_args);
+                    if _processor.should_skip(&mut _dict_values, &data, _args) { continue };
+                    if _processor.word_class_analyze(&mut _dict_values, &data, _args) {
+                        add_dict_data(_processor, &data, &mut _dict_values, dict_data, _args);
                     }
                 }
             }
@@ -1299,7 +1280,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             .filter_map(|os_str| os_str.to_str())
             .collect();
 
-        let cmd = args_slice.first().map(|&s| s).unwrap_or("");
+        let cmd = args_slice.first().copied().unwrap_or("");
 
         // コマンド名のみでオプション指定がない場合、またはヘルプが指定されている場合、`--help`を渡す
         // それ以外は、すべてのオプションを渡す。
