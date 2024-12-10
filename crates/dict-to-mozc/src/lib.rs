@@ -1,6 +1,6 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::process;
+use std::process::ExitCode;
 use std::ffi::OsString;
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
@@ -1272,7 +1272,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         filtered_args
     }
 
-    pub fn main() {
+    pub fn main() -> Result<(), ExitCode> {
         let filtered_args = filter_args();
         // OsStringを&strに変換する
         let args_slice: Vec<&str> = filtered_args
@@ -1284,19 +1284,23 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
         // コマンド名のみでオプション指定がない場合、またはヘルプが指定されている場合、`--help`を渡す
         // それ以外は、すべてのオプションを渡す。
-        let args: Args = Args::from_args(&[cmd], &args_slice[1..]).unwrap_or_else(|early_exit| {
-            std::process::exit(match early_exit.status {
+        let args = Args::from_args(&[cmd], &args_slice[1..]).map_err(|early_exit| {
+            match early_exit.status {
                 Ok(()) => {
                     println!("{}", early_exit.output);
-                    0
-                }
+                    return ExitCode::from(0) // 成功時の終了コード
+                },
                 Err(()) => {
                     eprintln!("{}\nRun {} --help for more information.", early_exit.output, cmd);
-                    1
-                },
-            });
-        });
-        let config = args.into_config().expect("Failed to parse config");
+                    return ExitCode::from(1) // エラー時の終了コード
+                }
+            }
+        })?;
+        // argsを使ってconfigを生成
+        let config = args.into_config().map_err(|_| {
+            eprintln!("Failed to parse config");
+            return ExitCode::from(1) // configのパースに失敗した場合の終了コード
+        })?;
 
         if config.debug {
             eprintln!("{:?}", config);
@@ -1309,12 +1313,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         // ファイルの存在チェック
         if !csv_path.exists() {
             eprintln!("Error: CSV file not found at {:?}", csv_path);
-            process::exit(1);
+            return Err(ExitCode::from(1));
         }
 
         if !id_def_path.exists() {
             eprintln!("Error: id.def file not found at {:?}", id_def_path);
-            process::exit(1);
+            return Err(ExitCode::from(1));
         }
 
         let mut dict_data = DictionaryData::new();
@@ -1335,4 +1339,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let _ = process_dictionary(&csv_path, _processor.as_ref(), &id_def_path, &mut dict_data, &config);
 
         let _ = dict_data.output(config.user_dict);
+
+        Ok(())
     }
