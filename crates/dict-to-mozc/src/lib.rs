@@ -138,6 +138,12 @@ pub struct DictionaryData {
     user_entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
 }
 
+impl Default for DictionaryData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DictionaryData {
     pub fn new() -> Self {
         Self {
