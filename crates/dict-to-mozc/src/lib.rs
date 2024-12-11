@@ -1,5 +1,5 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
@@ -1061,7 +1061,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         Ok(())
     }
 
-    use std::path::PathBuf;
     #[derive(Debug)]
     pub struct Config {
         pub csv_file: PathBuf,
