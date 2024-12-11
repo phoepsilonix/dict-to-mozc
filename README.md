@@ -111,14 +111,8 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 ### ダウンロード
 https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 ```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.7/dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz
-tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.gz --strip-components=1
-ls -l ./dict-to-mozc
-cp ./dict-to-mozc /usr/local/bin/
-```
-```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/download/v0.5.7/dict-to-mozc-x86_64-unknown-linux-musl.tar.gz
-tar xf dict-to-mozc-x86_64-unknown-linux-musl.tar.gz --strip-components=1
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/latest/download/dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz
+tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz --strip-components=1
 ls -l ./dict-to-mozc
 cp ./dict-to-mozc /usr/local/bin/
 ```
