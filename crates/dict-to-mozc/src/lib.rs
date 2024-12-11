@@ -1,7 +1,5 @@
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
-use std::path::{Path, PathBuf};
-use std::process::ExitCode;
-use std::ffi::OsString;
+use std::path::Path;
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
@@ -121,39 +119,39 @@ mod utils {
 // 結果構造体
 // pronunciation,notation,word_class_idの組み合わせで重複チェックされる。
 #[derive(Hash, Eq, PartialEq, Clone)]
-struct DictionaryKey {
+pub struct DictionaryKey {
     pronunciation: String,
     notation: String,
     word_class_id: i32,
 }
 
 // コストと品詞判定で判明した品詞の文字列
-struct DictionaryEntry {
+pub struct DictionaryEntry {
     key: DictionaryKey,
     cost: i32,
     word_class: String,
 }
 
 // システム辞書型式とユーザー辞書型式
-struct DictionaryData {
+pub struct DictionaryData {
     entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
     user_entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
 }
 
 impl DictionaryData {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             entries: MyIndexMap::with_hasher(RandomState::default()),
             user_entries: MyIndexMap::with_hasher(RandomState::default()),
         }
     }
 
-    fn add(&mut self, entry: DictionaryEntry, is_user_dict: bool) {
+    pub fn add(&mut self, entry: DictionaryEntry, is_user_dict: bool) {
         let target = if is_user_dict { &mut self.user_entries } else { &mut self.entries };
         target.insert(entry.key.clone(), entry);
     }
 
-    fn output(&self, _user_dict: bool) -> ioResult<()> {
+    pub fn output(&self, _user_dict: bool) -> ioResult<()> {
         let mut writer = BufWriter::new(stdout());
 
         // システム辞書のエントリーを出力
@@ -600,7 +598,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
 
 
     #[derive(Debug)]
-    struct DictValues<'a> {
+    pub struct DictValues<'a> {
         id_def: &'a mut IdDef,
         default_noun_id: &'a mut i32,
         class_map: &'a mut MyIndexMap::<String, i32>,
@@ -611,7 +609,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         cost: &'a mut i32,
     }
 
-    trait DictionaryProcessor {
+    pub trait DictionaryProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
     }
@@ -778,7 +776,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         parts.join("")
     }
 
-    struct DefaultProcessor;
+    pub struct DefaultProcessor;
     impl DictionaryProcessor for DefaultProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
             skip_analyze(record, _args, _dict_values)
@@ -806,7 +804,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    struct SudachiProcessor;
+    pub struct SudachiProcessor;
     impl DictionaryProcessor for SudachiProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
             skip_analyze(record, _args, _dict_values)
@@ -834,7 +832,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    struct NeologdProcessor;
+    pub struct NeologdProcessor;
     impl DictionaryProcessor for NeologdProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
             skip_analyze(record, _args, _dict_values)
@@ -860,7 +858,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    struct UtDictProcessor;
+    pub struct UtDictProcessor;
     impl DictionaryProcessor for UtDictProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
             skip_analyze(record, _args, _dict_values)
@@ -897,7 +895,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    struct MozcUserDictProcessor;
+    pub struct MozcUserDictProcessor;
     impl DictionaryProcessor for MozcUserDictProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
             skip_analyze(record, _args, _dict_values)
@@ -1000,7 +998,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    fn process_dictionary<P: AsRef<Path>>(
+    pub fn process_dictionary<P: AsRef<Path>>(
         path: P,
         _processor: &dyn DictionaryProcessor,
         id_def_path: &Path,
@@ -1057,288 +1055,23 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         Ok(())
     }
 
-    use argh::FromArgs;
-
-#[derive(FromArgs)]
-    /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
-    /// (Mozc辞書型式への変換プログラム)
+    use std::path::PathBuf;
     #[derive(Debug)]
-    struct Args {
-        /// path to the dictionary CSV file(TSV with -d $'\t' or -d TAB)
-        #[argh(option, short = 'f')]
-        csv_file: Option<PathBuf>,
-
-        /// path to the Mozc id.def file(Default is ./id.def)
-        #[argh(option, short = 'i')]
-        id_def: Option<PathBuf>,
-
-        /// generate Mozc User Dictionary formats(指定しない場合、Mozcシステム辞書型式で出力)
-        #[argh(switch, short = 'U')]
-        user_dict: bool,
-
-        /// target SudachiDict
-        #[argh(switch, short = 's')]
-        sudachi: bool,
-
-        /// target NEologd dictionary
-        #[argh(switch, short = 'n')]
-        neologd: bool,
-
-        /// target UT dictionary
-        #[argh(switch, short = 'u')]
-        utdict: bool,
-
-        /// target Mozc User Dictionary
-        #[argh(switch, short = 'M')]
-        mozcuserdict: bool,
-
-        /// include place names (地名を含める)
-        #[argh(switch, short = 'p')]
-        places: bool,
-
-        /// include symbols (記号を含める)
-        #[argh(switch, short = 'S')]
-        symbols: bool,
-
-        /// pronunciation 読みフィールドの位置（0から始まる）
-        #[argh(option, short = 'P')]
-        pronunciation_index: Option<usize>,
-
-        /// notation 表記フィールドの位置（0から始まる）
-        #[argh(option, short = 'N')]
-        notation_index: Option<usize>,
-
-        /// word class 品詞判定フィールドの位置（0から始まる）
-        #[argh(option, short = 'W')]
-        word_class_index: Option<usize>,
-
-        /// word class 品詞判定フィールドのフィールド数
-        #[argh(option, short = 'w')]
-        word_class_numbers: Option<usize>,
-
-        /// cost コストフィールドの位置（0から始まる）
-        #[argh(option, short = 'C')]
-        cost_index: Option<usize>,
-
-        /// delimiter デリミタ(初期値 ',' カンマ)
-        #[argh(option, short = 'd')]
-        delimiter: Option<String>,
-
-        /// debug デバッグ
-        #[argh(switch, short = 'D')]
-        debug: bool,
-
-    }
-
-#[derive(Debug)]
-    struct Config {
-        csv_file: PathBuf,
-        id_def: PathBuf,
-        pronunciation_index: usize,
-        notation_index: usize,
-        word_class_index: usize,
-        word_class_numbers: usize,
-        cost_index: usize,
-        delimiter: String,
-        sudachi: bool,
-        utdict: bool,
-        neologd: bool,
-        mozcuserdict: bool,
-        user_dict: bool,
-        places: bool,
-        symbols: bool,
-        debug: bool,
-    }
-
-    enum DictType {
-        Default,
-        Sudachi,
-        UTDict,
-        NEologd,
-        MozcUserDict,
-    }
-
-    impl Args {
-        fn into_config(self) -> std::io::Result<Config> {
-            let current_dir = std::env::current_dir()?;
-            let dict_type = if self.sudachi {
-                DictType::Sudachi
-            } else if self.utdict {
-                DictType::UTDict
-            } else if self.neologd {
-                DictType::NEologd
-            } else if self.mozcuserdict {
-                DictType::MozcUserDict
-            } else {
-                DictType::Default
-            };
-
-            Ok(Config {
-                csv_file: self.csv_file.unwrap_or_else(|| current_dir.join("all.csv")),
-                id_def: self.id_def.unwrap_or_else(|| current_dir.join("id.def")),
-                pronunciation_index: self.pronunciation_index.unwrap_or_else(|| dict_type.default_pronunciation_index()),
-                notation_index: self.notation_index.unwrap_or_else(|| dict_type.default_notation_index()),
-                word_class_index: self.word_class_index.unwrap_or_else(|| dict_type.default_word_class_index()),
-                word_class_numbers: self.word_class_numbers.unwrap_or_else(|| dict_type.default_word_class_numbers()),
-                cost_index: self.cost_index.unwrap_or_else(|| dict_type.default_cost_index()),
-                delimiter: self.delimiter.unwrap_or_else(|| dict_type.default_delimiter()),
-                sudachi: self.sudachi,
-                utdict: self.utdict,
-                neologd: self.neologd,
-                mozcuserdict: self.mozcuserdict,
-                user_dict: self.user_dict,
-                places: self.places,
-                symbols: self.symbols,
-                debug: self.debug,
-            })
-        }
-    }
-
-    impl DictType {
-        fn default_pronunciation_index(&self) -> usize {
-            match self {
-                DictType::Default => 11,
-                DictType::Sudachi => 11,
-                DictType::NEologd => 10,
-                DictType::UTDict => 0,
-                DictType::MozcUserDict => 0,
-            }
-        }
-
-        fn default_notation_index(&self) -> usize {
-            match self {
-                DictType::Default => 4,
-                DictType::Sudachi => 12,
-                DictType::NEologd => 12,
-                DictType::UTDict => 4,
-                DictType::MozcUserDict => 1,
-            }
-        }
-
-        fn default_word_class_index(&self) -> usize {
-            match self {
-                DictType::Default => 5,
-                DictType::Sudachi => 5,
-                DictType::NEologd => 4,
-                DictType::UTDict => 1,
-                DictType::MozcUserDict => 2,
-            }
-        }
-
-        fn default_word_class_numbers(&self) -> usize {
-            match self {
-                DictType::Default => 6,
-                DictType::Sudachi => 6,
-                DictType::NEologd => 6,
-                DictType::UTDict => 1,
-                DictType::MozcUserDict => 1,
-            }
-        }
-
-        fn default_cost_index(&self) -> usize {
-            match self {
-                DictType::Default => 3,
-                DictType::Sudachi => 3,
-                DictType::NEologd => 3,
-                DictType::UTDict => 3,
-                DictType::MozcUserDict => 3,
-            }
-        }
-
-        fn default_delimiter(&self) -> String {
-            match self {
-                DictType::Default => ",".to_string(),
-                DictType::Sudachi => ",".to_string(),
-                DictType::NEologd => ",".to_string(),
-                DictType::UTDict => "\t".to_string(),
-                DictType::MozcUserDict => "\t".to_string(),
-            }
-        }
-    }
-
-    fn filter_args() -> Vec<OsString> {
-        let args: Vec<OsString> = std::env::args_os().collect();
-
-        let mut filtered_args = vec![args[0].clone()];
-
-        let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into()];
-
-        if args.len() <= 1 || args.iter().any(|arg| help_flags.contains(arg)) {
-            filtered_args.push("--help".into());
-        } else {
-            filtered_args.extend(args.iter().skip(1).cloned());
-        }
-
-        filtered_args
-    }
-
-    pub fn main() -> Result<(), ExitCode> {
-        let filtered_args = filter_args();
-        // OsStringを&strに変換する
-        let args_slice: Vec<&str> = filtered_args
-            .iter()
-            .filter_map(|os_str| os_str.to_str())
-            .collect();
-
-        let cmd = args_slice.first().copied().unwrap_or("");
-
-        // コマンド名のみでオプション指定がない場合、またはヘルプが指定されている場合、`--help`を渡す
-        // それ以外は、すべてのオプションを渡す。
-        let args = Args::from_args(&[cmd], &args_slice[1..]).map_err(|early_exit| {
-            match early_exit.status {
-                Ok(()) => {
-                    println!("{}", early_exit.output);
-                    return ExitCode::from(0) // 成功時の終了コード
-                },
-                Err(()) => {
-                    eprintln!("{}\nRun {} --help for more information.", early_exit.output, cmd);
-                    return ExitCode::from(1) // エラー時の終了コード
-                }
-            }
-        })?;
-        // argsを使ってconfigを生成
-        let config = args.into_config().map_err(|_| {
-            eprintln!("Failed to parse config");
-            return ExitCode::from(1) // configのパースに失敗した場合の終了コード
-        })?;
-
-        if config.debug {
-            eprintln!("{:?}", config);
-        }
-
-        // CSVファイルとid.defファイルのパス取得
-        let csv_path = config.csv_file.clone();
-        let id_def_path = config.id_def.clone();
-
-        // ファイルの存在チェック
-        if !csv_path.exists() {
-            eprintln!("Error: CSV file not found at {:?}", csv_path);
-            return Err(ExitCode::from(1));
-        }
-
-        if !id_def_path.exists() {
-            eprintln!("Error: id.def file not found at {:?}", id_def_path);
-            return Err(ExitCode::from(1));
-        }
-
-        let mut dict_data = DictionaryData::new();
-
-        // 辞書の読み込み処理
-        let _processor: Box<dyn DictionaryProcessor> = if config.sudachi {
-            Box::new(SudachiProcessor)
-        } else if config.neologd {
-            Box::new(NeologdProcessor)
-        } else if config.utdict {
-            Box::new(UtDictProcessor)
-        } else if config.mozcuserdict {
-            Box::new(MozcUserDictProcessor)
-        } else {
-            Box::new(DefaultProcessor)
-        };
-
-        let _ = process_dictionary(&csv_path, _processor.as_ref(), &id_def_path, &mut dict_data, &config);
-
-        let _ = dict_data.output(config.user_dict);
-
-        Ok(())
+    pub struct Config {
+        pub csv_file: PathBuf,
+        pub id_def: PathBuf,
+        pub pronunciation_index: usize,
+        pub notation_index: usize,
+        pub word_class_index: usize,
+        pub word_class_numbers: usize,
+        pub cost_index: usize,
+        pub delimiter: String,
+        pub sudachi: bool,
+        pub utdict: bool,
+        pub neologd: bool,
+        pub mozcuserdict: bool,
+        pub user_dict: bool,
+        pub places: bool,
+        pub symbols: bool,
+        pub debug: bool,
     }
