@@ -1004,14 +1004,12 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
-    pub fn process_dictionary<P: AsRef<Path>>(
-        path: P,
+    pub fn process_dictionary(
         _processor: &dyn DictionaryProcessor,
-        id_def_path: &Path,
         dict_data: &mut DictionaryData,
         _args: &Config,
     ) -> ioResult<()> {
-        let (mut _id_def, mut _default_noun_id) = read_id_def(id_def_path)?;
+        let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
         let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
         let mut mapping = create_word_class_mapping();
         let mut pronunciation = String::new();
@@ -1045,7 +1043,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let reader = csv::ReaderBuilder::new()
             .has_headers(false)
             .delimiter(delimiter_char)
-            .from_path(path);
+            .from_path(&_args.csv_file);
         for result in reader?.records() {
             match result {
                 Err(_err) => continue,

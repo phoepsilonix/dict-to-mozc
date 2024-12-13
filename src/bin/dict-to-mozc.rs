@@ -238,18 +238,15 @@ pub fn main() -> ExitCode {
         eprintln!("{:?}", config);
     }
 
-    // CSVファイルとid.defファイルのパス取得
-    let csv_path = config.csv_file.clone();
-    let id_def_path = config.id_def.clone();
-
     // ファイルの存在チェック
-    if !csv_path.exists() {
-        eprintln!("Error: CSV file not found at {:?}", csv_path);
+    if !config.csv_file.exists() {
+        eprintln!("Error: CSV file not found at {:?}", &config.csv_file);
         return ExitCode::from(4);
     }
 
-    if !id_def_path.exists() {
-        eprintln!("Error: id.def file not found at {:?}", id_def_path);
+    // ファイルの存在チェック
+    if !config.id_def.exists() {
+        eprintln!("Error: id.def file not found at {:?}", &config.id_def);
         return ExitCode::from(5);
     }
 
@@ -268,7 +265,7 @@ pub fn main() -> ExitCode {
         Box::new(DefaultProcessor)
     };
 
-    let _ = process_dictionary(&csv_path, _processor.as_ref(), &id_def_path, &mut dict_data, &config);
+    let _ = process_dictionary(_processor.as_ref(), &mut dict_data, &config);
 
     let _ = dict_data.output(config.user_dict);
 
