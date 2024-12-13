@@ -185,17 +185,13 @@ impl DictType {
 fn filter_args() -> Vec<OsString> {
     let args: Vec<OsString> = std::env::args_os().collect();
 
-    let mut filtered_args = vec![args[0].clone()];
-
-    let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into()];
+    let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into(), "?".into()];
 
     if args.len() <= 1 || args.iter().any(|arg| help_flags.contains(arg)) {
-        filtered_args.push("--help".into());
+        vec![args[0].clone(), "--help".into()]
     } else {
-        filtered_args.extend(args.iter().skip(1).cloned());
+        args
     }
-
-    filtered_args
 }
 
 pub fn main() -> ExitCode {
