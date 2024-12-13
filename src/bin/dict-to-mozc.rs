@@ -184,8 +184,7 @@ impl DictType {
 
 fn filter_args() -> Vec<OsString> {
     let args: Vec<OsString> = std::env::args_os().collect();
-
-    let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into(), "?".into()];
+    let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into()];
 
     if args.len() <= 1 || args.iter().any(|arg| help_flags.contains(arg)) {
         vec![args[0].clone(), "--help".into()]
