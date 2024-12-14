@@ -1,4 +1,10 @@
-#[cfg(all(not(target_arch = "arm"), feature = "use-mimalloc"))]
+#[cfg(all(
+    feature = "use-mimalloc",
+    any(
+        not(any(target_arch = "arm", target_arch = "aarch64")),
+        all(target_arch = "aarch64", not(target_os = "windows"))
+    )
+))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 

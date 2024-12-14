@@ -5,7 +5,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.6.3"
+version = "0.6.4"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2021"
 rust-version = "1.83"
@@ -55,6 +55,8 @@ version.workspace = true
 [dependencies]
 lib-dict-to-mozc = { workspace = true }
 argh = { version = "0.1.12", default-features = false }
+
+[target.'cfg(any(not(any(target_arch = "arm", target_arch = "aarch64")),all(target_arch = "aarch64", not(target_os = "windows"))))'.dependencies]
 mimalloc = { workspace = true, optional = true }
 
 [package.metadata.release]
