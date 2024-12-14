@@ -1,9 +1,12 @@
+#[cfg(all(not(target_arch = "arm"), feature = "use-mimalloc"))]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use lib_dict_to_mozc::*;
 use argh::FromArgs;
 use std::process::ExitCode;
 use std::ffi::OsString;
 use std::path::PathBuf;
-
 
 #[derive(FromArgs)]
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.

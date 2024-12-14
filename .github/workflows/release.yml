@@ -129,10 +129,10 @@ jobs:
         if: "runner.os == 'Linux'"
         run: |
           case "${{ join(matrix.targets) }}" in
-            *aarch64*)
+            *aarch64*linux*)
               sudo apt-get install gcc-aarch64-linux-gnu -y
               ;;
-            *arm*)
+            *arm*linux*)
               sudo apt-get install gcc-arm-linux-gnueabihf -y
               ;;
           esac

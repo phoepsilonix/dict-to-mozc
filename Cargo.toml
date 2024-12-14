@@ -22,6 +22,7 @@ lazy-regex = { version = "3.3.0", default-features = false, features = ["unicode
 
 indexmap = { version = "2.6.0", default-features = false, features = [] }
 hashbrown = { version = "0.15.0", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+mimalloc = "0.1.43"
 
 [profile.release]
 debug = true
@@ -54,6 +55,7 @@ version.workspace = true
 [dependencies]
 lib-dict-to-mozc = { workspace = true }
 argh = { version = "0.1.12", default-features = false }
+mimalloc = { workspace = true, optional = true }
 
 [package.metadata.release]
 tag = true
@@ -61,3 +63,7 @@ tag-prefix =""
 
 [[bin]]
 name = "dict-to-mozc"
+
+[features]
+use-mimalloc = ["dep:mimalloc"]
+default = []

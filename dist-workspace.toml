@@ -3,6 +3,7 @@ members = ["cargo:."]
 
 # Config for 'dist'
 [dist]
+features = ["use-mimalloc"]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.26.1"
 # CI backends to support
@@ -22,5 +23,5 @@ targets = [
 "armv7-unknown-linux-musleabihf",
 "x86_64-unknown-linux-gnu",
 "x86_64-unknown-linux-musl",
-"x86_64-pc-windows-msvc"
+"x86_64-pc-windows-msvc",
 ]
