@@ -16,12 +16,13 @@ license = "MIT"
 
 [workspace.dependencies]
 lib-dict-to-mozc = { path = "./crates/dict-to-mozc" }
-csv = { version = "1.3.0", default-features = true }
+csv = { version = "1.3.1", default-features = true }
 kanaria = { git = "https://github.com/phoepsilonix/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8", version = "0.2.1", default-features = false }
 lazy-regex = { version = "3.3.0", default-features = false, features = ["unicode"] }
 
-indexmap = { version = "2.6.0", default-features = false, features = [] }
-hashbrown = { version = "0.15.0", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+indexmap = { version = "2.6.0", default-features = false, features = ["rayon"] }
+hashbrown = { version = "0.15.2", default-features = false, features = [ "rayon", "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+rayon = "1.10.0"
 mimalloc = "0.1.43"
 
 [profile.release]

@@ -1,5 +1,6 @@
 extern crate lazy_regex;
 extern crate csv;
+extern crate rayon;
 extern crate kanaria;
 extern crate indexmap;
 extern crate hashbrown;
@@ -12,6 +13,9 @@ use lazy_regex::Lazy;
 
 use csv::{ReaderBuilder, Error as CsvError};
 use csv::StringRecord;
+use rayon::prelude::*;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use kanaria::string::{UCSStr, ConvertType};
 use kanaria::utils::ConvertTarget;
@@ -188,13 +192,11 @@ impl DictionaryData {
         } else {
             // -Uオプションが設定されている場合のみユーザー辞書を出力
             for entry in self.user_entries.values() {
-                if !self.entries.contains_key(&entry.key) {
-                    writeln!(
-                        writer,
-                        "{}\t{}\t{}\t",
-                        entry.key.pronunciation, entry.key.notation, entry.word_class
-                    )?;
-                }
+                writeln!(
+                    writer,
+                    "{}\t{}\t{}\t",
+                    entry.key.pronunciation, entry.key.notation, entry.word_class
+                )?;
             }
         }
 
@@ -632,7 +634,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     }
 
     /// WIP_DictionaryProcessor_trait_description
-    pub trait DictionaryProcessor {
+    // メソッドの定義
+    pub trait DictionaryProcessor: Send + Sync {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
     }
@@ -1026,10 +1029,24 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    fn process_record(
+        _processor: &dyn DictionaryProcessor,
+        dict_data: &mut DictionaryData,
+        _args: &Config,
+        _dict_values: &mut DictValues,
+        data: &csv::StringRecord
+    ) {
+        if !_processor.should_skip(_dict_values, data, _args) && _processor.word_class_analyze(_dict_values, data, _args) {
+            // Mutexを使って共有データにアクセス
+            //let mut dict_data = dict_data_mutex.lock().unwrap();
+            add_dict_data(_processor, data, _dict_values, dict_data, _args);
+        }
+    }
+
     /// WIP_process_dictionary_function_description
     pub fn process_dictionary(
         _processor: &dyn DictionaryProcessor,
-        dict_data: &mut DictionaryData,
+        dict_data: Arc<Mutex<DictionaryData>>,
         _args: &Config,
     ) -> ioResult<()> {
         let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
@@ -1039,8 +1056,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         let mut notation = String::new();
         let mut word_class_id = -1;
         let mut cost = -1;
-
-        let mut _dict_values = DictValues {
+        let mut _dict_values = Arc::new(Mutex::new(DictValues {
             id_def: &mut _id_def,
             default_noun_id: &mut _default_noun_id,
             class_map: &mut class_map,
@@ -1049,7 +1065,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             notation: &mut notation,
             word_class_id: &mut word_class_id,
             cost: &mut cost,
-        };
+        }));
 
         let delimiter_char = parse_delimiter(&_args.delimiter, _args);
 
@@ -1067,54 +1083,53 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             .has_headers(false)
             .delimiter(delimiter_char)
             .from_path(&_args.csv_file);
-        for result in reader?.records() {
-            match result {
-                Err(_err) => continue,
-                Ok(record) => {
-                    let data = record;
-                    if _processor.should_skip(&mut _dict_values, &data, _args) { continue };
-                    if _processor.word_class_analyze(&mut _dict_values, &data, _args) {
-                        add_dict_data(_processor, &data, &mut _dict_values, dict_data, _args);
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
 
-    /// WIP_Config_struct_description
+        reader?.records()
+            .filter_map(Result::ok) // エラーをフィルタリング
+            .par_bridge() // 並列処理のためのブリッジ
+            .for_each(|record| {
+                // Mutexをロックしてミュータブルな参照を取得
+                let mut dict_data = dict_data.lock().unwrap();
+                let mut dict_values = _dict_values.lock().unwrap();
+                process_record(_processor, &mut dict_data, _args, &mut dict_values, &record); // 各レコードを処理
+            });
+
+        Ok(())
+        }
+
+        /// WIP_Config_struct_description
 #[derive(Debug)]
-    pub struct Config {
-        /// 変換元のテキストファイルのパス
-        pub csv_file: PathBuf,
-        /// Mozcソースにあるid.defファイルのパス
-        pub id_def: PathBuf,
-        /// 読みのフィールド位置。
-        pub pronunciation_index: usize,
-        /// 表記のフィールド位置。
-        pub notation_index: usize,
-        /// 品詞を示すフィールドの開始位置。
-        pub word_class_index: usize,
-        /// 品詞を示すフィールド数。
-        pub word_class_numbers: usize,
-        /// 品詞コストのフィールド位置。
-        pub cost_index: usize,
-        /// 読み取る変換元のテキストの区切り文字
-        pub delimiter: String,
-        /// 読み取り元をSudachiDictとみなす。
-        pub sudachi: bool,
-        /// 読み取り元をUtDictとみなす。
-        pub utdict: bool,
-        /// 読み取り元をNeologdとみなす。
-        pub neologd: bool,
-        /// 読み取り元をMozcユーザー辞書型式とみなす。
-        pub mozcuserdict: bool,
-        /// 出力する変換型式をMozcユーザー辞書型式にする。
-        pub user_dict: bool,
-        /// 出力に地名も含める。
-        pub places: bool,
-        /// 出力に記号も含める。
-        pub symbols: bool,
-        /// デバッグ情報の出力。
-        pub debug: bool,
-    }
+        pub struct Config {
+            /// 変換元のテキストファイルのパス
+            pub csv_file: PathBuf,
+            /// Mozcソースにあるid.defファイルのパス
+            pub id_def: PathBuf,
+            /// 読みのフィールド位置。
+            pub pronunciation_index: usize,
+            /// 表記のフィールド位置。
+            pub notation_index: usize,
+            /// 品詞を示すフィールドの開始位置。
+            pub word_class_index: usize,
+            /// 品詞を示すフィールド数。
+            pub word_class_numbers: usize,
+            /// 品詞コストのフィールド位置。
+            pub cost_index: usize,
+            /// 読み取る変換元のテキストの区切り文字
+            pub delimiter: String,
+            /// 読み取り元をSudachiDictとみなす。
+            pub sudachi: bool,
+            /// 読み取り元をUtDictとみなす。
+            pub utdict: bool,
+            /// 読み取り元をNeologdとみなす。
+            pub neologd: bool,
+            /// 読み取り元をMozcユーザー辞書型式とみなす。
+            pub mozcuserdict: bool,
+            /// 出力する変換型式をMozcユーザー辞書型式にする。
+            pub user_dict: bool,
+            /// 出力に地名も含める。
+            pub places: bool,
+            /// 出力に記号も含める。
+            pub symbols: bool,
+            /// デバッグ情報の出力。
+            pub debug: bool,
+        }
