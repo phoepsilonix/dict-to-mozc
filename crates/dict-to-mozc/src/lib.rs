@@ -1026,6 +1026,18 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    fn process_record(
+        _processor: &dyn DictionaryProcessor,
+        dict_data: &mut DictionaryData,
+        _args: &Config,
+        _dict_values: &mut DictValues,
+        data: &csv::StringRecord
+    ) {
+        if !_processor.should_skip(_dict_values, data, _args) && _processor.word_class_analyze(_dict_values, data, _args) {
+            add_dict_data(_processor, data, _dict_values, dict_data, _args);
+        }
+    }
+
     /// WIP_process_dictionary_function_description
     pub fn process_dictionary(
         _processor: &dyn DictionaryProcessor,
@@ -1067,18 +1079,13 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             .has_headers(false)
             .delimiter(delimiter_char)
             .from_path(&_args.csv_file);
-        for result in reader?.records() {
-            match result {
-                Err(_err) => continue,
-                Ok(record) => {
-                    let data = record;
-                    if _processor.should_skip(&mut _dict_values, &data, _args) { continue };
-                    if _processor.word_class_analyze(&mut _dict_values, &data, _args) {
-                        add_dict_data(_processor, &data, &mut _dict_values, dict_data, _args);
-                    }
-                }
-            }
-        }
+
+        reader?.records()
+            .filter_map(Result::ok)
+            .for_each(|record| {
+                process_record(_processor, dict_data, _args, &mut _dict_values, &record);
+            });
+
         Ok(())
     }
 
