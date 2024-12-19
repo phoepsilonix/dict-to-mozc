@@ -3,8 +3,10 @@ extern crate csv;
 extern crate kanaria;
 extern crate indexmap;
 extern crate hashbrown;
+extern crate tokio;
 
-use std::io::{Result as ioResult, stdout, BufWriter, Write};
+//use std::io::{Result as ioResult, stdout, BufWriter, Write};
+use tokio::io::{self, BufWriter, AsyncWriteExt};
 use std::path::{Path, PathBuf};
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
@@ -173,34 +175,43 @@ impl DictionaryData {
     }
 
     /// WIP_output_function_description
-    pub fn output(&self, _user_dict: bool) -> ioResult<()> {
-        let mut writer = BufWriter::new(stdout());
+    pub async fn output(&self, _user_dict: bool) -> io::Result<()> {
+        // 非同期の標準出力を取得
+        let mut writer = BufWriter::new(io::stdout());
 
         // システム辞書のエントリーを出力
-        if ! _user_dict {
+        if !_user_dict {
             for entry in self.entries.values() {
-                writeln!(
-                    writer,
-                    "{}\t{}\t{}\t{}\t{}",
-                    entry.key.pronunciation, entry.key.word_class_id, entry.key.word_class_id, entry.cost, entry.key.notation
-                )?;
+                let line = format!(
+                    "{}\t{}\t{}\t{}\t{}\n",
+                    entry.key.pronunciation,
+                    entry.key.word_class_id,
+                    entry.key.word_class_id,
+                    entry.cost,
+                    entry.key.notation
+                );
+                writer.write_all(line.as_bytes()).await?;
             }
         } else {
-            // -Uオプションが設定されている場合のみユーザー辞書を出力
             for entry in self.user_entries.values() {
                 if !self.entries.contains_key(&entry.key) {
-                    writeln!(
-                        writer,
-                        "{}\t{}\t{}\t",
-                        entry.key.pronunciation, entry.key.notation, entry.word_class
-                    )?;
+                    let line = format!(
+                        "{}\t{}\t{}\n",
+                        entry.key.pronunciation,
+                        entry.key.notation,
+                        entry.word_class
+                    );
+                    writer.write_all(line.as_bytes()).await?;
                 }
             }
         }
 
-        writer.flush()
+        // バッファをフラッシュ
+        writer.flush().await?;
+        Ok(())
     }
 }
+
 /// Mozc ソースに含まれるsrc/data/dictionary_oss/id.defを読み込む
 /// 更新される可能性がある。
 type IdDef = MyIndexMap<String, i32>;
@@ -1026,12 +1037,24 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    fn process_record(
+        _processor: &dyn DictionaryProcessor,
+        dict_data: &mut DictionaryData,
+        _args: &Config,
+        _dict_values: &mut DictValues,
+        data: &csv::StringRecord
+    ) {
+        if !_processor.should_skip(_dict_values, data, _args) && _processor.word_class_analyze(_dict_values, data, _args) {
+            add_dict_data(_processor, data, _dict_values, dict_data, _args);
+        }
+    }
+
     /// WIP_process_dictionary_function_description
     pub fn process_dictionary(
         _processor: &dyn DictionaryProcessor,
         dict_data: &mut DictionaryData,
         _args: &Config,
-    ) -> ioResult<()> {
+    ) -> io::Result<()> {
         let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
         let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
         let mut mapping = create_word_class_mapping();
@@ -1067,18 +1090,13 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             .has_headers(false)
             .delimiter(delimiter_char)
             .from_path(&_args.csv_file);
-        for result in reader?.records() {
-            match result {
-                Err(_err) => continue,
-                Ok(record) => {
-                    let data = record;
-                    if _processor.should_skip(&mut _dict_values, &data, _args) { continue };
-                    if _processor.word_class_analyze(&mut _dict_values, &data, _args) {
-                        add_dict_data(_processor, &data, &mut _dict_values, dict_data, _args);
-                    }
-                }
-            }
-        }
+
+        reader?.records()
+            .filter_map(Result::ok)
+            .for_each(|record| {
+                process_record(_processor, dict_data, _args, &mut _dict_values, &record);
+            });
+
         Ok(())
     }
 

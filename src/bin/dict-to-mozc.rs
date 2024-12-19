@@ -10,12 +10,15 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 extern crate lib_dict_to_mozc;
 extern crate argh;
+extern crate tokio;
 
 use lib_dict_to_mozc::*;
 use argh::FromArgs;
 use std::process::ExitCode;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use tokio::io;
+use tokio::runtime::Runtime;
 
 #[derive(FromArgs)]
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
@@ -274,8 +277,17 @@ pub fn main() -> ExitCode {
     };
 
     let _ = process_dictionary(_processor.as_ref(), &mut dict_data, &config);
+    let rt = Runtime::new().unwrap();
+    let result: Result<(), io::Error> = rt.block_on(async {
+        let _ = dict_data.output(config.user_dict).await;
+        Ok(())
+    });
 
-    let _ = dict_data.output(config.user_dict);
-
-    ExitCode::SUCCESS
+    match result {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("Error: {:?}", e);
+            ExitCode::FAILURE
+        }
+    }
 }

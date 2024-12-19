@@ -13,6 +13,7 @@ kanaria = { workspace = true }
 lazy-regex = { workspace = true }
 indexmap = { workspace = true }
 hashbrown = { workspace = true }
+tokio = { workspace = true }
 
 [package.metadata.release]
 tag = true
