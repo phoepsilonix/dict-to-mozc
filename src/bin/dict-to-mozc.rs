@@ -1,12 +1,15 @@
 #[cfg(all(
-    feature = "use-mimalloc",
-    any(
-        not(any(target_arch = "arm", target_arch = "aarch64")),
-        all(target_arch = "aarch64", not(target_os = "windows"))
-    )
+        feature = "use-mimalloc",
+        any(
+            not(any(target_arch = "arm", target_arch = "aarch64")),
+            all(target_arch = "aarch64", not(target_os = "windows"))
+        )
 ))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+extern crate lib_dict_to_mozc;
+extern crate argh;
 
 use lib_dict_to_mozc::*;
 use argh::FromArgs;
@@ -202,6 +205,7 @@ fn filter_args() -> Vec<OsString> {
     }
 }
 
+/// WIP_main_function_description
 pub fn main() -> ExitCode {
     let filtered_args = filter_args();
     // OsStringを&strに変換する

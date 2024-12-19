@@ -1,3 +1,9 @@
+extern crate lazy_regex;
+extern crate csv;
+extern crate kanaria;
+extern crate indexmap;
+extern crate hashbrown;
+
 use std::io::{Result as ioResult, stdout, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use lazy_regex::Regex;
@@ -23,6 +29,8 @@ use hashbrown::DefaultHashBuilder as RandomState;
 //use foldhash::fast::RandomState;
 //use std::hash::RandomState;
 
+/// MyIndexMap
+/// IndexMapでwith_hasherの指定を、切り替えてテストするため。
 pub struct MyIndexMap<K, V, S = RandomState>(IndexMap<K, V, S>);
 
 impl<K, V> Default for MyIndexMap<K, V, RandomState> {
@@ -32,6 +40,8 @@ impl<K, V> Default for MyIndexMap<K, V, RandomState> {
 }
 
 impl<K, V> MyIndexMap<K, V, RandomState> {
+
+    /// WIP_new_function_description
     pub fn new() -> Self {
         Self(IndexMap::with_hasher(RandomState::default()))
     }
@@ -41,6 +51,8 @@ impl<K, V, S> MyIndexMap<K, V, S>
 where
     S: std::hash::BuildHasher + Default,
 {
+
+    /// WIP_with_hasher_function_description
     pub fn with_hasher(hash_builder: S) -> Self {
         Self(IndexMap::with_hasher(hash_builder))
     }
@@ -116,8 +128,8 @@ mod utils {
     }
 }
 
-// 結果構造体
-// pronunciation,notation,word_class_idの組み合わせで重複チェックされる。
+/// 結果構造体
+/// pronunciation,notation,word_class_idの組み合わせで重複チェックされる。
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct DictionaryKey {
     pronunciation: String,
@@ -125,14 +137,14 @@ pub struct DictionaryKey {
     word_class_id: i32,
 }
 
-// コストと品詞判定で判明した品詞の文字列
+/// コストと品詞判定で判明した品詞の文字列
 pub struct DictionaryEntry {
     key: DictionaryKey,
     cost: i32,
     word_class: String,
 }
 
-// システム辞書型式とユーザー辞書型式
+/// システム辞書型式とユーザー辞書型式
 pub struct DictionaryData {
     entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
     user_entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
@@ -145,6 +157,8 @@ impl Default for DictionaryData {
 }
 
 impl DictionaryData {
+
+    /// WIP_new_function_description
     pub fn new() -> Self {
         Self {
             entries: MyIndexMap::with_hasher(RandomState::default()),
@@ -152,11 +166,13 @@ impl DictionaryData {
         }
     }
 
+    /// WIP_add_function_description
     pub fn add(&mut self, entry: DictionaryEntry, is_user_dict: bool) {
         let target = if is_user_dict { &mut self.user_entries } else { &mut self.entries };
         target.insert(entry.key.clone(), entry);
     }
 
+    /// WIP_output_function_description
     pub fn output(&self, _user_dict: bool) -> ioResult<()> {
         let mut writer = BufWriter::new(stdout());
 
@@ -185,8 +201,8 @@ impl DictionaryData {
         writer.flush()
     }
 }
-// Mozc ソースに含まれるsrc/data/dictionary_oss/id.def
-// 更新される可能性がある。
+/// Mozc ソースに含まれるsrc/data/dictionary_oss/id.defを読み込む
+/// 更新される可能性がある。
 type IdDef = MyIndexMap<String, i32>;
 
 const DEFAULT_COST: i32 = 6000;
@@ -290,9 +306,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     result_id
     }
 
-    // id.defは更新されうるので、毎回、最新のものを読み込む。
-    // 品詞判定が出来なかった場合、普通名詞とみなす。
-    // _default_noun_idは、その普通名詞のIDを格納しておく。
+    /// id.defは更新されうるので、毎回、最新のものを読み込む。
+    /// 品詞判定が出来なかった場合、普通名詞とみなす。
+    /// _default_noun_idは、その普通名詞のIDを格納しておく。
     fn read_id_def(path: &Path) -> Result<(IdDef, i32), CsvError> {
         let mut id_def = IdDef::with_hasher(RandomState::default());
         let mut reader = ReaderBuilder::new()
@@ -602,8 +618,8 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         JAPANESE_CHECK.is_match(str)
     }
 
-
-    #[derive(Debug)]
+    /// WIP_DictValues_struct_description
+#[derive(Debug)]
     pub struct DictValues<'a> {
         id_def: &'a mut IdDef,
         default_noun_id: &'a mut i32,
@@ -615,6 +631,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         cost: &'a mut i32,
     }
 
+    /// WIP_DictionaryProcessor_trait_description
     pub trait DictionaryProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
         fn word_class_analyze(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool;
@@ -782,6 +799,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         parts.join("")
     }
 
+    /// WIP_DefaultProcessor_struct_description
     pub struct DefaultProcessor;
     impl DictionaryProcessor for DefaultProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -810,6 +828,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    /// WIP_SudachiProcessor_struct_description
     pub struct SudachiProcessor;
     impl DictionaryProcessor for SudachiProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -838,6 +857,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    /// WIP_NeologdProcessor_struct_description
     pub struct NeologdProcessor;
     impl DictionaryProcessor for NeologdProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -864,6 +884,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    /// WIP_UtDictProcessor_struct_description
     pub struct UtDictProcessor;
     impl DictionaryProcessor for UtDictProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -901,6 +922,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    /// WIP_MozcUserDictProcessor_struct_description
     pub struct MozcUserDictProcessor;
     impl DictionaryProcessor for MozcUserDictProcessor {
         fn should_skip(&self, _dict_values: &mut DictValues, record: &StringRecord, _args: &Config) -> bool {
@@ -1004,6 +1026,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         }
     }
 
+    /// WIP_process_dictionary_function_description
     pub fn process_dictionary(
         _processor: &dyn DictionaryProcessor,
         dict_data: &mut DictionaryData,
@@ -1059,22 +1082,39 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         Ok(())
     }
 
-    #[derive(Debug)]
+    /// WIP_Config_struct_description
+#[derive(Debug)]
     pub struct Config {
+        /// 変換元のテキストファイルのパス
         pub csv_file: PathBuf,
+        /// Mozcソースにあるid.defファイルのパス
         pub id_def: PathBuf,
+        /// 読みのフィールド位置。
         pub pronunciation_index: usize,
+        /// 表記のフィールド位置。
         pub notation_index: usize,
+        /// 品詞を示すフィールドの開始位置。
         pub word_class_index: usize,
+        /// 品詞を示すフィールド数。
         pub word_class_numbers: usize,
+        /// 品詞コストのフィールド位置。
         pub cost_index: usize,
+        /// 読み取る変換元のテキストの区切り文字
         pub delimiter: String,
+        /// 読み取り元をSudachiDictとみなす。
         pub sudachi: bool,
+        /// 読み取り元をUtDictとみなす。
         pub utdict: bool,
+        /// 読み取り元をNeologdとみなす。
         pub neologd: bool,
+        /// 読み取り元をMozcユーザー辞書型式とみなす。
         pub mozcuserdict: bool,
+        /// 出力する変換型式をMozcユーザー辞書型式にする。
         pub user_dict: bool,
+        /// 出力に地名も含める。
         pub places: bool,
+        /// 出力に記号も含める。
         pub symbols: bool,
+        /// デバッグ情報の出力。
         pub debug: bool,
     }
