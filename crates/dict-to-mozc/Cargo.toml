@@ -14,6 +14,10 @@ lazy-regex = { workspace = true }
 indexmap = { workspace = true }
 hashbrown = { workspace = true }
 
+#foldhash = { workspace = true }
+#allocator-api2 = { workspace = true }
+#fxhash = { workspace = true }
+
 [package.metadata.release]
 tag = true
 tag-prefix =""

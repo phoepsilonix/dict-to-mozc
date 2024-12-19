@@ -4,7 +4,7 @@ extern crate kanaria;
 extern crate indexmap;
 extern crate hashbrown;
 
-use std::io::{Result as ioResult, stdout, BufWriter, Write};
+use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use lazy_regex::Regex;
 use lazy_regex::regex_replace_all;
@@ -170,37 +170,48 @@ impl DictionaryData {
     pub fn add(&mut self, entry: DictionaryEntry, is_user_dict: bool) {
         let target = if is_user_dict { &mut self.user_entries } else { &mut self.entries };
         target.insert(entry.key.clone(), entry);
+        //if insert_result.is_none() {
+        //    return Some(entry);
+        //}
+        //None
     }
 
     /// WIP_output_function_description
-    pub fn output(&self, _user_dict: bool) -> ioResult<()> {
-        let mut writer = BufWriter::new(stdout());
+    pub fn output(&self, is_user_dict: bool) -> io::Result<()> {
+        // 非同期の標準出力を取得
+        let mut writer = BufWriter::new(io::stdout());
 
+        // -Uオプションが設定されている場合のみユーザー辞書を出力
+        // ユーザー辞書のエントリーを出力
+        if is_user_dict {
+            for entry in self.user_entries.values() {
+                writeln!(
+                    writer,
+                    "{}\t{}\t{}\t",
+                    entry.key.pronunciation,
+                    entry.key.notation,
+                    entry.word_class
+                )?;
+            }
+        } else {
         // システム辞書のエントリーを出力
-        if ! _user_dict {
             for entry in self.entries.values() {
                 writeln!(
                     writer,
                     "{}\t{}\t{}\t{}\t{}",
-                    entry.key.pronunciation, entry.key.word_class_id, entry.key.word_class_id, entry.cost, entry.key.notation
+                    entry.key.pronunciation,
+                    entry.key.word_class_id,
+                    entry.key.word_class_id,
+                    entry.cost,
+                    entry.key.notation
                 )?;
             }
-        } else {
-            // -Uオプションが設定されている場合のみユーザー辞書を出力
-            for entry in self.user_entries.values() {
-                if !self.entries.contains_key(&entry.key) {
-                    writeln!(
-                        writer,
-                        "{}\t{}\t{}\t",
-                        entry.key.pronunciation, entry.key.notation, entry.word_class
-                    )?;
-                }
-            }
         }
-
+        // バッファをフラッシュ
         writer.flush()
     }
 }
+
 /// Mozc ソースに含まれるsrc/data/dictionary_oss/id.defを読み込む
 /// 更新される可能性がある。
 type IdDef = MyIndexMap<String, i32>;
@@ -366,7 +377,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
     impl WordClassMapping {
         fn new() -> Self {
             Self {
-                //user_to_id_def: MyIndexMap::with_hasher(RandomState::default()),
                 id_def_to_user: MyIndexMap::with_hasher(RandomState::default()),
                 id_to_user_word_class_cache: MyIndexMap::with_hasher(RandomState::default()),
             }
@@ -1006,6 +1016,14 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 word_class: "".to_string(),
             }, false);
         }
+        /*
+           match _result {
+           Some(entry) => {
+           dict_data.output_entry(writer, &entry.clone(), _args.user_dict);
+           },
+           None => todo!(),
+           }
+           */
     }
 
     fn parse_delimiter(s: &str, args: &Config) -> u8 {
@@ -1043,7 +1061,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         _processor: &dyn DictionaryProcessor,
         dict_data: &mut DictionaryData,
         _args: &Config,
-    ) -> ioResult<()> {
+    ) -> io::Result<()> {
         let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
         let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
         let mut mapping = create_word_class_mapping();
@@ -1085,7 +1103,6 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
             .for_each(|record| {
                 process_record(_processor, dict_data, _args, &mut _dict_values, &record);
             });
-
         Ok(())
     }
 
