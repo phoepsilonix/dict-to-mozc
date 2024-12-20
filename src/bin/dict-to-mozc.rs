@@ -17,8 +17,6 @@ use argh::FromArgs;
 use std::process::ExitCode;
 use std::ffi::OsString;
 use std::path::PathBuf;
-use tokio::io;
-use tokio::runtime::Runtime;
 
 #[derive(FromArgs)]
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
@@ -209,7 +207,8 @@ fn filter_args() -> Vec<OsString> {
 }
 
 /// WIP_main_function_description
-pub fn main() -> ExitCode {
+#[tokio::main]
+pub async fn main() -> ExitCode {
     let filtered_args = filter_args();
     // OsStringを&strに変換する
     let args_slice: Vec<&str> = filtered_args
@@ -277,17 +276,6 @@ pub fn main() -> ExitCode {
     };
 
     let _ = process_dictionary(_processor.as_ref(), &mut dict_data, &config);
-    let rt = Runtime::new().unwrap();
-    let result: Result<(), io::Error> = rt.block_on(async {
-        let _ = dict_data.output(config.user_dict).await;
-        Ok(())
-    });
-
-    match result {
-        Ok(_) => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-            ExitCode::FAILURE
-        }
-    }
+    let _ = dict_data.output(config.user_dict).await;
+    ExitCode::SUCCESS
 }

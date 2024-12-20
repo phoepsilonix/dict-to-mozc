@@ -175,12 +175,23 @@ impl DictionaryData {
     }
 
     /// WIP_output_function_description
-    pub async fn output(&self, _user_dict: bool) -> io::Result<()> {
+    pub async fn output(&self, is_user_dict: bool) -> io::Result<()> {
         // 非同期の標準出力を取得
         let mut writer = BufWriter::new(io::stdout());
 
-        // システム辞書のエントリーを出力
-        if !_user_dict {
+        if is_user_dict {
+            // ユーザー辞書のエントリーを出力
+            for entry in self.user_entries.values() {
+                let line = format!(
+                    "{}\t{}\t{}\t\n",
+                    entry.key.pronunciation,
+                    entry.key.notation,
+                    entry.word_class
+                );
+                writer.write_all(line.as_bytes()).await?;
+            }
+        } else {
+            // システム辞書のエントリーを出力
             for entry in self.entries.values() {
                 let line = format!(
                     "{}\t{}\t{}\t{}\t{}\n",
@@ -191,18 +202,6 @@ impl DictionaryData {
                     entry.key.notation
                 );
                 writer.write_all(line.as_bytes()).await?;
-            }
-        } else {
-            for entry in self.user_entries.values() {
-                if !self.entries.contains_key(&entry.key) {
-                    let line = format!(
-                        "{}\t{}\t{}\n",
-                        entry.key.pronunciation,
-                        entry.key.notation,
-                        entry.word_class
-                    );
-                    writer.write_all(line.as_bytes()).await?;
-                }
             }
         }
 
