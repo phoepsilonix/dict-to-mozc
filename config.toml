@@ -31,7 +31,8 @@ rustflags = [
 "-C", "control-flow-guard=y",
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
-"-C", "opt-level=z",
+"-C", "opt-level=3",
+#"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 "-C", "link-args=-Bmold -Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 [target.aarch64-unknown-linux-gnu]
