@@ -8,6 +8,32 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+#[cfg(all(
+        feature = "use-mimalloc-rs",
+))]
+#[global_allocator]
+static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiMalloc;
+
+#[cfg(all(
+        feature = "use-snmalloc",
+        any(
+            not(any(target_arch = "arm", target_arch = "aarch64")),
+            all(target_arch = "aarch64", not(target_os = "windows"))
+        )
+))]
+#[global_allocator]
+static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
+
+#[cfg(all(
+        feature = "use-tcmalloc",
+        any(
+            not(any(target_arch = "arm", target_arch = "aarch64")),
+            all(target_arch = "aarch64", not(target_os = "windows"))
+        )
+))]
+#[global_allocator]
+static GLOBAL: tcmalloc::TCMalloc = tcmalloc::TCMalloc;
+
 extern crate lib_dict_to_mozc;
 extern crate argh;
 
