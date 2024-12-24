@@ -216,8 +216,11 @@ dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.
 ## 依存ライブラリの補足説明
 読みのカタカナから平仮名への変換は、クレートの[kanaria](https://docs.rs/kanaria/latest/kanaria/)[^5]を用いています。  
 なおkanariaについては、依存ライブラリを新しいライブラリへ対応させたものを用いました。  
-クレートの[encoding_rs](https://docs.rs/encoding_rs/latest/encoding_rs/)と[unicode_normalization](https://docs.rs/unicode-normalization/latest/unicode_normalization/)を用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。
-[csv](https://docs.rs/csv/latest/csv/)クレートで読み込んでいます。
+クレートの[encoding_rs](https://docs.rs/encoding_rs/latest/encoding_rs/)と[unicode_normalization](https://docs.rs/unicode-normalization/latest/unicode_normalization/)を用いても、同等のことは可能です。ただkanariaを用いたほうがファイルサイズが小さくなりました。またパフォーマンス面も、ほぼ変わらないようです。  
+データの読み込みは、[csv](https://docs.rs/csv/latest/csv/)クレートを用いてます。  
+カナや英数記号の判定の正規表現の判定に、[lazy-regex](https://docs.rs/lazy-regex/latest/lazy_regex/)を用いてます。  
+重複するエントリーを取り除くのに、[indexmap](https://docs.rs/indexmap/latest/indexmap/)を用いています。  
+Global Allocatorとしてmimallocへのバインディングを提供している[mimalloc-rust](https://docs.rs/mimalloc-rust/latest/mimalloc_rust/)を用いることで、パフォーマンスの改善が行えました。cargo distで複数のアーキテクチャ向けにビルドする際、mimalloc-rustだと、どのアーキテクチャでもビルドエラーにならなかったので、こちらを採用しました。  
 
 ## ユーザー辞書として
 SudachiDictをMozcユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのMozcユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。(Mozcのid.defに依存せずに品詞情報を含めた対応表として残せることが利点です。)  
