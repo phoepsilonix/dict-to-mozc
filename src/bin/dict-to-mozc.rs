@@ -8,9 +8,9 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[cfg(all(
+#[cfg(
         feature = "use-mimalloc-rs",
-))]
+)]
 #[global_allocator]
 static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiMalloc;
 
