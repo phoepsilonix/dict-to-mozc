@@ -61,7 +61,7 @@ Options:
   -C, --cost-index  cost コストフィールドの位置（0から始まる）
   -d, --delimiter   delimiter デリミタ(初期値 ',' カンマ)
   -D, --debug       debug デバッグ
-  --help            display usage information
+  --help, help      display usage information
 ```
 
 ## 動作説明
