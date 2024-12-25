@@ -63,7 +63,7 @@ version.workspace = true
 
 [dependencies]
 lib-dict-to-mozc = { workspace = true }
-argh = { version = "0.1.12", default-features = false }
+argh = { version = "0.1.13", default-features = false, features = [ "help" ] }
 mimalloc-rust = { workspace = true, optional = true }
 
 [target.'cfg(any(not(any(target_arch = "arm", target_arch = "aarch64")),all(target_arch = "aarch64", not(target_os = "windows"))))'.dependencies]
