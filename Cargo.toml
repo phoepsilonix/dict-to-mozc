@@ -1,3 +1,5 @@
+#cargo-features = ["profile-rustflags"]
+
 [workspace]
 members = [
     "crates/*",
@@ -5,7 +7,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.6.9"
+version = "0.6.10"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2021"
 rust-version = "1.83"
@@ -33,17 +35,19 @@ tcmalloc = { version = "0.3.0" }
 #tokio = { version = "1.42.0", features = ["full"] }
 
 [profile.release]
-#debug = true
+debug = true
 strip = true
 overflow-checks = false
 opt-level = 3
 lto = "fat"
 codegen-units = 1
 panic = "abort"
+incremental = true
 
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
+lto = "fat"
 
 [workspace.metadata.release]
 allow-branch = ["main"]
