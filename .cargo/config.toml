@@ -23,6 +23,7 @@ rustflags = [
 [target.x86_64-unknown-linux-musl]
 #linker = "gcc"
 rustflags = [
+"-Ctarget-feature=+crt-static",
 "-Clink-self-contained=on",
 "-C", "panic=abort",
 "-C", "strip=symbols",
@@ -53,6 +54,7 @@ rustflags = [
 linker = "aarch64-linux-gnu-gcc"
 #linker = "gcc"
 rustflags = [
+"-Ctarget-feature=+crt-static",
 "-Clink-self-contained=on",
 "-C", "panic=abort",
 "-C", "strip=symbols",
@@ -83,6 +85,7 @@ rustflags = [
 [target.armv7-unknown-linux-musleabihf]
 linker = "arm-linux-gnueabihf-gcc"
 rustflags = [
+"-Ctarget-feature=+crt-static",
 "-Clink-self-contained=on",
 "-C", "panic=abort",
 "-C", "strip=symbols",

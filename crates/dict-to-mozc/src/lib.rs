@@ -1035,7 +1035,7 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
                 if chars.len() == 1 {
                     chars[0] as u8
                 } else {
-                    if args.debug { eprintln!("Warning: Invalid delimiter '{}'. Using default ','.", s); }
+                    if args.debug >= 1 { eprintln!("Warning: Invalid delimiter '{}'. Using default ','.", s); }
                     b','
                 }
             }
@@ -1086,8 +1086,9 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         } else {
             String::from_utf8(vec![delimiter_char]).unwrap_or_else(|_| "?".to_string())
         };
-        if _args.debug {
+        if _args.debug >= 1 {
             eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char);
+        } else if _args.debug >= 2 {
             dbg!(&_dict_values);
         }
 
@@ -1138,5 +1139,5 @@ fn id_expr(clsexpr: &str, _id_def: &mut IdDef, class_map: &mut MyIndexMap<String
         /// 出力に記号も含める。
         pub symbols: bool,
         /// デバッグ情報の出力。
-        pub debug: bool,
+        pub debug: usize,
     }

@@ -108,9 +108,9 @@ struct Args {
     #[argh(option, short = 'd')]
     delimiter: Option<String>,
 
-    /// debug デバッグ
-    #[argh(switch, short = 'D')]
-    debug: bool,
+    /// debug デバッグ(1: config and time, 2: DictonaryData)
+    #[argh(option, short = 'D')]
+    debug: Option<usize>,
 
 }
 
@@ -153,7 +153,7 @@ impl Args {
             user_dict: self.user_dict,
             places: self.places,
             symbols: self.symbols,
-            debug: self.debug,
+            debug: self.debug.unwrap_or_else(|| dict_type.default_debug()),
         })
     }
 }
@@ -218,6 +218,17 @@ impl DictType {
             DictType::MozcUserDict => "\t".to_string(),
         }
     }
+
+    fn default_debug(&self) -> usize {
+        match self {
+            DictType::Default => 0,
+            DictType::Sudachi => 0,
+            DictType::NEologd => 0,
+            DictType::UTDict => 0,
+            DictType::MozcUserDict => 0,
+        }
+    }
+
 }
 
 fn filter_args() -> Vec<OsString> {
@@ -233,6 +244,7 @@ fn filter_args() -> Vec<OsString> {
 
 /// WIP_main_function_description
 pub fn main() -> ExitCode {
+    let now = std::time::Instant::now();
     let filtered_args = filter_args();
     // OsStringを&strに変換する
     let args_slice: Vec<&str> = filtered_args
@@ -268,7 +280,7 @@ pub fn main() -> ExitCode {
         }
     };
 
-    if config.debug {
+    if config.debug >= 1 {
         eprintln!("{:?}", config);
     }
 
@@ -303,5 +315,9 @@ pub fn main() -> ExitCode {
 
     let _ = dict_data.output(config.user_dict);
 
+    if config.debug >= 1 {
+        let elp = now.elapsed();
+        eprintln!("time: {elp:?}");
+    }
     ExitCode::SUCCESS
 }

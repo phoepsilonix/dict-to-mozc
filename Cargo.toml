@@ -33,7 +33,7 @@ tcmalloc = { version = "0.3.0" }
 #tokio = { version = "1.42.0", features = ["full"] }
 
 [profile.release]
-debug = true
+#debug = true
 strip = true
 overflow-checks = false
 opt-level = 3
@@ -44,7 +44,6 @@ panic = "abort"
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
-lto = "fat"
 
 [workspace.metadata.release]
 allow-branch = ["main"]
