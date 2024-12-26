@@ -131,19 +131,19 @@ jobs:
           case "${{ join(matrix.targets) }}" in
             *aarch64*linux*)
               sudo apt-get install gcc-aarch64-linux-gnu -y
-              #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
-              #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
-              #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
-              #ls -l ~/.cargo/bin/
+              sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
+              curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
+              tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
+              ls -l ~/.cargo/bin/
               hash -r
               ;;
             *arm*linux*)
               sudo apt-get install gcc-arm-linux-gnueabihf -y
-              #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
-              #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
-              #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
+              sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
+              curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
+              tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               ls -l ~/.cargo/bin/
-              #hash -r
+              hash -r
               ;;
             *linux*)
               sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
@@ -157,11 +157,11 @@ jobs:
       - name: "Install rust and rust-src"
         run: |
           sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
+          rustup update nightly
           #rust-toolchain.tomlに記載しているので、cargoコマンドで自動で追加インストールされるため不要
-          #rustup update nightly
           #rustup component add rust-src --toolchain nightly
           # 
-          sed -i -e 's|^debug|#debug|' Cargo.toml
+          #sed -i -e 's|^debug|#debug|' Cargo.toml
         shell: "bash"
       - name: "RUSTFLAGS"
         run: |
