@@ -108,7 +108,7 @@ struct Args {
     #[argh(option, short = 'd')]
     delimiter: Option<String>,
 
-    /// debug デバッグ(1: config and time, 2: DictonaryData)
+    /// debug デバッグ(1: time, 2: config 3: DictonaryData)
     #[argh(option, short = 'D')]
     debug: Option<usize>,
 
@@ -280,7 +280,7 @@ pub fn main() -> ExitCode {
         }
     };
 
-    if config.debug >= 1 {
+    if config.debug > 1 {
         eprintln!("{:?}", config);
     }
 
@@ -315,9 +315,9 @@ pub fn main() -> ExitCode {
 
     let _ = dict_data.output(config.user_dict);
 
-    if config.debug >= 1 {
+    if config.debug > 0 {
         let elp = now.elapsed();
-        eprintln!("time: {elp:?}");
+        eprintln!("elapsed time: {elp:?}");
     }
     ExitCode::SUCCESS
 }
