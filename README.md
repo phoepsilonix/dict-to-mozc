@@ -34,7 +34,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -dオプションでタブ区切りにも対応できます。  
 読み込みにつかっているcsvクレートで用いるデリミタを指定できます。
 ```
-Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-M] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-w <word-class-numbers>] [-C <cost-index>] [-d <delimiter>] [-D]
+Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-M] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-w <word-class-numbers>] [-C <cost-index>] [-d <delimiter>] [-D <debug>]
 
 Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (Mozc辞書型式への変換プログラム)
 
@@ -60,7 +60,7 @@ Options:
                     word class 品詞判定フィールドのフィールド数
   -C, --cost-index  cost コストフィールドの位置（0から始まる）
   -d, --delimiter   delimiter デリミタ(初期値 ',' カンマ)
-  -D, --debug       debug デバッグ
+  -D, --debug       debug デバッグ(1: time, 2: config 3: DictonaryData)
   --help, help      display usage information
 ```
 
