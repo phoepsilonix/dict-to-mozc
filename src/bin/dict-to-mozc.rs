@@ -1,47 +1,45 @@
 #[cfg(all(
-        feature = "use-mimalloc",
-        any(
-            not(any(target_arch = "arm", target_arch = "aarch64")),
-            all(target_arch = "aarch64", not(target_os = "windows"))
-        )
+    feature = "use-mimalloc",
+    any(
+        not(any(target_arch = "arm", target_arch = "aarch64")),
+        all(target_arch = "aarch64", not(target_os = "windows"))
+    )
 ))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[cfg(
-        feature = "use-mimalloc-rs",
-)]
+#[cfg(feature = "use-mimalloc-rs")]
 #[global_allocator]
 static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiMalloc;
 
 #[cfg(all(
-        feature = "use-snmalloc",
-        any(
-            not(any(target_arch = "arm", target_arch = "aarch64")),
-            all(target_arch = "aarch64", not(target_os = "windows"))
-        )
+    feature = "use-snmalloc",
+    any(
+        not(any(target_arch = "arm", target_arch = "aarch64")),
+        all(target_arch = "aarch64", not(target_os = "windows"))
+    )
 ))]
 #[global_allocator]
 static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 
 #[cfg(all(
-        feature = "use-tcmalloc",
-        any(
-            not(any(target_arch = "arm", target_arch = "aarch64")),
-            all(target_arch = "aarch64", not(target_os = "windows"))
-        )
+    feature = "use-tcmalloc",
+    any(
+        not(any(target_arch = "arm", target_arch = "aarch64")),
+        all(target_arch = "aarch64", not(target_os = "windows"))
+    )
 ))]
 #[global_allocator]
 static GLOBAL: tcmalloc::TCMalloc = tcmalloc::TCMalloc;
 
-extern crate lib_dict_to_mozc;
 extern crate argh;
+extern crate lib_dict_to_mozc;
 
-use lib_dict_to_mozc::*;
 use argh::FromArgs;
-use std::process::ExitCode;
+use lib_dict_to_mozc::*;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::process::ExitCode;
 
 #[derive(FromArgs)]
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
@@ -111,7 +109,6 @@ struct Args {
     /// debug デバッグ(1: time, 2: config 3: DictonaryData)
     #[argh(option, short = 'D')]
     debug: Option<usize>,
-
 }
 
 enum DictType {
@@ -140,12 +137,24 @@ impl Args {
         Ok(Config {
             csv_file: self.csv_file.unwrap_or_else(|| current_dir.join("all.csv")),
             id_def: self.id_def.unwrap_or_else(|| current_dir.join("id.def")),
-            pronunciation_index: self.pronunciation_index.unwrap_or_else(|| dict_type.default_pronunciation_index()),
-            notation_index: self.notation_index.unwrap_or_else(|| dict_type.default_notation_index()),
-            word_class_index: self.word_class_index.unwrap_or_else(|| dict_type.default_word_class_index()),
-            word_class_numbers: self.word_class_numbers.unwrap_or_else(|| dict_type.default_word_class_numbers()),
-            cost_index: self.cost_index.unwrap_or_else(|| dict_type.default_cost_index()),
-            delimiter: self.delimiter.unwrap_or_else(|| dict_type.default_delimiter()),
+            pronunciation_index: self
+                .pronunciation_index
+                .unwrap_or_else(|| dict_type.default_pronunciation_index()),
+            notation_index: self
+                .notation_index
+                .unwrap_or_else(|| dict_type.default_notation_index()),
+            word_class_index: self
+                .word_class_index
+                .unwrap_or_else(|| dict_type.default_word_class_index()),
+            word_class_numbers: self
+                .word_class_numbers
+                .unwrap_or_else(|| dict_type.default_word_class_numbers()),
+            cost_index: self
+                .cost_index
+                .unwrap_or_else(|| dict_type.default_cost_index()),
+            delimiter: self
+                .delimiter
+                .unwrap_or_else(|| dict_type.default_delimiter()),
             sudachi: self.sudachi,
             utdict: self.utdict,
             neologd: self.neologd,
@@ -228,7 +237,6 @@ impl DictType {
             DictType::MozcUserDict => 0,
         }
     }
-
 }
 
 fn filter_args() -> Vec<OsString> {
@@ -263,9 +271,12 @@ pub fn main() -> ExitCode {
                 Ok(()) => {
                     println!("{}", early_exit.output);
                     return ExitCode::from(2); // ヘルプ表示時の終了コード
-                },
+                }
                 Err(()) => {
-                    eprintln!("{}\nRun {} --help for more information.", early_exit.output, cmd);
+                    eprintln!(
+                        "{}\nRun {} --help for more information.",
+                        early_exit.output, cmd
+                    );
                     return ExitCode::FAILURE; // コマンドオプションが不適切な場合の終了コード
                 }
             }
