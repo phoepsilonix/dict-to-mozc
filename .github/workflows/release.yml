@@ -131,73 +131,42 @@ jobs:
           case "${{ join(matrix.targets) }}" in
             *aarch64*linux*)
               sudo apt-get install gcc-aarch64-linux-gnu -y
-              sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
-              curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
-              tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
-              ls -l ~/.cargo/bin/
-              hash -r
+              #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
+              #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
+              #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
+              #ls -l ~/.cargo/bin/
+              #hash -r
               ;;
             *arm*linux*)
               sudo apt-get install gcc-arm-linux-gnueabihf -y
-              sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
-              curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
-              tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
-              ls -l ~/.cargo/bin/
+              #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
+              #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
+              #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
+              #ls -l ~/.cargo/bin/
               hash -r
               ;;
             *linux*)
-              sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
-              curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
-              tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
-              ls -l ~/.cargo/bin/
-              hash -r
+              #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
+              #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
+              #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
+              #ls -l ~/.cargo/bin/
+              #hash -r
               ;;
           esac
         shell: "sh"
       - name: "Install rust and rust-src"
         run: |
           sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
-          rustup update nightly
           #rust-toolchain.tomlに記載しているので、cargoコマンドで自動で追加インストールされるため不要
+          #rustup update nightly
           #rustup component add rust-src --toolchain nightly
           # 
           #sed -i -e 's|^debug|#debug|' Cargo.toml
-        shell: "bash"
-      - name: "RUSTFLAGS"
-        run: |
-          echo $RUSTFLAGS
-          RUSTFLAGS="$RUSTFLAGS -Cpanic=abort -Cstrip=symbols -Clto=fat -Cincremental=y -Cno-redzone=y -Coverflow-checks=n -Ccontrol-flow-guard=y -Cembed-bitcode=y -Ccodegen-units=1 -Copt-level=3"
-          RUSTFLAGS="$RUSTFLAGS -Clink-arg=-Wp,-D_FORTIFY_SOURCE=2 -Clink-arg=-U_FORTIFY_SOURCE -Clink-arg=-D_FORTIFY_SOURCE=2 -Clink-arg=-fPIC -Clink-arg=-fpic -Clink-arg=-fPIE -Clink-arg=-fpie"
-          # windows以外はsudoが使える。
-          case "${{ join(matrix.targets) }}" in
-            *linux*)
-              RUSTFLAGS="$RUSTFLAGS -Clink-arg=-Bmold -Clink-arg=-Wl,--sort-common -Clink-arg=-Wl,--as-needed -Clink-arg=-Wl,-z,relro,-z,now,--gc-sections"
-              echo "export RUSTFLAGS=$RUSTFLAGS" |sudo tee -a /etc/environment
-              echo "export RUSTFLAGS=$RUSTFLAGS" |tee -a $HOME/.bashrc
-              echo "export RUSTFLAGS=$RUSTFLAGS" |tee -a $HOME/.bash_profile
-              ;;
-            *apple*)
-              echo "export RUSTFLAGS=$RUSTFLAGS" |sudo tee -a /etc/environment
-              echo "export RUSTFLAGS=$RUSTFLAGS" |tee -a $HOME/.bashrc
-              echo "export RUSTFLAGS=$RUSTFLAGS" |tee -a $HOME/.bash_profile
-              ;;
-            *windows*)
-              RUSTFLAGS="$RUSTFLAGS -Clink-arg=-Wl,--sort-common -Clink-arg=-Wl,--as-needed"
-              echo "export RUSTFLAGS=$RUSTFLAGS" |tee -a $HOME/.bashrc
-              echo "export RUSTFLAGS=$RUSTFLAGS" |tee -a $HOME/.bash_profile
-              ;;
-          esac
-          echo "RUSTFLAGS=$RUSTFLAGS" >> $GITHUB_ENV
-          export RUSTFLAGS
           # copy config.toml to ~/.cargo/
           mkdir -p ~/.cargo/
           rm -f ~/.cargo/config*
           cp -f .cargo/config.toml ~/.cargo/config.toml
         shell: "bash"
-      - name: "check RUSTFLAGS"
-        run: |
-          echo $RUSTFLAGS
-          env
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
