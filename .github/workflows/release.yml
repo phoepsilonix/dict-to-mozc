@@ -135,7 +135,9 @@ jobs:
               #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
               #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               #ls -l ~/.cargo/bin/
-              #hash -r
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              hash -r
+              export RUSTFLAGS="-Clink-arg=-Bmold"
               ;;
             *arm*linux*)
               sudo apt-get install gcc-arm-linux-gnueabihf -y
@@ -143,14 +145,18 @@ jobs:
               #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
               #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               #ls -l ~/.cargo/bin/
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
+              export RUSTFLAGS="-Clink-arg=-Bmold"
               ;;
             *linux*)
               #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
               #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
               #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               #ls -l ~/.cargo/bin/
-              #hash -r
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              hash -r
+              export RUSTFLAGS="-Clink-arg=-Bmold"
               ;;
           esac
         shell: "sh"
