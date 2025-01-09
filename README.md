@@ -85,7 +85,7 @@ $,5969,5969,2784,$,補助記号,一般,*,*,*,*,キゴウ,$,*,A,*,*,*,*
 git clone --filter=tree:0 https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
 cd dict-to-mozc
 # rustプログラムのビルド
-cargo build --release
+RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
 ```
 ```sh
 # id.defの最新版を取得
@@ -134,8 +134,15 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/phoepsilonix/dict-to-mo
 Rustはあらかじめインストールしておいてください。  
 `$HOME/.cargo/bin`にインストールされます。
 ```sh
-cargo install --git https://github.com/phoepsilonix/dict-to-mozc.git
+cargo install --git https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc --profile release -F use-mimalloc-rs
 which dict-to-mozc
+```
+```sh
+git clone https://github.com/phoepsilonix/dict-to-mozc.git
+cd dict-to-mozc
+RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+ls -l target/x86_64-unknown-linux-gnu/release/dict-to-mozc
+cp target/x86_64-unknown-linux-gnu/release/dict-to-mozc ~/.cargo/bin/
 ```
 
 ### 使用例
@@ -164,7 +171,7 @@ cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
 # id.defの最新版を取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
 # rustプログラムのビルド
-cargo build --release
+RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
 # Mozcシステム辞書型式への変換
 dict-to-mozc -s -i ./id.def -f sudachi.csv > sudachi-dict.txt
 # Mozcユーザー辞書型式への変換
@@ -231,7 +238,7 @@ SudachiDictをMozcユーザー辞書形式へ変換したものと、Neologdのu
 
 ただ上記2点のことを踏まえると、ユーザー辞書として、すべてを取り込むのは、使い勝手の面からも、よくないかもしれません。
 実際に、全件を取り込むと、mozc_serverが応答しないなどの問題が発生しました。品詞などを選別して、特定のものに限ったほうがよさそうです。システム辞書に組み込む場合は、そこまで重くなっていないのですが、ユーザー辞書の用途として、やはり大量の件数を取り込むのは悪手なのでしょう。  
-個人的な知り合いの氏名が出にくい、郵便番号辞書が更新されたが反映されていないなど、個別の案件で、そのユーザーが優先的に変換したいものを、登録するのがユーザー辞書のような機能の本来のあり方だとも思います。システム辞書型式に変換するだけでなく、付属的にユーザー辞書への変換機能も追加しましたが、ユーザー辞書型式にして、取り込む場合には、元データをよく選別してから、使うほうが良さそうです。
+個人的な知り合いの氏名が出にくい、郵便番号辞書が更新されたが反映されていないなど、個別の案件で、そのユーザーが優先的に変換したいものを登録するのが、ユーザー辞書の本来のあり方だとも思います。システム辞書型式に変換するだけでなく、付属的にユーザー辞書への変換機能も追加しましたが、ユーザー辞書型式にして、取り込む場合には、元データをよく選別してから、使うほうが良さそうです。
 
 下記サイトでMozcのシステム辞書として、SudachiDict[^6]とMeCab-unidic-NEologd[^7],MeCab-ipadic-NEologd[^8]を組み込んだものを用意しています。  
 [Ubuntu:23.10(mantic) and Debian:12(bookworm)向けMozcパッケージ](https://github.com/phoepsilonix/mozc-deb/releases)[^2]  
