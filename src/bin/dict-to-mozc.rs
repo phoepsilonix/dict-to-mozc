@@ -220,11 +220,11 @@ impl DictType {
 
     fn default_delimiter(&self) -> String {
         match self {
-            DictType::Default => ",".to_string(),
-            DictType::Sudachi => ",".to_string(),
-            DictType::NEologd => ",".to_string(),
-            DictType::UTDict => "\t".to_string(),
-            DictType::MozcUserDict => "\t".to_string(),
+            DictType::Default => ",".to_owned(),
+            DictType::Sudachi => ",".to_owned(),
+            DictType::NEologd => ",".to_owned(),
+            DictType::UTDict => "\t".to_owned(),
+            DictType::MozcUserDict => "\t".to_owned(),
         }
     }
 

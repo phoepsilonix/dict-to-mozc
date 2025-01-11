@@ -177,7 +177,7 @@ impl DictionaryData {
         } else {
             &mut self.entries
         };
-        target.insert(entry.key.clone(), entry);
+        target.insert(entry.key.to_owned(), entry);
         //if insert_result.is_none() {
         //    return Some(entry);
         //}
@@ -241,7 +241,7 @@ fn id_expr(
     let normalized_clsexpr = expr.join(",");
 
     if let Some((_, id)) = _id_def.iter().find(|(key, _)| *key == &normalized_clsexpr) {
-        class_map.insert(normalized_clsexpr.to_string(), *id);
+        class_map.insert(normalized_clsexpr.to_owned(), *id);
         return *id;
     }
 
@@ -333,8 +333,8 @@ fn id_expr(
     } else {
         best_match.1
     };
-    _id_def.insert(normalized_clsexpr.to_string(), result_id);
-    class_map.insert(normalized_clsexpr.to_string(), result_id);
+    _id_def.insert(normalized_clsexpr.to_owned(), result_id);
+    class_map.insert(normalized_clsexpr.to_owned(), result_id);
     result_id
 }
 
@@ -401,11 +401,11 @@ impl WordClassMapping {
     fn add_mapping(&mut self, user_word_class: &str, id_def_word_class: &str) {
         /*
         if self.user_to_id_def.get(user_word_class) == None {
-        self.user_to_id_def.insert(user_word_class.to_string(), id_def_word_class.to_string());
+        self.user_to_id_def.insert(user_word_class.to_owned(), id_def_word_class.to_owned());
         }
         */
         self.id_def_to_user
-            .insert(id_def_word_class.to_string(), user_word_class.to_string());
+            .insert(id_def_word_class.to_owned(), user_word_class.to_owned());
     }
 
     fn get_first_id_def(&self, user_word_class: &String) -> Option<&String> {
@@ -522,7 +522,7 @@ fn get_user_word_class_by_id(
 ) -> Option<String> {
     // キャッシュをチェック
     if let Some(cached_word_class) = mapping.id_to_user_word_class_cache.get(&word_class_id) {
-        return Some(cached_word_class.clone());
+        return Some(cached_word_class.to_owned());
     }
     let result = _id_def
         .iter()
@@ -538,7 +538,7 @@ fn get_user_word_class_by_id(
                 // 特殊なケース（記号など）の処理
                 if parts[0] == "記号" || parts[0] == "補助記号" {
                     if key_parts[0] == "記号" {
-                        return Some(value.clone());
+                        return Some(value.to_owned());
                     }
                     continue;
                 }
@@ -581,13 +581,13 @@ fn get_user_word_class_by_id(
                 }
             }
 
-            best_match.map(|(_, v)| v.clone())
+            best_match.map(|(_, v)| v.to_owned())
         });
     // 結果をキャッシュに保存
     if let Some(ref word_class) = result {
         mapping
             .id_to_user_word_class_cache
-            .insert(word_class_id, word_class.clone());
+            .insert(word_class_id, word_class.to_owned());
     }
 
     result
@@ -601,8 +601,8 @@ fn get_user_word_class(
 ) -> String {
     // キャッシュをチェック
     let word_class: String = match mapping.get_first_id_def(&user_word_class) {
-        Some(class) => class.clone(),
-        None => "名詞,一般,*,*,*,*,*".to_string(),
+        Some(class) => class.to_owned(),
+        None => "名詞,一般,*,*,*,*,*".to_owned(),
     };
     word_class
 }
@@ -611,12 +611,12 @@ fn get_user_word_class(
 fn search_key(def: &IdDef, search: i32) -> String {
     for (key, value) in def {
         if value == &search {
-            return key.to_string();
+            return key.to_owned();
         } else {
             continue;
         }
     }
-    "".to_string()
+    "".to_owned()
 }
 
 // 品詞idからユーザー辞書の品詞を判定
@@ -698,7 +698,7 @@ pub trait DictionaryProcessor {
 
 fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> bool {
     let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
-        Some(p) => p.to_string(),
+        Some(p) => p.to_owned(),
         None => return false,
     };
     let _notation = match record.get(_args.notation_index) {
@@ -748,7 +748,7 @@ fn process_sudachi_skip(
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
     if !is_kana(&_pronunciation) {
         return true;
@@ -778,7 +778,7 @@ fn process_neologd_skip(
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
     if !is_kana(&_pronunciation) {
         return true;
@@ -816,7 +816,7 @@ fn process_utdict_skip(
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
     if !is_kana(&_pronunciation) {
         return true;
@@ -849,7 +849,7 @@ fn process_mozcuserdict_skip(
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
     if !is_kana(&_pronunciation) {
         return true;
@@ -918,7 +918,7 @@ fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut 
 }
 
 fn process_sudachi_word_class(word_class: &[&str]) -> String {
-    let mut parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+    let mut parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
     parts[0] = parts[0].replace("補助記号", "記号");
     if parts.len() > 1 {
@@ -955,9 +955,9 @@ fn process_sudachi_word_class(word_class: &[&str]) -> String {
 }
 
 fn process_neologd_word_class(word_class: &[&str]) -> String {
-    let mut parts: Vec<String> = word_class.iter().map(|&s| s.to_string()).collect();
+    let mut parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
     if parts.len() > 1 && parts[0] == "名詞" && parts[1] == "一般" {
-        parts[1] = "普通名詞".to_string();
+        parts[1] = "普通名詞".to_owned();
     }
     parts.join(",")
 }
@@ -1130,7 +1130,7 @@ impl DictionaryProcessor for UtDictProcessor {
         };
         *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
         *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, word_class_id).to_string();
+        let d: String = search_key(_dict_values.id_def, word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
         if word_class.is_none() {
             *_dict_values.word_class_id = id_expr(
@@ -1193,7 +1193,7 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         };
         *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
         *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_string();
+        let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
         if word_class.is_none() {
             *_dict_values.word_class_id = id_expr(
@@ -1230,8 +1230,8 @@ fn add_dict_data(
                 dict_data.add(
                     DictionaryEntry {
                         key: DictionaryKey {
-                            pronunciation: _dict_values.pronunciation.to_string(),
-                            notation: _dict_values.notation.to_string(),
+                            pronunciation: _dict_values.pronunciation.to_owned(),
+                            notation: _dict_values.notation.to_owned(),
                             word_class_id: *_dict_values.word_class_id,
                         },
                         cost: *_dict_values.cost,
@@ -1244,12 +1244,12 @@ fn add_dict_data(
                 dict_data.add(
                     DictionaryEntry {
                         key: DictionaryKey {
-                            pronunciation: _dict_values.pronunciation.to_string(),
-                            notation: _dict_values.notation.to_string(),
+                            pronunciation: _dict_values.pronunciation.to_owned(),
+                            notation: _dict_values.notation.to_owned(),
                             word_class_id: *_dict_values.word_class_id,
                         },
                         cost: *_dict_values.cost,
-                        word_class: "名詞".to_string(),
+                        word_class: "名詞".to_owned(),
                     },
                     true,
                 );
@@ -1259,12 +1259,12 @@ fn add_dict_data(
         dict_data.add(
             DictionaryEntry {
                 key: DictionaryKey {
-                    pronunciation: _dict_values.pronunciation.to_string(),
-                    notation: _dict_values.notation.to_string(),
+                    pronunciation: _dict_values.pronunciation.to_owned(),
+                    notation: _dict_values.notation.to_owned(),
                     word_class_id: *_dict_values.word_class_id,
                 },
                 cost: *_dict_values.cost,
-                word_class: "".to_string(),
+                word_class: "".to_owned(),
             },
             false,
         );
@@ -1272,7 +1272,7 @@ fn add_dict_data(
     /*
     match _result {
     Some(entry) => {
-    dict_data.output_entry(writer, &entry.clone(), _args.user_dict);
+    dict_data.output_entry(writer, &entry.to_owned(), _args.user_dict);
     },
     None => todo!(),
     }
@@ -1341,13 +1341,14 @@ pub fn process_dictionary(
     let delimiter_char = parse_delimiter(&_args.delimiter, _args);
 
     let delimiter_str = if delimiter_char == b'\t' {
-        "TAB".to_string()
+        "TAB".to_owned()
     } else {
-        String::from_utf8(vec![delimiter_char]).unwrap_or_else(|_| "?".to_string())
+        String::from_utf8(vec![delimiter_char]).unwrap_or_else(|_| "?".to_owned())
     };
     if _args.debug > 1 {
         eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char);
-    } else if _args.debug > 2 {
+    }
+    if _args.debug > 2 {
         dbg!(&_dict_values);
     }
 
