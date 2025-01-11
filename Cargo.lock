@@ -55,8 +55,7 @@ checksum = "1be3f42a67d6d345ecd59f675f3f012d6974981560836e938c22b424b85ce1be"
 [[package]]
 name = "cc"
 version = "1.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad0cf6e91fde44c773c6ee7ec6bba798504641a8bc2eb7e37a04ffbf4dfaa55a"
+source = "git+https://github.com/rust-lang/cc-rs.git?rev=2e74353eb1d021ed272bc606242b2c700de9cbaa#2e74353eb1d021ed272bc606242b2c700de9cbaa"
 dependencies = [
  "shlex",
 ]
@@ -99,7 +98,7 @@ checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
 name = "dict-to-mozc"
-version = "0.6.13-pre"
+version = "0.6.13"
 dependencies = [
  "argh",
  "csv",
@@ -156,7 +155,7 @@ checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
 [[package]]
 name = "kanaria"
 version = "0.2.1"
-source = "git+https://github.com/phoepsilonix/kanaria.git?rev=18ca812a1fe8c7f30a753aecc2681db1f18031e8#18ca812a1fe8c7f30a753aecc2681db1f18031e8"
+source = "git+https://github.com/samunohito/kanaria.git?rev=18ca812a1fe8c7f30a753aecc2681db1f18031e8#18ca812a1fe8c7f30a753aecc2681db1f18031e8"
 dependencies = [
  "bitflags",
 ]
@@ -186,7 +185,7 @@ dependencies = [
 
 [[package]]
 name = "lib-dict-to-mozc"
-version = "0.6.13-pre"
+version = "0.6.13"
 dependencies = [
  "csv",
  "hashbrown",
