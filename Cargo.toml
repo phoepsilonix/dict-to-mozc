@@ -61,7 +61,7 @@ license.workspace = true
 version.workspace = true
 
 [patch.crates-io]
-cc = { git = "https://github.com/rust-lang/cc-rs.git", rev = "2e74353eb1d021ed272bc606242b2c700de9cbaa" }
+cc = { git = "https://github.com/rust-lang/cc-rs.git", rev = "9b9174434e1e0e31a1928c9280a443907b0db911" }
 kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8" }
 
 [dependencies]
