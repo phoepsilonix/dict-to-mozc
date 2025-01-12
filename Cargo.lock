@@ -55,7 +55,7 @@ checksum = "1be3f42a67d6d345ecd59f675f3f012d6974981560836e938c22b424b85ce1be"
 [[package]]
 name = "cc"
 version = "1.2.8"
-source = "git+https://github.com/rust-lang/cc-rs.git?rev=2e74353eb1d021ed272bc606242b2c700de9cbaa#2e74353eb1d021ed272bc606242b2c700de9cbaa"
+source = "git+https://github.com/rust-lang/cc-rs.git?rev=9b9174434e1e0e31a1928c9280a443907b0db911#9b9174434e1e0e31a1928c9280a443907b0db911"
 dependencies = [
  "shlex",
 ]
@@ -98,7 +98,7 @@ checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
 name = "dict-to-mozc"
-version = "0.6.13"
+version = "0.6.14-pre"
 dependencies = [
  "argh",
  "csv",
@@ -185,7 +185,7 @@ dependencies = [
 
 [[package]]
 name = "lib-dict-to-mozc"
-version = "0.6.13"
+version = "0.6.14-pre"
 dependencies = [
  "csv",
  "hashbrown",
