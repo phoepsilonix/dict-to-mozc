@@ -697,8 +697,8 @@ pub trait DictionaryProcessor {
 }
 
 fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> bool {
-    let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
-        Some(p) => p.to_owned(),
+    let _pronunciation = match record.get(_args.pronunciation_index) {
+        Some(p) => p,
         None => return false,
     };
     let _notation = match record.get(_args.notation_index) {
@@ -744,13 +744,13 @@ fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictVa
 
 fn process_sudachi_skip(
     _args: &Config,
-    _pronunciation: String,
+    _pronunciation: &str,
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
     let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
-    if !is_kana(&_pronunciation) {
+    if !is_kana(_pronunciation) {
         return true;
     };
     if _notation.is_empty() {
@@ -774,13 +774,13 @@ fn process_sudachi_skip(
 
 fn process_neologd_skip(
     _args: &Config,
-    _pronunciation: String,
+    _pronunciation: &str,
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
     let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
-    if !is_kana(&_pronunciation) {
+    if !is_kana(_pronunciation) {
         return true;
     };
     if _notation.is_empty() {
@@ -812,13 +812,13 @@ fn process_neologd_skip(
 fn process_utdict_skip(
     _args: &Config,
     _dict_values: &mut DictValues,
-    _pronunciation: String,
+    _pronunciation: &str,
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
     let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
-    if !is_kana(&_pronunciation) {
+    if !is_kana(_pronunciation) {
         return true;
     };
     if _notation.is_empty() {
@@ -845,13 +845,13 @@ fn process_utdict_skip(
 fn process_mozcuserdict_skip(
     _args: &Config,
     _dict_values: &mut DictValues,
-    _pronunciation: String,
+    _pronunciation: &str,
     _notation: &str,
     word_class: &[&str],
 ) -> bool {
     let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
 
-    if !is_kana(&_pronunciation) {
+    if !is_kana(_pronunciation) {
         return true;
     };
     if _notation.is_empty() {
@@ -983,7 +983,7 @@ impl DictionaryProcessor for DefaultProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
         };
@@ -1027,7 +1027,7 @@ impl DictionaryProcessor for SudachiProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
         };
@@ -1071,7 +1071,7 @@ impl DictionaryProcessor for NeologdProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
         };
@@ -1120,7 +1120,7 @@ impl DictionaryProcessor for UtDictProcessor {
         if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
             word_class_id = *_dict_values.default_noun_id;
         }
-        let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
         };
@@ -1183,7 +1183,7 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         }
         // ユーザー辞書型式から品詞IDに
         *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
-        let mut _pronunciation: String = match record.get(_args.pronunciation_index) {
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
         };
