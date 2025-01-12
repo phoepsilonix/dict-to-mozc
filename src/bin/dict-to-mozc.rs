@@ -244,7 +244,7 @@ fn filter_args() -> Vec<OsString> {
     let help_flags: Vec<OsString> = vec!["-h".into(), "--help".into(), "-?".into()];
 
     if args.len() <= 1 || args.iter().any(|arg| help_flags.contains(arg)) {
-        vec![args[0].clone(), "--help".into()]
+        vec![args[0].to_owned(), "--help".into()]
     } else {
         args
     }
