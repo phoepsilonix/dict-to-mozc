@@ -595,7 +595,7 @@ fn get_user_word_class_by_id(
 
 // ユーザー辞書の品詞からid_defの品詞文字列へ
 fn get_user_word_class(
-    mapping: &mut WordClassMapping,
+    mapping: &WordClassMapping,
     _id_def: &IdDef,
     user_word_class: String,
 ) -> String {
@@ -622,7 +622,7 @@ fn search_key(def: &IdDef, search: i32) -> String {
 // 品詞idからユーザー辞書の品詞を判定
 fn u_search_key(
     mapping: &mut WordClassMapping,
-    _id_def: &mut IdDef,
+    _id_def: &IdDef,
     word_class_id: i32,
 ) -> Option<String> {
     get_user_word_class_by_id(mapping, _id_def, word_class_id)
@@ -630,7 +630,7 @@ fn u_search_key(
 
 // ユーザー辞書の品詞からid.defの品詞文字列へ
 fn u_search_word_class(
-    mapping: &mut WordClassMapping,
+    mapping: &WordClassMapping,
     _id_def: &mut IdDef,
     word_class: String,
 ) -> String {
