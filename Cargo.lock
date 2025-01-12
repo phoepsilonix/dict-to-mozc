@@ -54,8 +54,9 @@ checksum = "1be3f42a67d6d345ecd59f675f3f012d6974981560836e938c22b424b85ce1be"
 
 [[package]]
 name = "cc"
-version = "1.2.8"
-source = "git+https://github.com/rust-lang/cc-rs.git?rev=9b9174434e1e0e31a1928c9280a443907b0db911#9b9174434e1e0e31a1928c9280a443907b0db911"
+version = "1.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8293772165d9345bdaaa39b45b2109591e63fe5e6fbc23c6ff930a048aa310b"
 dependencies = [
  "shlex",
 ]
