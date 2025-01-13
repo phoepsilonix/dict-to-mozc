@@ -1357,9 +1357,9 @@ pub fn process_dictionary(
         .delimiter(delimiter_char)
         .from_path(&_args.csv_file);
 
-    reader?.records().filter_map(Result::ok).for_each(|record| {
-        process_record(_processor, dict_data, _args, &mut _dict_values, &record);
-    });
+    for record in reader?.records() {
+        process_record(_processor, dict_data, _args, &mut _dict_values, &record?);
+    }
     Ok(())
 }
 
