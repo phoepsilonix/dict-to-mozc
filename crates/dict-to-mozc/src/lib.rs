@@ -5,8 +5,8 @@ extern crate kanaria;
 extern crate lazy_regex;
 extern crate rayon;
 
-use rayon::ThreadPoolBuilder;
 use rayon::ThreadPool;
+use rayon::ThreadPoolBuilder;
 
 use std::sync::{Arc, Mutex};
 
@@ -674,35 +674,46 @@ fn is_japanese(str: &str) -> bool {
 }
 
 /// WIP_DictValues_struct_description
-#[derive(Debug)]
 pub struct DictValues<'a> {
-    id_def: &'a mut IdDef,
-    default_noun_id: &'a mut i32,
-    class_map: &'a mut MyIndexMap<String, i32>,
-    mapping: &'a mut WordClassMapping,
     pronunciation: &'a mut String,
     notation: &'a mut String,
     word_class_id: &'a mut i32,
     cost: &'a mut i32,
 }
 
+/// WIP_WordClassValues_struct_description
+#[derive(Debug)]
+pub struct WordClassValues<'a> {
+    class_map: &'a mut MyIndexMap<String, i32>,
+    mapping: &'a mut WordClassMapping,
+    id_def: &'a mut IdDef,
+    default_noun_id: &'a mut i32,
+}
+
 /// WIP_DictionaryProcessor_trait_description
-pub trait DictionaryProcessor  {
+pub trait DictionaryProcessor {
     fn should_skip(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool;
     fn word_class_analyze(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool;
 }
 
-fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> bool {
+fn skip_analyze(
+    record: &StringRecord,
+    _args: &Config,
+    _word_class_values: &mut WordClassValues,
+    _dict_values: &mut DictValues,
+) -> bool {
     let _pronunciation = match record.get(_args.pronunciation_index) {
         Some(p) => p,
         None => return false,
@@ -730,6 +741,7 @@ fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictVa
     } else if _args.utdict {
         process_utdict_skip(
             _args,
+            _word_class_values,
             _dict_values,
             _pronunciation,
             _notation,
@@ -738,6 +750,7 @@ fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictVa
     } else if _args.mozcuserdict {
         process_mozcuserdict_skip(
             _args,
+            _word_class_values,
             _dict_values,
             _pronunciation,
             _notation,
@@ -817,6 +830,7 @@ fn process_neologd_skip(
 
 fn process_utdict_skip(
     _args: &Config,
+    _word_class_values: &mut WordClassValues,
     _dict_values: &mut DictValues,
     _pronunciation: &str,
     _notation: &str,
@@ -832,16 +846,16 @@ fn process_utdict_skip(
     };
     *_dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
     if *_dict_values.word_class_id == -1 || *_dict_values.word_class_id == 0 {
-        *_dict_values.word_class_id = *_dict_values.default_noun_id;
+        *_dict_values.word_class_id = *_word_class_values.default_noun_id;
     }
     if (!_args.symbols)
         && is_kigou(_notation)
-        && !search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
+        && !search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
     {
         return true;
     };
     if (!_args.places)
-        && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+        && search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("地名")
     {
         return true;
     }
@@ -850,6 +864,7 @@ fn process_utdict_skip(
 
 fn process_mozcuserdict_skip(
     _args: &Config,
+    _word_class_values: &mut WordClassValues,
     _dict_values: &mut DictValues,
     _pronunciation: &str,
     _notation: &str,
@@ -864,29 +879,37 @@ fn process_mozcuserdict_skip(
         return true;
     };
     // ユーザー辞書の品詞からID.defの品詞文字列へ
-    let word_class =
-        u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
+    let word_class = u_search_word_class(
+        _word_class_values.mapping,
+        _word_class_values.id_def,
+        _parts.join(""),
+    );
     *_dict_values.word_class_id = id_expr(
         &word_class,
-        _dict_values.id_def,
-        _dict_values.class_map,
-        *_dict_values.default_noun_id,
+        _word_class_values.id_def,
+        _word_class_values.class_map,
+        *_word_class_values.default_noun_id,
     );
     if (!_args.symbols)
         && is_kigou(_notation)
-        && !search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
+        && !search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
     {
         return true;
     };
     if (!_args.places)
-        && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+        && search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("地名")
     {
         return true;
     }
     false
 }
 
-fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> i32 {
+fn process_word_class(
+    record: &StringRecord,
+    _args: &Config,
+    _word_class_values: &mut WordClassValues,
+    _dict_values: &mut DictValues,
+) -> i32 {
     let mut word_class_parts = Vec::new();
     let start_index = _args.word_class_index;
     let end_index = std::cmp::min(start_index + _args.word_class_numbers, record.len());
@@ -903,12 +926,12 @@ fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut 
     } else if _args.neologd {
         process_neologd_word_class(&word_class_parts)
     } else if _args.utdict {
-        return *_dict_values.default_noun_id;
+        return *_word_class_values.default_noun_id;
         //    process_utdict_word_class(&word_class_parts)
     } else if _args.mozcuserdict {
         u_search_word_class(
-            _dict_values.mapping,
-            _dict_values.id_def,
+            _word_class_values.mapping,
+            _word_class_values.id_def,
             process_mozcuserdict_word_class(&word_class_parts),
         )
     } else {
@@ -917,9 +940,9 @@ fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut 
 
     id_expr(
         &processed_class,
-        _dict_values.id_def,
-        _dict_values.class_map,
-        *_dict_values.default_noun_id,
+        _word_class_values.id_def,
+        _word_class_values.class_map,
+        *_word_class_values.default_noun_id,
     )
 }
 
@@ -976,15 +999,17 @@ pub struct DefaultProcessor;
 impl DictionaryProcessor for DefaultProcessor {
     fn should_skip(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        skip_analyze(record, _args, _word_class_values, _dict_values)
     }
 
     fn word_class_analyze(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
@@ -997,9 +1022,10 @@ impl DictionaryProcessor for DefaultProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        *_dict_values.word_class_id =
+            process_word_class(record, _args, _word_class_values, _dict_values);
         if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            && search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("地名")
             && is_japanese(_dict_values.notation)
         {
             return false;
@@ -1020,15 +1046,17 @@ pub struct SudachiProcessor;
 impl DictionaryProcessor for SudachiProcessor {
     fn should_skip(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        skip_analyze(record, _args, _word_class_values, _dict_values)
     }
 
     fn word_class_analyze(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
@@ -1041,9 +1069,10 @@ impl DictionaryProcessor for SudachiProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        *_dict_values.word_class_id =
+            process_word_class(record, _args, _word_class_values, _dict_values);
         if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            && search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("地名")
             && is_japanese(_dict_values.notation)
         {
             return false;
@@ -1064,15 +1093,17 @@ pub struct NeologdProcessor;
 impl DictionaryProcessor for NeologdProcessor {
     fn should_skip(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        skip_analyze(record, _args, _word_class_values, _dict_values)
     }
 
     fn word_class_analyze(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
@@ -1085,9 +1116,10 @@ impl DictionaryProcessor for NeologdProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        *_dict_values.word_class_id =
+            process_word_class(record, _args, _word_class_values, _dict_values);
         if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            && search_key(_word_class_values.id_def, *_dict_values.word_class_id).contains("地名")
         {
             return false;
         }
@@ -1107,15 +1139,17 @@ pub struct UtDictProcessor;
 impl DictionaryProcessor for UtDictProcessor {
     fn should_skip(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        skip_analyze(record, _args, _word_class_values, _dict_values)
     }
 
     fn word_class_analyze(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
@@ -1124,7 +1158,7 @@ impl DictionaryProcessor for UtDictProcessor {
         let word_class = &data[_args.word_class_index];
         let mut word_class_id = word_class.parse::<i32>().unwrap();
         if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
-            word_class_id = *_dict_values.default_noun_id;
+            word_class_id = *_word_class_values.default_noun_id;
         }
         let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
@@ -1136,14 +1170,14 @@ impl DictionaryProcessor for UtDictProcessor {
         };
         *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
         *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, word_class_id).to_owned();
-        let word_class = _dict_values.class_map.get(&d);
+        let d: String = search_key(_word_class_values.id_def, word_class_id).to_owned();
+        let word_class = _word_class_values.class_map.get(&d);
         if word_class.is_none() {
             *_dict_values.word_class_id = id_expr(
                 &d,
-                _dict_values.id_def,
-                _dict_values.class_map,
-                *_dict_values.default_noun_id,
+                _word_class_values.id_def,
+                _word_class_values.class_map,
+                *_word_class_values.default_noun_id,
             );
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
@@ -1162,15 +1196,17 @@ pub struct MozcUserDictProcessor;
 impl DictionaryProcessor for MozcUserDictProcessor {
     fn should_skip(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        skip_analyze(record, _args, _word_class_values, _dict_values)
     }
 
     fn word_class_analyze(
         &self,
+        _word_class_values: &mut WordClassValues,
         _dict_values: &mut DictValues,
         record: &StringRecord,
         _args: &Config,
@@ -1188,7 +1224,8 @@ impl DictionaryProcessor for MozcUserDictProcessor {
             }
         }
         // ユーザー辞書型式から品詞IDに
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        *_dict_values.word_class_id =
+            process_word_class(record, _args, _word_class_values, _dict_values);
         let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
@@ -1199,14 +1236,15 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         };
         *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
         *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_owned();
-        let word_class = _dict_values.class_map.get(&d);
+        let d: String =
+            search_key(_word_class_values.id_def, *_dict_values.word_class_id).to_owned();
+        let word_class = _word_class_values.class_map.get(&d);
         if word_class.is_none() {
             *_dict_values.word_class_id = id_expr(
                 &d,
-                _dict_values.id_def,
-                _dict_values.class_map,
-                *_dict_values.default_noun_id,
+                _word_class_values.id_def,
+                _word_class_values.class_map,
+                *_word_class_values.default_noun_id,
             );
         } else {
             *_dict_values.word_class_id = *word_class.unwrap();
@@ -1221,14 +1259,15 @@ impl DictionaryProcessor for MozcUserDictProcessor {
 
 fn add_dict_data(
     _data: &StringRecord,
+    _word_class_values: &mut WordClassValues,
     _dict_values: &mut DictValues,
     dict_data: &mut DictionaryData,
     _args: &Config,
 ) {
     if _args.user_dict {
         match u_search_key(
-            _dict_values.mapping,
-            _dict_values.id_def,
+            _word_class_values.mapping,
+            _word_class_values.id_def,
             *_dict_values.word_class_id,
         ) {
             Some(_word_class) => {
@@ -1308,17 +1347,23 @@ fn process_record(
     _processor: &dyn DictionaryProcessor,
     dict_data: Arc<Mutex<DictionaryData>>,
     _args: &Config,
+    _word_class_values: &mut WordClassValues,
     _dict_values: &mut DictValues,
     data: &csv::StringRecord,
     pool: &ThreadPool,
 ) {
-    if !_processor.should_skip(_dict_values, data, _args)
-        && _processor.word_class_analyze(_dict_values, data, _args)
+    if !_processor.should_skip(_word_class_values, _dict_values, data, _args)
+        && _processor.word_class_analyze(_word_class_values, _dict_values, data, _args)
     {
-
         pool.install(|| {
             let mut _dict_data = dict_data.lock().unwrap();
-            add_dict_data(data, _dict_values, &mut _dict_data, _args);
+            add_dict_data(
+                data,
+                _word_class_values,
+                _dict_values,
+                &mut _dict_data,
+                _args,
+            );
         });
     }
 }
@@ -1337,11 +1382,14 @@ pub fn process_dictionary(
     let mut word_class_id = -1;
     let mut cost = -1;
 
-    let mut _dict_values = DictValues {
-        id_def: &mut _id_def,
-        default_noun_id: &mut _default_noun_id,
+    let mut _word_class_values = WordClassValues {
         class_map: &mut class_map,
         mapping: &mut mapping,
+        id_def: &mut _id_def,
+        default_noun_id: &mut _default_noun_id,
+    };
+
+    let mut _dict_values = DictValues {
         pronunciation: &mut pronunciation,
         notation: &mut notation,
         word_class_id: &mut word_class_id,
@@ -1359,7 +1407,7 @@ pub fn process_dictionary(
         eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char);
     }
     if _args.debug > 2 {
-        dbg!(&_dict_values);
+        dbg!(&_word_class_values);
     }
 
     let reader = csv::ReaderBuilder::new()
@@ -1373,10 +1421,16 @@ pub fn process_dictionary(
         .build()
         .unwrap();
 
-
     for record in reader?.records() {
-        let record = record?;
-        process_record(_processor, dict_data.clone(), _args, &mut _dict_values, &record, &pool);
+        process_record(
+            _processor,
+            dict_data.clone(),
+            _args,
+            &mut _word_class_values,
+            &mut _dict_values,
+            &record?,
+            &pool,
+        );
     }
     Ok(())
 }
