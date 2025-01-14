@@ -1357,8 +1357,7 @@ pub fn process_dictionary(
         .from_path(&_args.csv_file);
 
     for record in reader?.records() {
-        let record = &record?;
-        process_record(_processor, dict_data, _args, &mut _dict_values, record);
+        process_record(_processor, dict_data, _args, &mut _dict_values, &record?);
     }
     Ok(())
 }
