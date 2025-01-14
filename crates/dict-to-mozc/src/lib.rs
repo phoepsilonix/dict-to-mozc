@@ -692,7 +692,7 @@ pub struct WordClassValues<'a> {
 }
 
 /// WIP_DictionaryProcessor_trait_description
-pub trait DictionaryProcessor {
+pub trait DictionaryProcessor: Send + Sync {
     fn should_skip(
         &self,
         _word_class_values: &mut WordClassValues,
@@ -1352,15 +1352,15 @@ fn process_record(
     _word_class_values: &mut WordClassValues,
     _dict_values: &mut DictValues,
     data: &csv::StringRecord,
-    pool: &ThreadPool,
+    _pool: &ThreadPool,
 ) {
     if !_processor.should_skip(_word_class_values, _dict_values, data, _args)
         && _processor.word_class_analyze(_word_class_values, _dict_values, data, _args)
     {
-        pool.install(move || {
-            add_dict_data(data, _word_class_values, _dict_values, dict_data, _args);
-        });
-        //pool.join();
+        //_pool.install(move || {
+        add_dict_data(data, _word_class_values, _dict_values, dict_data, _args);
+        //});
+        //_pool.join();
     }
 }
 
@@ -1411,7 +1411,7 @@ pub fn process_dictionary(
         .delimiter(delimiter_char)
         .from_path(&_args.csv_file);
 
-    let num_threads = 2;
+    let num_threads = 0;
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_threads)
         .build()
@@ -1421,15 +1421,18 @@ pub fn process_dictionary(
     //ThreadPoolBuilder::new().num_threads(num_threads).build_global().unwrap();
 
     for record in reader?.records() {
-        process_record(
-            _processor,
-            dict_data.clone(),
-            _args,
-            &mut _word_class_values,
-            &mut _dict_values,
-            &record?,
-            &pool,
-        );
+        let record = &record?;
+        pool.install(|| {
+            process_record(
+                _processor,
+                dict_data.clone(),
+                _args,
+                &mut _word_class_values,
+                &mut _dict_values,
+                record,
+                &pool,
+            );
+        });
     }
     Ok(())
 }
