@@ -7,6 +7,7 @@ extern crate rayon;
 
 use rayon::ThreadPool;
 use rayon::ThreadPoolBuilder;
+//use threadpool::ThreadPool;
 
 use std::sync::{Arc, Mutex};
 
@@ -1261,9 +1262,10 @@ fn add_dict_data(
     _data: &StringRecord,
     _word_class_values: &mut WordClassValues,
     _dict_values: &mut DictValues,
-    dict_data: &mut DictionaryData,
+    _dict_data: Arc<Mutex<DictionaryData>>,
     _args: &Config,
 ) {
+    let mut dict_data = _dict_data.lock().unwrap();
     if _args.user_dict {
         match u_search_key(
             _word_class_values.mapping,
@@ -1355,16 +1357,10 @@ fn process_record(
     if !_processor.should_skip(_word_class_values, _dict_values, data, _args)
         && _processor.word_class_analyze(_word_class_values, _dict_values, data, _args)
     {
-        pool.install(|| {
-            let mut _dict_data = dict_data.lock().unwrap();
-            add_dict_data(
-                data,
-                _word_class_values,
-                _dict_values,
-                &mut _dict_data,
-                _args,
-            );
+        pool.install(move || {
+            add_dict_data(data, _word_class_values, _dict_values, dict_data, _args);
         });
+        //pool.join();
     }
 }
 
@@ -1420,6 +1416,9 @@ pub fn process_dictionary(
         .num_threads(num_threads)
         .build()
         .unwrap();
+
+    //let pool = ThreadPool::new(num_threads);
+    //ThreadPoolBuilder::new().num_threads(num_threads).build_global().unwrap();
 
     for record in reader?.records() {
         process_record(
