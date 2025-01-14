@@ -1214,7 +1214,6 @@ impl DictionaryProcessor for MozcUserDictProcessor {
 }
 
 fn add_dict_data(
-    _processor: &dyn DictionaryProcessor,
     _data: &StringRecord,
     _dict_values: &mut DictValues,
     dict_data: &mut DictionaryData,
@@ -1309,7 +1308,7 @@ fn process_record(
     if !_processor.should_skip(_dict_values, data, _args)
         && _processor.word_class_analyze(_dict_values, data, _args)
     {
-        add_dict_data(_processor, data, _dict_values, dict_data, _args);
+        add_dict_data(data, _dict_values, dict_data, _args);
     }
 }
 
