@@ -3,6 +3,12 @@ extern crate hashbrown;
 extern crate indexmap;
 extern crate kanaria;
 extern crate lazy_regex;
+extern crate rayon;
+
+use rayon::ThreadPoolBuilder;
+use rayon::ThreadPool;
+
+use std::sync::{Arc, Mutex};
 
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
@@ -681,7 +687,7 @@ pub struct DictValues<'a> {
 }
 
 /// WIP_DictionaryProcessor_trait_description
-pub trait DictionaryProcessor {
+pub trait DictionaryProcessor  {
     fn should_skip(
         &self,
         _dict_values: &mut DictValues,
@@ -1214,7 +1220,6 @@ impl DictionaryProcessor for MozcUserDictProcessor {
 }
 
 fn add_dict_data(
-    _processor: &dyn DictionaryProcessor,
     _data: &StringRecord,
     _dict_values: &mut DictValues,
     dict_data: &mut DictionaryData,
@@ -1301,22 +1306,27 @@ fn parse_delimiter(s: &str, args: &Config) -> u8 {
 
 fn process_record(
     _processor: &dyn DictionaryProcessor,
-    dict_data: &mut DictionaryData,
+    dict_data: Arc<Mutex<DictionaryData>>,
     _args: &Config,
     _dict_values: &mut DictValues,
     data: &csv::StringRecord,
+    pool: &ThreadPool,
 ) {
     if !_processor.should_skip(_dict_values, data, _args)
         && _processor.word_class_analyze(_dict_values, data, _args)
     {
-        add_dict_data(_processor, data, _dict_values, dict_data, _args);
+
+        pool.install(|| {
+            let mut _dict_data = dict_data.lock().unwrap();
+            add_dict_data(data, _dict_values, &mut _dict_data, _args);
+        });
     }
 }
 
 /// WIP_process_dictionary_function_description
 pub fn process_dictionary(
     _processor: &dyn DictionaryProcessor,
-    dict_data: &mut DictionaryData,
+    dict_data: Arc<Mutex<DictionaryData>>,
     _args: &Config,
 ) -> io::Result<()> {
     let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
@@ -1357,8 +1367,16 @@ pub fn process_dictionary(
         .delimiter(delimiter_char)
         .from_path(&_args.csv_file);
 
+    let num_threads = 2;
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build()
+        .unwrap();
+
+
     for record in reader?.records() {
-        process_record(_processor, dict_data, _args, &mut _dict_values, &record?);
+        let record = record?;
+        process_record(_processor, dict_data.clone(), _args, &mut _dict_values, &record, &pool);
     }
     Ok(())
 }

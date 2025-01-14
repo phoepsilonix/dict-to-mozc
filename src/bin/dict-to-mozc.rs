@@ -40,6 +40,7 @@ use lib_dict_to_mozc::*;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::{Arc, Mutex};
 
 #[derive(FromArgs)]
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
@@ -307,8 +308,6 @@ pub fn main() -> ExitCode {
         return ExitCode::from(5);
     }
 
-    let mut dict_data = DictionaryData::new();
-
     // 辞書の読み込み処理
     let _processor: Box<dyn DictionaryProcessor> = if config.sudachi {
         Box::new(SudachiProcessor)
@@ -322,9 +321,10 @@ pub fn main() -> ExitCode {
         Box::new(DefaultProcessor)
     };
 
-    let _ = process_dictionary(_processor.as_ref(), &mut dict_data, &config);
-
-    let _ = dict_data.output(config.user_dict);
+    let dict_data = Arc::new(Mutex::new(DictionaryData::new()));
+    let _ = process_dictionary(_processor.as_ref(), dict_data.clone(), &config);
+    let dict_data_locked = dict_data.lock().unwrap();
+    let _ = dict_data_locked.output(config.user_dict);
 
     if config.debug > 0 {
         let elp = now.elapsed();
