@@ -15,8 +15,8 @@ kanaria = { workspace = true }
 lazy-regex = { workspace = true }
 
 #foldhash = { workspace = true }
-#allocator-api2 = { workspace = true }
 #fxhash = { workspace = true }
+#allocator-api2 = { workspace = true }
 
 [package.metadata.release]
 tag = true
