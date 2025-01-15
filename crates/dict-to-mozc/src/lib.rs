@@ -1245,11 +1245,11 @@ fn process_record(
 ) {
     let records = Arc::clone(&_records);
     for record in &*(records.clone()) {
-        if !processor.should_skip(&mut dict_values.lock().unwrap(), &record, &args)
-            && processor.word_class_analyze(&mut dict_values.lock().unwrap(), &record, &args)
+        if !processor.should_skip(&mut dict_values.lock().unwrap(), record, &args)
+            && processor.word_class_analyze(&mut dict_values.lock().unwrap(), record, &args)
         {
             add_dict_data(
-                &record,
+                record,
                 &mut dict_values.lock().unwrap(),
                 &mut dict_data.lock().unwrap(),
                 &args,
@@ -1260,7 +1260,7 @@ fn process_record(
 
 /// WIP_process_dictionary_function_description
 pub fn process_dictionary(
-    _processor: Arc<Box<dyn DictionaryProcessor>>,
+    processor: Arc<Box<dyn DictionaryProcessor>>,
     dict_data: Arc<Mutex<DictionaryData>>,
     _args: &Config,
 ) -> io::Result<()> {
@@ -1305,10 +1305,10 @@ pub fn process_dictionary(
     let num_threads = _args.threads; // スレッド数
 
     // X件ごとにスレッドプールに任せる
-    let chunk_size = 10000;
+    let chunk_size = _args.chunk_size;
     let mut chunk = Vec::with_capacity(chunk_size);
 
-    let processor = Arc::clone(&_processor);
+    let processor = Arc::clone(&processor);
     let args = Arc::new(_args.clone());
 
     let pool = ThreadPoolBuilder::new()
@@ -1325,17 +1325,17 @@ pub fn process_dictionary(
                 let args = Arc::clone(&args);
                 let dict_data = Arc::clone(&dict_data);
                 let dict_values = Arc::clone(&dict_values);
-                let record_ = Arc::new(chunk);
-                let record = Arc::clone(&record_);
+                let record = Arc::new(chunk);
+                let record = Arc::clone(&record);
                 process_record(record, processor, args, dict_data, dict_values);
             });
-            chunk = Vec::with_capacity(chunk_size).into();
+            chunk = Vec::with_capacity(chunk_size);
         }
     }
 
     if !chunk.is_empty() {
-        let record_ = Arc::new(chunk);
-        let record = Arc::clone(&record_);
+        let record = Arc::new(chunk);
+        let record = Arc::clone(&record);
         process_record(record, processor, args, dict_data, dict_values);
     }
 
@@ -1377,6 +1377,8 @@ pub struct Config {
     pub symbols: bool,
     /// スレッド数
     pub threads: usize,
+    /// １スレッド当たりに処理する行数
+    pub chunk_size: usize,
     /// デバッグ情報の出力。
     pub debug: usize,
 }

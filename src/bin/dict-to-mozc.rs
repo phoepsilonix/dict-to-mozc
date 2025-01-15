@@ -112,6 +112,11 @@ struct Args {
     #[argh(option, short = 'T')]
     threads: Option<usize>,
 
+    /// chunk size
+    #[argh(option, short = 'c')]
+    chunk_size: Option<usize>,
+
+    /// debug デバッグ(1: time, 2: config 3: DictonaryData)
     /// debug デバッグ(1: time, 2: config 3: DictonaryData)
     #[argh(option, short = 'D')]
     debug: Option<usize>,
@@ -169,6 +174,7 @@ impl Args {
             places: self.places,
             symbols: self.symbols,
             threads: self.threads.unwrap_or(1),
+            chunk_size: self.chunk_size.unwrap_or(10000),
             debug: self.debug.unwrap_or_else(|| dict_type.default_debug()),
         })
     }
