@@ -1307,6 +1307,9 @@ pub fn process_dictionary(
     // X件ごとにスレッドプールに任せる
     let chunk_size = _args.chunk_size;
     let mut chunk = Vec::with_capacity(chunk_size);
+    if _args.debug > 0 {
+        eprintln!("threads: {}\tchunk_size: {}", num_threads, chunk_size);
+    }
 
     let processor = Arc::clone(&processor);
     let args = Arc::new(_args.clone());
