@@ -31,11 +31,12 @@ use hashbrown::DefaultHashBuilder as RandomState;
 
 /// MyIndexMap
 /// IndexMapでwith_hasherの指定を、切り替えてテストするため。
+#[derive(Clone)]
 pub struct MyIndexMap<K, V, S = RandomState>(IndexMap<K, V, S>);
 
 impl<K, V> Default for MyIndexMap<K, V, RandomState> {
     fn default() -> Self {
-        Self::new()
+        Self(IndexMap::with_hasher(RandomState::default()))
     }
 }
 
