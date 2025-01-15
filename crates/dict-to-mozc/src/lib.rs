@@ -1328,6 +1328,32 @@ pub fn process_dictionary(
         .num_threads(num_threads)
         .build()
         .unwrap();
+
+
+    let lines = reader?.records()
+    .collect::<Vec<_>>()
+    .into_iter().par_bridge()
+    .into_par_iter()
+    .collect::<Vec<_>>();
+    for result in lines {
+        let record = result?;
+        chunk.push(record);
+        if chunk.len() == chunk_size {
+            pool.scope(|s| {
+                s.spawn(|_| {
+                    let processor = Arc::clone(&processor);
+                    let args = Arc::clone(&args);
+                    let dict_data = Arc::clone(&dict_data);
+                    let dict_values = Arc::clone(&dict_values);
+                    let record = Arc::new(chunk);
+                    let record = Arc::clone(&record);
+                    process_record(record, processor, args, dict_data, dict_values);
+                });
+            });
+            chunk = Vec::with_capacity(chunk_size);
+        }
+    }
+/*
     for result in reader?.records() {
         let record = result?;
         chunk.push(record);
@@ -1346,7 +1372,7 @@ pub fn process_dictionary(
             chunk = Vec::with_capacity(chunk_size);
         }
     }
-
+*/
     if !chunk.is_empty() {
         let record = Arc::new(chunk);
         let record = Arc::clone(&record);
