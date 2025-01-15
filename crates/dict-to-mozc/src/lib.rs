@@ -29,6 +29,9 @@ use hashbrown::DefaultHashBuilder as RandomState;
 //use foldhash::fast::RandomState;
 //use std::hash::RandomState;
 
+use rayon::ThreadPoolBuilder;
+use std::sync::{Arc, Mutex};
+
 mod utils {
     use super::*;
 
@@ -616,7 +619,7 @@ pub struct DictValues<'a> {
 }
 
 /// WIP_DictionaryProcessor_trait_description
-pub trait DictionaryProcessor {
+pub trait DictionaryProcessor: Send + Sync {
     fn should_skip(
         &self,
         _dict_values: &mut DictValues,
@@ -1234,23 +1237,31 @@ fn parse_delimiter(s: &str, args: &Config) -> u8 {
 }
 
 fn process_record(
-    _processor: &dyn DictionaryProcessor,
-    dict_data: &mut DictionaryData,
-    _args: &Config,
-    _dict_values: &mut DictValues,
-    data: &csv::StringRecord,
+    _records: Arc<Vec<csv::StringRecord>>,
+    processor: Arc<Box<dyn DictionaryProcessor>>,
+    args: Arc<Config>,
+    dict_data: Arc<Mutex<DictionaryData>>,
+    dict_values: Arc<Mutex<DictValues>>,
 ) {
-    if !_processor.should_skip(_dict_values, data, _args)
-        && _processor.word_class_analyze(_dict_values, data, _args)
-    {
-        add_dict_data(data, _dict_values, dict_data, _args);
+    let records = Arc::clone(&_records);
+    for record in &*(records.clone()) {
+        if !processor.should_skip(&mut dict_values.lock().unwrap(), &record, &args)
+            && processor.word_class_analyze(&mut dict_values.lock().unwrap(), &record, &args)
+        {
+            add_dict_data(
+                &record,
+                &mut dict_values.lock().unwrap(),
+                &mut dict_data.lock().unwrap(),
+                &args,
+            );
+        }
     }
 }
 
 /// WIP_process_dictionary_function_description
 pub fn process_dictionary(
-    _processor: &dyn DictionaryProcessor,
-    dict_data: &mut DictionaryData,
+    _processor: Arc<Box<dyn DictionaryProcessor>>,
+    dict_data: Arc<Mutex<DictionaryData>>,
     _args: &Config,
 ) -> io::Result<()> {
     let (mut _id_def, _default_noun_id) = read_id_def(&_args.id_def)?;
@@ -1261,7 +1272,7 @@ pub fn process_dictionary(
     let mut word_class_id = -1;
     let mut cost = -1;
 
-    let mut _dict_values = DictValues {
+    let dict_values = Arc::new(Mutex::new(DictValues {
         id_def: &mut _id_def,
         default_noun_id: &_default_noun_id,
         class_map: &mut class_map,
@@ -1270,7 +1281,7 @@ pub fn process_dictionary(
         notation: &mut notation,
         word_class_id: &mut word_class_id,
         cost: &mut cost,
-    };
+    }));
 
     let delimiter_char = parse_delimiter(&_args.delimiter, _args);
 
@@ -1283,7 +1294,7 @@ pub fn process_dictionary(
         eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char);
     }
     if _args.debug > 2 {
-        dbg!(&_dict_values);
+        dbg!(&dict_values);
     }
 
     let reader = csv::ReaderBuilder::new()
@@ -1291,14 +1302,48 @@ pub fn process_dictionary(
         .delimiter(delimiter_char)
         .from_path(&_args.csv_file);
 
-    for record in reader?.records() {
-        process_record(_processor, dict_data, _args, &mut _dict_values, &record?);
+    let num_threads = _args.threads; // スレッド数
+
+    // X件ごとにスレッドプールに任せる
+    let chunk_size = 10000;
+    let mut chunk = Vec::with_capacity(chunk_size);
+
+    let processor = Arc::clone(&_processor);
+    let args = Arc::new(_args.clone());
+
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build()
+        .unwrap();
+
+    for result in reader?.records() {
+        let record = result?;
+        chunk.push(record);
+        if chunk.len() == chunk_size {
+            pool.install(|| {
+                let processor = Arc::clone(&processor);
+                let args = Arc::clone(&args);
+                let dict_data = Arc::clone(&dict_data);
+                let dict_values = Arc::clone(&dict_values);
+                let record_ = Arc::new(chunk);
+                let record = Arc::clone(&record_);
+                process_record(record, processor, args, dict_data, dict_values);
+            });
+            chunk = Vec::with_capacity(chunk_size).into();
+        }
     }
+
+    if !chunk.is_empty() {
+        let record_ = Arc::new(chunk);
+        let record = Arc::clone(&record_);
+        process_record(record, processor, args, dict_data, dict_values);
+    }
+
     Ok(())
 }
 
 /// WIP_Config_struct_description
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Config {
     /// 変換元のテキストファイルのパス
     pub csv_file: PathBuf,
@@ -1330,6 +1375,8 @@ pub struct Config {
     pub places: bool,
     /// 出力に記号も含める。
     pub symbols: bool,
+    /// スレッド数
+    pub threads: usize,
     /// デバッグ情報の出力。
     pub debug: usize,
 }

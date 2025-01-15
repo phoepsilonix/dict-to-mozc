@@ -41,6 +41,8 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use std::sync::{Arc, Mutex};
+
 #[derive(FromArgs)]
 /// Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files.
 /// (Mozc辞書型式への変換プログラム)
@@ -106,6 +108,10 @@ struct Args {
     #[argh(option, short = 'd')]
     delimiter: Option<String>,
 
+    /// threads
+    #[argh(option, short = 'T')]
+    threads: Option<usize>,
+
     /// debug デバッグ(1: time, 2: config 3: DictonaryData)
     #[argh(option, short = 'D')]
     debug: Option<usize>,
@@ -162,6 +168,7 @@ impl Args {
             user_dict: self.user_dict,
             places: self.places,
             symbols: self.symbols,
+            threads: self.threads.unwrap_or(1),
             debug: self.debug.unwrap_or_else(|| dict_type.default_debug()),
         })
     }
@@ -307,24 +314,26 @@ pub fn main() -> ExitCode {
         return ExitCode::from(5);
     }
 
-    let mut dict_data = DictionaryData::new();
+    let dict_data = Arc::new(Mutex::new(DictionaryData::new()));
 
     // 辞書の読み込み処理
-    let _processor: Box<dyn DictionaryProcessor> = if config.sudachi {
-        Box::new(SudachiProcessor)
+    let _processor: Arc<Box<dyn DictionaryProcessor>> = if config.sudachi {
+        Arc::new(Box::new(SudachiProcessor))
     } else if config.neologd {
-        Box::new(NeologdProcessor)
+        Arc::new(Box::new(NeologdProcessor))
     } else if config.utdict {
-        Box::new(UtDictProcessor)
+        Arc::new(Box::new(UtDictProcessor))
     } else if config.mozcuserdict {
-        Box::new(MozcUserDictProcessor)
+        Arc::new(Box::new(MozcUserDictProcessor))
     } else {
-        Box::new(DefaultProcessor)
+        Arc::new(Box::new(DefaultProcessor))
     };
 
-    let _ = process_dictionary(_processor.as_ref(), &mut dict_data, &config);
+    //let processor = Arc::new(Box::new(*_processor.as_ref()));
+    let processor = Arc::clone(&_processor);
+    let _ = process_dictionary(processor, dict_data.clone(), &config);
 
-    let _ = dict_data.output(config.user_dict);
+    let _ = dict_data.lock().unwrap().output(config.user_dict);
 
     if config.debug > 0 {
         let elp = now.elapsed();

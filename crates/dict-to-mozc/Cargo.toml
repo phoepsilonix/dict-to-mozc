@@ -13,6 +13,8 @@ hashbrown = { workspace = true }
 indexmap = { workspace = true }
 kanaria = { workspace = true }
 lazy-regex = { workspace = true }
+rayon = { workspace = true }
+#num_cpus = { workspace = true }
 #bitflags = { workspace = true }
 #foldhash = { workspace = true }
 #fxhash = { workspace = true }

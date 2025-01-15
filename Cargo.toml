@@ -23,9 +23,11 @@ argh = { version = "0.1.13", default-features = false, features = [ "help" ] }
 csv = { version = "1.3.1", default-features = true }
 kanaria = { version = "0.2.0", default-features = false }
 lazy-regex = { version = "3.4.1", default-features = false, features = [ "perf-dfa", "unicode" ] }
-indexmap = { version = "2.7.0", default-features = false, features = [] }
+indexmap = { version = "2.7.0", default-features = false, features = [ 'rustc-rayon' ] }
 mimalloc-rust = { version = "0.2.1", default-features = false }
 hashbrown = { version = "0.15.2", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+rayon = "1.10.0"
+#num_cpus = "1.16.0"
 #bitflags = "=2.7"
 #foldhash = "0.1.4"
 #fxhash = "0.2.1"
@@ -71,6 +73,7 @@ kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "18ca812a1f
 lib-dict-to-mozc = { workspace = true }
 argh.workspace = true
 mimalloc-rust = { workspace = true, optional = true, features = [] , default-features = false }
+indexmap.workspace = true
 #csv.workspace = true
 #foldhash.workspace = true
 #fxhash.workspace = true
