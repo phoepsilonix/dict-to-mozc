@@ -26,6 +26,7 @@ lazy-regex = { version = "3.4.1", default-features = false, features = [ "perf-d
 indexmap = { version = "2.7.0", default-features = false, features = [] }
 mimalloc-rust = { version = "0.2.1", default-features = false }
 hashbrown = { version = "0.15.2", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+#bitflags = "=2.7"
 #foldhash = "0.1.4"
 #fxhash = "0.2.1"
 
