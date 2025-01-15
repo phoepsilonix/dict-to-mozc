@@ -29,6 +29,10 @@ use hashbrown::DefaultHashBuilder as RandomState;
 //use foldhash::fast::RandomState;
 //use std::hash::RandomState;
 
+//use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelBridge;
+use rayon::iter::ParallelIterator;
 use rayon::ThreadPoolBuilder;
 use std::sync::{Arc, Mutex};
 
@@ -1238,6 +1242,7 @@ fn parse_delimiter(s: &str, args: &Config) -> u8 {
 
 fn process_record(
     _records: Arc<Vec<csv::StringRecord>>,
+    //_records: Arc<Vec<csv::StringRecord>>,
     processor: Arc<Box<dyn DictionaryProcessor>>,
     args: Arc<Config>,
     dict_data: Arc<Mutex<DictionaryData>>,
@@ -1311,31 +1316,60 @@ pub fn process_dictionary(
         eprintln!("threads: {}\tchunk_size: {}", num_threads, chunk_size);
     }
 
-    let processor = Arc::clone(&processor);
-    let args = Arc::new(_args.clone());
-
-    let pool = ThreadPoolBuilder::new()
+    // globally
+    rayon::ThreadPoolBuilder::new()
         .num_threads(num_threads)
-        .build()
+        .build_global()
         .unwrap();
 
-    for result in reader?.records() {
+    let processor = Arc::clone(&processor);
+    let args = Arc::new(_args.clone());
+    /*
+       let pool = ThreadPoolBuilder::new()
+           .num_threads(num_threads)
+           .build()
+           .unwrap();
+    */
+    for result in reader?
+        .records()
+        .par_bridge()
+        .collect::<Vec<_>>()
+        .into_iter()
+    {
         let record = result?;
-        chunk.push(record);
+        chunk.push(record.clone());
         if chunk.len() == chunk_size {
-            pool.install(|| {
-                let processor = Arc::clone(&processor);
-                let args = Arc::clone(&args);
-                let dict_data = Arc::clone(&dict_data);
-                let dict_values = Arc::clone(&dict_values);
-                let record = Arc::new(chunk);
-                let record = Arc::clone(&record);
-                process_record(record, processor, args, dict_data, dict_values);
-            });
+            let processor = Arc::clone(&processor);
+            let args = Arc::clone(&args);
+            let dict_data = Arc::clone(&dict_data);
+            let dict_values = Arc::clone(&dict_values);
+            let record = Arc::new(chunk.clone());
+            //let record = Arc::new(chunk);
+            //let record = Arc::new(*record);
+            //let record = Arc::new(record);
+            let record = Arc::clone(&record);
+            process_record(record, processor, args, dict_data, dict_values);
             chunk = Vec::with_capacity(chunk_size);
-        }
-    }
-
+        };
+    } //);
+      /*
+          for result in reader?.records() {
+              let record = result?;
+              chunk.push(record);
+              if chunk.len() == chunk_size {
+                  pool.install(|| {
+                      let processor = Arc::clone(&processor);
+                      let args = Arc::clone(&args);
+                      let dict_data = Arc::clone(&dict_data);
+                      let dict_values = Arc::clone(&dict_values);
+                      let record = Arc::new(chunk);
+                      let record = Arc::clone(&record);
+                      process_record(record, processor, args, dict_data, dict_values);
+                  });
+                  chunk = Vec::with_capacity(chunk_size);
+              }
+          }
+      */
     if !chunk.is_empty() {
         let record = Arc::new(chunk);
         let record = Arc::clone(&record);
