@@ -1324,52 +1324,29 @@ pub fn process_dictionary(
 
     let processor = Arc::clone(&processor);
     let args = Arc::new(_args.clone());
-    /*
-       let pool = ThreadPoolBuilder::new()
-           .num_threads(num_threads)
-           .build()
-           .unwrap();
-    */
-    for result in reader?
-        .records()
-        .par_bridge()
-        .collect::<Vec<_>>()
-        .into_iter()
-    {
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build()
+        .unwrap();
+    for result in reader?.records() {
         let record = result?;
-        chunk.push(record.clone());
+        chunk.push(record);
         if chunk.len() == chunk_size {
-            let processor = Arc::clone(&processor);
-            let args = Arc::clone(&args);
-            let dict_data = Arc::clone(&dict_data);
-            let dict_values = Arc::clone(&dict_values);
-            let record = Arc::new(chunk.clone());
-            //let record = Arc::new(chunk);
-            //let record = Arc::new(*record);
-            //let record = Arc::new(record);
-            let record = Arc::clone(&record);
-            process_record(record, processor, args, dict_data, dict_values);
+            pool.scope(|s| {
+                s.spawn(|_| {
+                    let processor = Arc::clone(&processor);
+                    let args = Arc::clone(&args);
+                    let dict_data = Arc::clone(&dict_data);
+                    let dict_values = Arc::clone(&dict_values);
+                    let record = Arc::new(chunk);
+                    let record = Arc::clone(&record);
+                    process_record(record, processor, args, dict_data, dict_values);
+                });
+            });
             chunk = Vec::with_capacity(chunk_size);
-        };
-    } //);
-      /*
-          for result in reader?.records() {
-              let record = result?;
-              chunk.push(record);
-              if chunk.len() == chunk_size {
-                  pool.install(|| {
-                      let processor = Arc::clone(&processor);
-                      let args = Arc::clone(&args);
-                      let dict_data = Arc::clone(&dict_data);
-                      let dict_values = Arc::clone(&dict_values);
-                      let record = Arc::new(chunk);
-                      let record = Arc::clone(&record);
-                      process_record(record, processor, args, dict_data, dict_values);
-                  });
-                  chunk = Vec::with_capacity(chunk_size);
-              }
-          }
-      */
+        }
+    }
+
     if !chunk.is_empty() {
         let record = Arc::new(chunk);
         let record = Arc::clone(&record);
