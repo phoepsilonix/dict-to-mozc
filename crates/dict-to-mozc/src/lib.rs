@@ -100,8 +100,8 @@ impl DictionaryData {
     /// WIP_new_function_description
     pub fn new() -> Self {
         Self {
-            entries: IndexMap::with_hasher(RandomState::default()),
-            user_entries: IndexMap::with_hasher(RandomState::default()),
+            entries: IndexMap::<DictionaryKey, DictionaryEntry, RandomState>::default(),
+            user_entries: IndexMap::<DictionaryKey, DictionaryEntry, RandomState>::default(),
         }
     }
 
@@ -278,7 +278,7 @@ fn id_expr(
 /// 品詞判定が出来なかった場合、普通名詞とみなす。
 /// _default_noun_idは、その普通名詞のIDを格納しておく。
 fn read_id_def(path: &Path) -> Result<(IdDef, i32), CsvError> {
-    let mut id_def = IdDef::with_hasher(RandomState::default());
+    let mut id_def = IdDef::default();
     let mut reader = ReaderBuilder::new()
         .has_headers(false)
         .delimiter(b' ')
@@ -328,8 +328,8 @@ struct WordClassMapping {
 impl WordClassMapping {
     fn new() -> Self {
         Self {
-            id_def_to_user: IndexMap::with_hasher(RandomState::default()),
-            id_to_user_word_class_cache: IndexMap::with_hasher(RandomState::default()),
+            id_def_to_user: IndexMap::<String, String, RandomState>::default(),
+            id_to_user_word_class_cache: IndexMap::<i32, String, RandomState>::default(),
         }
     }
 
@@ -1254,7 +1254,7 @@ pub fn process_dictionary(
     _args: &Config,
 ) -> io::Result<()> {
     let (mut _id_def, _default_noun_id) = read_id_def(&_args.id_def)?;
-    let mut class_map = IndexMap::<String, i32, RandomState>::with_hasher(RandomState::default());
+    let mut class_map = IndexMap::<String, i32, RandomState>::default();
     let mut mapping = create_word_class_mapping();
     let mut pronunciation = String::new();
     let mut notation = String::new();
