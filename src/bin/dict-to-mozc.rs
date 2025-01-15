@@ -307,24 +307,7 @@ pub fn main() -> ExitCode {
         return ExitCode::from(5);
     }
 
-    let mut dict_data = DictionaryData::new();
-
-    // 辞書の読み込み処理
-    let _processor: Box<dyn DictionaryProcessor> = if config.sudachi {
-        Box::new(SudachiProcessor)
-    } else if config.neologd {
-        Box::new(NeologdProcessor)
-    } else if config.utdict {
-        Box::new(UtDictProcessor)
-    } else if config.mozcuserdict {
-        Box::new(MozcUserDictProcessor)
-    } else {
-        Box::new(DefaultProcessor)
-    };
-
-    let _ = process_dictionary(_processor.as_ref(), &mut dict_data, &config);
-
-    let _ = dict_data.output(config.user_dict);
+    let _ = process_dictionary(&config);
 
     if config.debug > 0 {
         let elp = now.elapsed();

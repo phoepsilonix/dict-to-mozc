@@ -14,6 +14,9 @@ indexmap = { workspace = true }
 kanaria = { workspace = true }
 lazy-regex = { workspace = true }
 
+crossbeam-channel = { workspace = true }
+num_cpus = { workspace = true }
+
 #foldhash = { workspace = true }
 #allocator-api2 = { workspace = true }
 #fxhash = { workspace = true }

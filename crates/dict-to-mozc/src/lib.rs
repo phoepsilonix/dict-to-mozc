@@ -13,6 +13,10 @@ use std::path::{Path, PathBuf};
 use csv::StringRecord;
 use csv::{Error as CsvError, ReaderBuilder};
 
+use crossbeam_channel::{bounded, Receiver};
+use std::sync::{Arc, Mutex};
+use std::thread;
+
 use kanaria::string::{ConvertType, UCSStr};
 use kanaria::utils::ConvertTarget;
 
@@ -31,6 +35,7 @@ use hashbrown::DefaultHashBuilder as RandomState;
 
 /// MyIndexMap
 /// IndexMapでwith_hasherの指定を、切り替えてテストするため。
+#[derive(Clone)]
 pub struct MyIndexMap<K, V, S = RandomState>(IndexMap<K, V, S>);
 
 impl<K, V> Default for MyIndexMap<K, V, RandomState> {
@@ -143,6 +148,7 @@ pub struct DictionaryKey {
 }
 
 /// コストと品詞判定で判明した品詞の文字列
+#[derive(Clone)]
 pub struct DictionaryEntry {
     key: DictionaryKey,
     cost: i32,
@@ -150,6 +156,7 @@ pub struct DictionaryEntry {
 }
 
 /// システム辞書型式とユーザー辞書型式
+#[derive(Clone)]
 pub struct DictionaryData {
     entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
     user_entries: MyIndexMap<DictionaryKey, DictionaryEntry>,
@@ -384,7 +391,7 @@ fn read_id_def(path: &Path) -> Result<(IdDef, i32), CsvError> {
 
 // ユーザー辞書の品詞と、id.defの品詞のマッピングを作成する
 #[derive(Debug)]
-struct WordClassMapping {
+pub struct WordClassMapping {
     //user_to_id_def: MyIndexMap<String, String>,
     id_def_to_user: MyIndexMap<String, String>,
     id_to_user_word_class_cache: MyIndexMap<i32, String>,
@@ -667,8 +674,7 @@ fn is_japanese(str: &str) -> bool {
     JAPANESE_CHECK.is_match(str)
 }
 
-/// WIP_DictValues_struct_description
-#[derive(Debug)]
+/*
 pub struct DictValues<'a> {
     id_def: &'a mut IdDef,
     default_noun_id: &'a mut i32,
@@ -679,9 +685,22 @@ pub struct DictValues<'a> {
     word_class_id: &'a mut i32,
     cost: &'a mut i32,
 }
+*/
+/// WIP_DictValues_struct_description
+#[derive(Debug)]
+pub struct DictValues {
+    pub id_def: IdDef,
+    pub default_noun_id: i32,
+    pub class_map: MyIndexMap<String, i32>,
+    pub mapping: WordClassMapping,
+    pub pronunciation: String,
+    pub notation: String,
+    pub word_class_id: i32,
+    pub cost: i32,
+}
 
 /// WIP_DictionaryProcessor_trait_description
-pub trait DictionaryProcessor {
+pub trait DictionaryProcessor: Send + Sync {
     fn should_skip(
         &self,
         _dict_values: &mut DictValues,
@@ -824,18 +843,18 @@ fn process_utdict_skip(
     if _notation.is_empty() {
         return true;
     };
-    *_dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
-    if *_dict_values.word_class_id == -1 || *_dict_values.word_class_id == 0 {
-        *_dict_values.word_class_id = *_dict_values.default_noun_id;
+    _dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
+    if _dict_values.word_class_id == -1 || _dict_values.word_class_id == 0 {
+        _dict_values.word_class_id = _dict_values.default_noun_id;
     }
     if (!_args.symbols)
         && is_kigou(_notation)
-        && !search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
+        && !search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("固有名詞")
     {
         return true;
     };
     if (!_args.places)
-        && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+        && search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("地名")
     {
         return true;
     }
@@ -858,22 +877,25 @@ fn process_mozcuserdict_skip(
         return true;
     };
     // ユーザー辞書の品詞からID.defの品詞文字列へ
-    let word_class =
-        u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
-    *_dict_values.word_class_id = id_expr(
+    let word_class = u_search_word_class(
+        &_dict_values.mapping,
+        &mut _dict_values.id_def,
+        _parts.join(""),
+    );
+    _dict_values.word_class_id = id_expr(
         &word_class,
-        _dict_values.id_def,
-        _dict_values.class_map,
-        *_dict_values.default_noun_id,
+        &mut _dict_values.id_def,
+        &mut _dict_values.class_map,
+        _dict_values.default_noun_id,
     );
     if (!_args.symbols)
         && is_kigou(_notation)
-        && !search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
+        && !search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("固有名詞")
     {
         return true;
     };
     if (!_args.places)
-        && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+        && search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("地名")
     {
         return true;
     }
@@ -897,12 +919,12 @@ fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut 
     } else if _args.neologd {
         process_neologd_word_class(&word_class_parts)
     } else if _args.utdict {
-        return *_dict_values.default_noun_id;
+        return _dict_values.default_noun_id;
         //    process_utdict_word_class(&word_class_parts)
     } else if _args.mozcuserdict {
         u_search_word_class(
-            _dict_values.mapping,
-            _dict_values.id_def,
+            &_dict_values.mapping,
+            &mut _dict_values.id_def,
             process_mozcuserdict_word_class(&word_class_parts),
         )
     } else {
@@ -911,9 +933,9 @@ fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut 
 
     id_expr(
         &processed_class,
-        _dict_values.id_def,
-        _dict_values.class_map,
-        *_dict_values.default_noun_id,
+        &mut _dict_values.id_def,
+        &mut _dict_values.class_map,
+        _dict_values.default_noun_id,
     )
 }
 
@@ -991,20 +1013,20 @@ impl DictionaryProcessor for DefaultProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        _dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-            && is_japanese(_dict_values.notation)
+            && search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("地名")
+            && is_japanese(&_dict_values.notation)
         {
             return false;
         }
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
+        _dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+        _dict_values.notation = unicode_escape_to_char(_notation);
         let cost_str = record
             .get(_args.cost_index)
             .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
         let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
+        _dict_values.cost = adjust_cost(cost);
         true
     }
 }
@@ -1035,20 +1057,20 @@ impl DictionaryProcessor for SudachiProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        _dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-            && is_japanese(_dict_values.notation)
+            && search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("地名")
+            && is_japanese(&_dict_values.notation)
         {
             return false;
         }
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
+        _dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+        _dict_values.notation = unicode_escape_to_char(_notation);
         let cost_str = record
             .get(_args.cost_index)
             .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
         let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
+        _dict_values.cost = adjust_cost(cost);
         true
     }
 }
@@ -1079,19 +1101,19 @@ impl DictionaryProcessor for NeologdProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        _dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            && search_key(&_dict_values.id_def, _dict_values.word_class_id).contains("地名")
         {
             return false;
         }
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
+        _dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+        _dict_values.notation = unicode_escape_to_char(_notation);
         let cost_str = record
             .get(_args.cost_index)
             .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
         let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
+        _dict_values.cost = adjust_cost(cost);
         true
     }
 }
@@ -1118,7 +1140,7 @@ impl DictionaryProcessor for UtDictProcessor {
         let word_class = &data[_args.word_class_index];
         let mut word_class_id = word_class.parse::<i32>().unwrap();
         if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
-            word_class_id = *_dict_values.default_noun_id;
+            word_class_id = _dict_values.default_noun_id;
         }
         let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
@@ -1128,25 +1150,25 @@ impl DictionaryProcessor for UtDictProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, word_class_id).to_owned();
+        _dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+        _dict_values.notation = unicode_escape_to_char(_notation);
+        let d: String = search_key(&_dict_values.id_def, word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
         if word_class.is_none() {
-            *_dict_values.word_class_id = id_expr(
+            _dict_values.word_class_id = id_expr(
                 &d,
-                _dict_values.id_def,
-                _dict_values.class_map,
-                *_dict_values.default_noun_id,
+                &mut _dict_values.id_def,
+                &mut _dict_values.class_map,
+                _dict_values.default_noun_id,
             );
         } else {
-            *_dict_values.word_class_id = *word_class.unwrap();
+            _dict_values.word_class_id = *word_class.unwrap();
         }
         let cost_str = record
             .get(_args.cost_index)
             .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
         let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
+        _dict_values.cost = adjust_cost(cost);
         true
     }
 }
@@ -1182,7 +1204,7 @@ impl DictionaryProcessor for MozcUserDictProcessor {
             }
         }
         // ユーザー辞書型式から品詞IDに
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
+        _dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         let _pronunciation: String = match record.get(_args.pronunciation_index) {
             Some(p) => convert_to_hiragana(p),
             None => return false,
@@ -1191,24 +1213,24 @@ impl DictionaryProcessor for MozcUserDictProcessor {
             Some(n) => n,
             None => return false,
         };
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_owned();
+        _dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+        _dict_values.notation = unicode_escape_to_char(_notation);
+        let d: String = search_key(&_dict_values.id_def, _dict_values.word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
         if word_class.is_none() {
-            *_dict_values.word_class_id = id_expr(
+            _dict_values.word_class_id = id_expr(
                 &d,
-                _dict_values.id_def,
-                _dict_values.class_map,
-                *_dict_values.default_noun_id,
+                &mut _dict_values.id_def,
+                &mut _dict_values.class_map,
+                _dict_values.default_noun_id,
             );
         } else {
-            *_dict_values.word_class_id = *word_class.unwrap();
+            _dict_values.word_class_id = *word_class.unwrap();
         }
         //let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
         //let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
         let cost = DEFAULT_COST;
-        *_dict_values.cost = adjust_cost(cost);
+        _dict_values.cost = adjust_cost(cost);
         true
     }
 }
@@ -1221,9 +1243,9 @@ fn add_dict_data(
 ) {
     if _args.user_dict {
         match u_search_key(
-            _dict_values.mapping,
-            _dict_values.id_def,
-            *_dict_values.word_class_id,
+            &mut _dict_values.mapping,
+            &_dict_values.id_def,
+            _dict_values.word_class_id,
         ) {
             Some(_word_class) => {
                 dict_data.add(
@@ -1231,9 +1253,9 @@ fn add_dict_data(
                         key: DictionaryKey {
                             pronunciation: _dict_values.pronunciation.to_owned(),
                             notation: _dict_values.notation.to_owned(),
-                            word_class_id: *_dict_values.word_class_id,
+                            word_class_id: _dict_values.word_class_id,
                         },
-                        cost: *_dict_values.cost,
+                        cost: _dict_values.cost,
                         word_class: _word_class,
                     },
                     true,
@@ -1245,9 +1267,9 @@ fn add_dict_data(
                         key: DictionaryKey {
                             pronunciation: _dict_values.pronunciation.to_owned(),
                             notation: _dict_values.notation.to_owned(),
-                            word_class_id: *_dict_values.word_class_id,
+                            word_class_id: _dict_values.word_class_id,
                         },
-                        cost: *_dict_values.cost,
+                        cost: _dict_values.cost,
                         word_class: "名詞".to_owned(),
                     },
                     true,
@@ -1260,9 +1282,9 @@ fn add_dict_data(
                 key: DictionaryKey {
                     pronunciation: _dict_values.pronunciation.to_owned(),
                     notation: _dict_values.notation.to_owned(),
-                    word_class_id: *_dict_values.word_class_id,
+                    word_class_id: _dict_values.word_class_id,
                 },
-                cost: *_dict_values.cost,
+                cost: _dict_values.cost,
                 word_class: "".to_owned(),
             },
             false,
@@ -1298,44 +1320,77 @@ fn parse_delimiter(s: &str, args: &Config) -> u8 {
     }
 }
 
-fn process_record(
-    _processor: &dyn DictionaryProcessor,
-    dict_data: &mut DictionaryData,
-    _args: &Config,
-    _dict_values: &mut DictValues,
-    data: &csv::StringRecord,
+fn process_chunks(
+    receiver: Receiver<Vec<csv::StringRecord>>,
+    processor: Arc<Box<dyn DictionaryProcessor>>,
+    args: Arc<Config>,
+    dict_data: Arc<Mutex<DictionaryData>>,
+    dict_values: Arc<Mutex<DictValues>>,
 ) {
-    if !_processor.should_skip(_dict_values, data, _args)
-        && _processor.word_class_analyze(_dict_values, data, _args)
-    {
-        add_dict_data(data, _dict_values, dict_data, _args);
+    while let Ok(chunk) = receiver.recv() {
+        for record in chunk {
+            if !processor.should_skip(&mut dict_values.lock().unwrap(), &record, &args)
+                && processor.word_class_analyze(&mut dict_values.lock().unwrap(), &record, &args)
+            {
+                add_dict_data(
+                    &record,
+                    &mut dict_values.lock().unwrap(),
+                    &mut dict_data.lock().unwrap(),
+                    &args,
+                );
+            }
+        }
     }
 }
 
-/// WIP_process_dictionary_function_description
-pub fn process_dictionary(
-    _processor: &dyn DictionaryProcessor,
+/*
+fn process_record(
+    processor: &dyn DictionaryProcessor,
     dict_data: &mut DictionaryData,
-    _args: &Config,
-) -> io::Result<()> {
-    let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
-    let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
-    let mut mapping = create_word_class_mapping();
-    let mut pronunciation = String::new();
-    let mut notation = String::new();
-    let mut word_class_id = -1;
-    let mut cost = -1;
+    args: &Config,
+    dict_values: &mut DictValues,
+    record: &csv::StringRecord,
+) {
+    if !processor.should_skip(dict_values, record, args)
+        && processor.word_class_analyze(dict_values, record, args)
+    {
+        add_dict_data(record, dict_values, dict_data, args);
+    }
+}
+*/
 
-    let mut _dict_values = DictValues {
-        id_def: &mut _id_def,
-        default_noun_id: &mut _default_noun_id,
-        class_map: &mut class_map,
-        mapping: &mut mapping,
-        pronunciation: &mut pronunciation,
-        notation: &mut notation,
-        word_class_id: &mut word_class_id,
-        cost: &mut cost,
+/// WIP_process_dictionary_function_description
+pub fn process_dictionary(_args: &Config) -> io::Result<()> {
+    let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
+    let class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
+    let mapping = create_word_class_mapping();
+    let pronunciation = String::new();
+    let notation = String::new();
+    let word_class_id = -1;
+    let cost = -1;
+
+    let _processor: Box<dyn DictionaryProcessor> = if _args.sudachi {
+        Box::new(SudachiProcessor)
+    } else if _args.neologd {
+        Box::new(NeologdProcessor)
+    } else if _args.utdict {
+        Box::new(UtDictProcessor)
+    } else if _args.mozcuserdict {
+        Box::new(MozcUserDictProcessor)
+    } else {
+        Box::new(DefaultProcessor)
     };
+
+    let dict_values = Arc::new(Mutex::new(DictValues {
+        id_def: _id_def,
+        default_noun_id: _default_noun_id,
+        class_map,
+        mapping,
+        pronunciation,
+        notation,
+        word_class_id,
+        cost,
+    }));
 
     let delimiter_char = parse_delimiter(&_args.delimiter, _args);
 
@@ -1348,22 +1403,69 @@ pub fn process_dictionary(
         eprintln!("Using delimiter: {} {}", delimiter_str, delimiter_char);
     }
     if _args.debug > 2 {
-        dbg!(&_dict_values);
+        dbg!(&dict_values);
     }
 
-    let reader = csv::ReaderBuilder::new()
+    let rdr = csv::ReaderBuilder::new()
         .has_headers(false)
         .delimiter(delimiter_char)
         .from_path(&_args.csv_file);
 
-    for record in reader?.records() {
-        process_record(_processor, dict_data, _args, &mut _dict_values, &record?);
+    let mut num_threads = 0; // スレッド数
+
+    if num_threads == 0 {
+        num_threads = num_cpus::get(); // システムの論理コア数を使用
     }
+
+    // X件ごとにスレッドプールに任せる
+    let chunk_size = 1000;
+
+    let (sender, receiver) = bounded(num_threads);
+    let processor = Arc::new(_processor);
+    let dict_data = Arc::new(Mutex::new(DictionaryData::new()));
+
+    let args = Arc::new(_args.clone());
+
+    let pool: Vec<_> = (0..num_threads)
+        .map(|_thread_id| {
+            let receiver = receiver.clone();
+            let processor = Arc::clone(&processor);
+            let args = Arc::clone(&args);
+            let dict_data = Arc::clone(&dict_data);
+            let dict_values = Arc::clone(&dict_values);
+            thread::spawn(move || process_chunks(receiver, processor, args, dict_data, dict_values))
+        })
+        .collect();
+
+    let mut chunk = Vec::with_capacity(chunk_size);
+
+    for result in rdr?.records() {
+        let record = result?;
+        chunk.push(record);
+        if chunk.len() == chunk_size {
+            sender.send(chunk).unwrap();
+            chunk = Vec::with_capacity(chunk_size);
+        }
+    }
+
+    if !chunk.is_empty() {
+        sender.send(chunk).unwrap();
+    }
+
+    drop(sender);
+
+    for handle in pool {
+        handle.join().unwrap();
+    }
+
+    let dict_data = &mut dict_data.lock().unwrap();
+    let _ = dict_data.output(_args.user_dict);
+
     Ok(())
 }
 
 /// WIP_Config_struct_description
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Config {
     /// 変換元のテキストファイルのパス
     pub csv_file: PathBuf,
