@@ -333,6 +333,7 @@ fn id_expr(
     } else {
         best_match.1
     };
+    // read_id_defで読み込んだ以外の品詞を追加で格納しておく。
     _id_def.insert(normalized_clsexpr.to_owned(), result_id);
     class_map.insert(normalized_clsexpr.to_owned(), result_id);
     result_id
@@ -671,7 +672,7 @@ fn is_japanese(str: &str) -> bool {
 #[derive(Debug)]
 pub struct DictValues<'a> {
     id_def: &'a mut IdDef,
-    default_noun_id: &'a mut i32,
+    default_noun_id: &'a i32,
     class_map: &'a mut MyIndexMap<String, i32>,
     mapping: &'a mut WordClassMapping,
     pronunciation: &'a mut String,
@@ -1318,7 +1319,7 @@ pub fn process_dictionary(
     dict_data: &mut DictionaryData,
     _args: &Config,
 ) -> io::Result<()> {
-    let (mut _id_def, mut _default_noun_id) = read_id_def(&_args.id_def)?;
+    let (mut _id_def, _default_noun_id) = read_id_def(&_args.id_def)?;
     let mut class_map = MyIndexMap::<String, i32>::with_hasher(RandomState::default());
     let mut mapping = create_word_class_mapping();
     let mut pronunciation = String::new();
@@ -1328,7 +1329,7 @@ pub fn process_dictionary(
 
     let mut _dict_values = DictValues {
         id_def: &mut _id_def,
-        default_noun_id: &mut _default_noun_id,
+        default_noun_id: &_default_noun_id,
         class_map: &mut class_map,
         mapping: &mut mapping,
         pronunciation: &mut pronunciation,
