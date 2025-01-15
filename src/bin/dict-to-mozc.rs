@@ -174,7 +174,7 @@ impl Args {
             places: self.places,
             symbols: self.symbols,
             threads: self.threads.unwrap_or(1),
-            chunk_size: self.chunk_size.unwrap_or(10000),
+            chunk_size: self.chunk_size.unwrap_or(1000),
             debug: self.debug.unwrap_or_else(|| dict_type.default_debug()),
         })
     }
