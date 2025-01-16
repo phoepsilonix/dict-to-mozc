@@ -1145,6 +1145,7 @@ impl DictionaryProcessor for MozcUserDictProcessor {
     }
 }
 
+#[inline]
 fn add_dict_data(
     _data: &StringRecord,
     _dict_values: &mut DictValues,
