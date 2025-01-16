@@ -36,14 +36,16 @@ mod utils {
     pub(crate) fn convert_to_hiragana(text: &str) -> String {
         // 半角カタカナを全角カタカナへ
         let yomi = UCSStr::convert(
-            &text.chars().collect::<Vec<char>>(),
+            text.chars().collect::<Vec<_>>().as_slice(),
             ConvertType::Wide,
             ConvertTarget::KATAKANA,
         );
         // ひらがなへ
-        let hiragana: String = UCSStr::convert(&yomi, ConvertType::Hiragana, ConvertTarget::ALL)
-            .iter()
-            .collect();
+        let hiragana = String::from_iter(UCSStr::convert(
+            &yomi,
+            ConvertType::Hiragana,
+            ConvertTarget::ALL,
+        ));
         hiragana.replace("ゐ", "い").replace("ゑ", "え")
     }
 
