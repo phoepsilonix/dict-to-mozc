@@ -1216,14 +1216,6 @@ fn add_dict_data(
             false,
         );
     }
-    /*
-    match _result {
-    Some(entry) => {
-    dict_data.output_entry(writer, &entry.to_owned(), _args.user_dict);
-    },
-    None => todo!(),
-    }
-    */
 }
 
 fn parse_delimiter(s: &str, args: &Config) -> u8 {
@@ -1232,16 +1224,12 @@ fn parse_delimiter(s: &str, args: &Config) -> u8 {
         "," => b',',
         ";" => b';',
         " " => b' ',
+        s if s.chars().count() == 1 => s.chars().next().unwrap() as u8,
         _ => {
-            let chars: Vec<char> = s.chars().collect();
-            if chars.len() == 1 {
-                chars[0] as u8
-            } else {
-                if args.debug > 1 {
-                    eprintln!("Warning: Invalid delimiter '{}'. Using default ','.", s);
-                }
-                b','
+            if args.debug > 1 {
+                eprintln!("Warning: Invalid delimiter '{}'. Using default ','.", s);
             }
+            b','
         }
     }
 }
