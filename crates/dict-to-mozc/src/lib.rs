@@ -4,6 +4,7 @@ extern crate indexmap;
 extern crate kanaria;
 extern crate lazy_regex;
 
+use lazy_regex::regex;
 use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
 use lazy_regex::Regex;
@@ -32,7 +33,7 @@ use hashbrown::DefaultHashBuilder as RandomState;
 mod utils {
     use super::*;
 
-    // カタカナから読みを平仮名へ
+    /// カタカナから読みを平仮名へ
     pub(crate) fn convert_to_hiragana(text: &str) -> String {
         // 半角カタカナを全角カタカナへ
         let yomi = UCSStr::convert(
@@ -49,16 +50,25 @@ mod utils {
         hiragana.replace("ゐ", "い").replace("ゑ", "え")
     }
 
-    // Unicode Escapeの記述が含まれる場合、それを変換する。
+    static UNICODE_ESCAPE_RE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r#"\\u([0-9a-fA-F]{4})"#).unwrap());
+    /// Unicode Escapeの記述が含まれる場合、それを変換する。
     pub(crate) fn unicode_escape_to_char(text: &str) -> String {
-        regex_replace_all!(r#"\\u([0-9a-fA-F]{4})"#, text, |_, num: &str| {
-            let num: u32 = u32::from_str_radix(num, 16).unwrap();
-            std::char::from_u32(num).unwrap().to_string()
-        })
-        .to_string()
+        if UNICODE_ESCAPE_RE.is_match(text) {
+            let result = UNICODE_ESCAPE_RE
+                .replace_all(text, |caps: &regex::Captures| {
+                    let num = u32::from_str_radix(&caps[1], 16).unwrap();
+                    std::char::from_u32(num).unwrap().to_string()
+                })
+                .into_owned();
+            // 置換ロジック
+            result
+        } else {
+            text.to_string()
+        }
     }
 
-    // コスト計算
+    /// 品詞コスト計算
     pub(crate) fn adjust_cost(cost: i32) -> i32 {
         if cost < MIN_COST {
             8000
