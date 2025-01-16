@@ -534,11 +534,12 @@ fn get_user_word_class(
     _id_def: &IdDef,
     user_word_class: String,
 ) -> String {
-    if let Some(word_class) = mapping.get_first_id_def(&user_word_class) {
-        word_class.to_owned()
-    } else {
-        "名詞,一般,*,*,*,*,*".to_owned()
-    }
+    // キャッシュをチェック
+    let word_class: String = match mapping.get_first_id_def(&user_word_class) {
+        Some(class) => class.to_owned(),
+        None => "名詞,一般,*,*,*,*,*".to_owned(),
+    };
+    word_class
 }
 
 // id.defからキーを検索
@@ -631,11 +632,13 @@ pub trait DictionaryProcessor {
 }
 
 fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> bool {
-    let Some(_pronunciation) = record.get(_args.pronunciation_index) else {
-        return false;
+    let _pronunciation = match record.get(_args.pronunciation_index) {
+        Some(p) => p,
+        None => return false,
     };
-    let Some(_notation) = record.get(_args.notation_index) else {
-        return false;
+    let _notation = match record.get(_args.notation_index) {
+        Some(n) => n,
+        None => return false,
     };
     let mut word_class_parts = Vec::new();
     let start_index = _args.word_class_index;
@@ -915,13 +918,13 @@ impl DictionaryProcessor for DefaultProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let _pronunciation = if let Some(p) = record.get(_args.pronunciation_index) {
-            convert_to_hiragana(p)
-        } else {
-            return false;
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
+            Some(p) => convert_to_hiragana(p),
+            None => return false,
         };
-        let Some(_notation) = record.get(_args.notation_index) else {
-            return false;
+        let _notation = match record.get(_args.notation_index) {
+            Some(n) => n,
+            None => return false,
         };
         *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         if (!_args.places)
@@ -959,13 +962,13 @@ impl DictionaryProcessor for SudachiProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let _pronunciation = if let Some(p) = record.get(_args.pronunciation_index) {
-            convert_to_hiragana(p)
-        } else {
-            return false;
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
+            Some(p) => convert_to_hiragana(p),
+            None => return false,
         };
-        let Some(_notation) = record.get(_args.notation_index) else {
-            return false;
+        let _notation = match record.get(_args.notation_index) {
+            Some(n) => n,
+            None => return false,
         };
         *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         if (!_args.places)
@@ -1003,13 +1006,13 @@ impl DictionaryProcessor for NeologdProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let _pronunciation = if let Some(p) = record.get(_args.pronunciation_index) {
-            convert_to_hiragana(p)
-        } else {
-            return false;
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
+            Some(p) => convert_to_hiragana(p),
+            None => return false,
         };
-        let Some(_notation) = record.get(_args.notation_index) else {
-            return false;
+        let _notation = match record.get(_args.notation_index) {
+            Some(n) => n,
+            None => return false,
         };
         *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
         if (!_args.places)
@@ -1052,13 +1055,13 @@ impl DictionaryProcessor for UtDictProcessor {
         if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
             word_class_id = *_dict_values.default_noun_id;
         }
-        let _pronunciation = if let Some(p) = record.get(_args.pronunciation_index) {
-            convert_to_hiragana(p)
-        } else {
-            return false;
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
+            Some(p) => convert_to_hiragana(p),
+            None => return false,
         };
-        let Some(_notation) = record.get(_args.notation_index) else {
-            return false;
+        let _notation = match record.get(_args.notation_index) {
+            Some(n) => n,
+            None => return false,
         };
         *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
         *_dict_values.notation = unicode_escape_to_char(_notation);
@@ -1115,13 +1118,13 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         }
         // ユーザー辞書型式から品詞IDに
         *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
-        let _pronunciation = if let Some(p) = record.get(_args.pronunciation_index) {
-            convert_to_hiragana(p)
-        } else {
-            return false;
+        let _pronunciation: String = match record.get(_args.pronunciation_index) {
+            Some(p) => convert_to_hiragana(p),
+            None => return false,
         };
-        let Some(_notation) = record.get(_args.notation_index) else {
-            return false;
+        let _notation = match record.get(_args.notation_index) {
+            Some(n) => n,
+            None => return false,
         };
         *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
         *_dict_values.notation = unicode_escape_to_char(_notation);
@@ -1153,26 +1156,40 @@ fn add_dict_data(
     _args: &Config,
 ) {
     if _args.user_dict {
-        let _word_class = match u_search_key(
+        match u_search_key(
             _dict_values.mapping,
             _dict_values.id_def,
             *_dict_values.word_class_id,
         ) {
-            Some(class) => class,
-            None => "名詞".to_owned(),
-        };
-        dict_data.add(
-            DictionaryEntry {
-                key: DictionaryKey {
-                    pronunciation: _dict_values.pronunciation.to_owned(),
-                    notation: _dict_values.notation.to_owned(),
-                    word_class_id: *_dict_values.word_class_id,
-                },
-                cost: *_dict_values.cost,
-                word_class: _word_class,
-            },
-            true,
-        );
+            Some(_word_class) => {
+                dict_data.add(
+                    DictionaryEntry {
+                        key: DictionaryKey {
+                            pronunciation: _dict_values.pronunciation.to_owned(),
+                            notation: _dict_values.notation.to_owned(),
+                            word_class_id: *_dict_values.word_class_id,
+                        },
+                        cost: *_dict_values.cost,
+                        word_class: _word_class,
+                    },
+                    true,
+                );
+            }
+            None => {
+                dict_data.add(
+                    DictionaryEntry {
+                        key: DictionaryKey {
+                            pronunciation: _dict_values.pronunciation.to_owned(),
+                            notation: _dict_values.notation.to_owned(),
+                            word_class_id: *_dict_values.word_class_id,
+                        },
+                        cost: *_dict_values.cost,
+                        word_class: "名詞".to_owned(),
+                    },
+                    true,
+                );
+            }
+        }
     } else {
         dict_data.add(
             DictionaryEntry {
@@ -1187,6 +1204,14 @@ fn add_dict_data(
             false,
         );
     }
+    /*
+    match _result {
+    Some(entry) => {
+    dict_data.output_entry(writer, &entry.to_owned(), _args.user_dict);
+    },
+    None => todo!(),
+    }
+    */
 }
 
 fn parse_delimiter(s: &str, args: &Config) -> u8 {
@@ -1195,12 +1220,16 @@ fn parse_delimiter(s: &str, args: &Config) -> u8 {
         "," => b',',
         ";" => b';',
         " " => b' ',
-        s if s.chars().count() == 1 => s.chars().next().unwrap() as u8,
         _ => {
-            if args.debug > 1 {
-                eprintln!("Warning: Invalid delimiter '{}'. Using default ','.", s);
+            let chars: Vec<char> = s.chars().collect();
+            if chars.len() == 1 {
+                chars[0] as u8
+            } else {
+                if args.debug > 1 {
+                    eprintln!("Warning: Invalid delimiter '{}'. Using default ','.", s);
+                }
+                b','
             }
-            b','
         }
     }
 }

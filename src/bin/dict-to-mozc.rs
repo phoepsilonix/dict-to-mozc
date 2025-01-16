@@ -267,32 +267,28 @@ pub fn main() -> ExitCode {
     let args = match Args::from_args(&[cmd], &args_slice[1..]) {
         Ok(args) => args,
         Err(early_exit) => {
-            let (message, exit_code) = if early_exit.status.is_ok() {
-                (early_exit.output, ExitCode::from(2)) // ヘルプ表示時の終了コード
-            } else {
-                (
-                    format!(
+            match early_exit.status {
+                Ok(()) => {
+                    println!("{}", early_exit.output);
+                    return ExitCode::from(2); // ヘルプ表示時の終了コード
+                }
+                Err(()) => {
+                    eprintln!(
                         "{}\nRun {} --help for more information.",
                         early_exit.output, cmd
-                    ),
-                    ExitCode::FAILURE, // コマンドオプションが不適切な場合の終了コード
-                )
-            };
-
-            if exit_code == ExitCode::FAILURE {
-                eprintln!("{}", message);
-            } else {
-                println!("{}", message);
+                    );
+                    return ExitCode::FAILURE; // コマンドオプションが不適切な場合の終了コード
+                }
             }
-
-            return exit_code;
         }
     };
-
     // argsを使ってconfigを生成
-    let Ok(config) = args.into_config() else {
-        eprintln!("Failed to parse config");
-        return ExitCode::from(3); // configのパースに失敗した場合の終了コード
+    let config = match args.into_config() {
+        Ok(config) => config,
+        Err(_) => {
+            eprintln!("Failed to parse config");
+            return ExitCode::from(3); // configのパースに失敗した場合の終了コード
+        }
     };
 
     if config.debug > 1 {
