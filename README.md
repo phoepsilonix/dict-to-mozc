@@ -33,7 +33,7 @@ Mozcの内部的な品詞IDは変わることがありますので、その時�
 + -P,-N,-W,-Cオプションを追加しました。読み込みフィールド位置を指定できます。
 + -dオプションでタブ区切りにも対応できます。  
 読み込みにつかっているcsvクレートで用いるデリミタを指定できます。
-```
+```sh
 Usage: dict-to-mozc [-f <csv-file>] [-i <id-def>] [-U] [-s] [-n] [-u] [-M] [-p] [-S] [-P <pronunciation-index>] [-N <notation-index>] [-W <word-class-index>] [-w <word-class-numbers>] [-C <cost-index>] [-d <delimiter>] [-D <debug>]
 
 Dictionary to Mozc Dictionary Formats: a tool for processing dictionary files. (Mozc辞書型式への変換プログラム)
