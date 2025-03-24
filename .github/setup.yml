@@ -37,8 +37,9 @@
 - name: Install rust and rust-src
   shell: bash
   run: |
-    sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
-    sed -i -e 's|features =.*$|features = [ "use-mimalloc-rs", "unstable" ]|' dist-workspace.toml 
+    # nightly -> rust 1.85.1 stable
+    #sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
+    #sed -i -e 's|features =.*$|features = [ "use-mimalloc-rs", "unstable" ]|' dist-workspace.toml 
 
     #rust-toolchain.tomlに記載しているので、cargoコマンドで自動で追加インストールされるため不要
     #rustup update nightly
