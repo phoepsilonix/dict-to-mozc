@@ -9,6 +9,12 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[cfg(feature = "use-mimalloc-rs")]
+#[cfg(all(
+    feature = "use-mimalloc-rs",
+    any(
+        all(not(target_os = "windows"))
+    )
+))]
 #[global_allocator]
 static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiMalloc;
 
