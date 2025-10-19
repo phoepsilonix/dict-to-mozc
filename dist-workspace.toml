@@ -21,15 +21,15 @@ install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
 
-[dist.github-custom-runners]
-x86_64-unknown-linux-gnu = "ubuntu-24.04"
-x86_64-unknown-linux-musl = "ubuntu-24.04"
+#[dist.github-custom-runners]
+#x86_64-unknown-linux-gnu = "ubuntu-24.04"
+#x86_64-unknown-linux-musl = "ubuntu-24.04"
 
 # Arm
-aarch64-unknown-linux-gnu = "ubuntu-24.04"
-aarch64-unknown-linux-musl = "ubuntu-24.04"
-armv7-unknown-linux-gnueabihf = "ubuntu-24.04"
-armv7-unknown-linux-musleabihf = "ubuntu-24.04"
+#aarch64-unknown-linux-gnu = "ubuntu-24.04"
+#aarch64-unknown-linux-musl = "ubuntu-24.04"
+#armv7-unknown-linux-gnueabihf = "ubuntu-24.04"
+#armv7-unknown-linux-musleabihf = "ubuntu-24.04"
 
 #aarch64-unknown-linux-gnu = "buildjet-8vcpu-ubuntu-2204-arm"
 #aarch64-unknown-linux-musl = "buildjet-8vcpu-ubuntu-2204-arm"
@@ -45,16 +45,14 @@ armv7-unknown-linux-musleabihf = "ubuntu-24.04"
 #x86_64-pc-windows-msvc = "ubuntu-24.04"
 
 # Mac
-aarch64-apple-darwin = "macos-14"
-x86_64-apple-darwin = "macos-14"
+#aarch64-apple-darwin = "macos-14"
+#x86_64-apple-darwin = "macos-14"
 
-[dist.github-custom-runners.x86_64-pc-windows-msvc]
-runner = "ubuntu-24.04"
-container = "rust-cross/cargo-xwin"
+#[dist.github-custom-runners.x86_64-pc-windows-msvc]
+#runner = "ubuntu-24.04"
 #container = "messense/cargo-xwin"
 
-[dist.github-custom-runners.aarch64-pc-windows-msvc]
-runner = "ubuntu-24.04"
-container = "rust-cross/cargo-xwin"
+#[dist.github-custom-runners.aarch64-pc-windows-msvc]
+#runner = "ubuntu-24.04"
 #container = "messense/cargo-xwin"
 
