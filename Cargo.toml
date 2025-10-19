@@ -30,7 +30,7 @@ hashbrown = { version = "0.16", default-features = false, features = [ "allocato
 #foldhash = "0.1.4"
 #fxhash = "0.2.1"
 
-mimalloc = { version = "0.1.43" }
+mimalloc = { version = "0.1.40" }
 snmalloc-rs = { version = "0.3.7", features = ["lto"] }
 tcmalloc = { version = "0.3.0" }
 
