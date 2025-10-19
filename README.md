@@ -133,10 +133,12 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/phoepsilonix/dict-to-mo
 ### ソースからビルド＆インストール
 Rustはあらかじめインストールしておいてください。  
 `$HOME/.cargo/bin`にインストールされます。
+#### その１
 ```sh
 cargo install --git https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc --profile release -F use-mimalloc-rs
 which dict-to-mozc
 ```
+#### その２
 ```sh
 git clone https://github.com/phoepsilonix/dict-to-mozc.git
 cd dict-to-mozc
@@ -144,6 +146,30 @@ RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mima
 ls -l target/x86_64-unknown-linux-gnu/release/dict-to-mozc
 cp target/x86_64-unknown-linux-gnu/release/dict-to-mozc ~/.cargo/bin/
 ```
+
+#### 補足
+gcc15などの場合、mimallocを有効にすると、cc-rsのビルドで失敗する場合があります。  
+その場合、下記のような環境変数をCFLAGSに設定することで、gcc15でもmimallocを有効にしたままビルド可能です。
+```sh
+#環境変数CCにgccが含まれる場合、CFLAGSを設定する。
+expr "$CC" : ".*gcc" >/dev/null && {
+    for flag in -std=c11 -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration; do
+        case " $CFLAGS " in
+            *" $flag "*) ;; # フラグが既にある場合はスキップ
+            *) CFLAGS="$CFLAGS $flag" ;; # フラグを追加
+        esac
+    done
+}
+export CFLAGS
+echo "$CFLAGS"
+RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+```
+#### 補足２
+mold linkerを用いる場合のコマンド例。
+```sh
+RUSTFLAGS="-Clink-arg=-Bmold" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+```
+
 
 ### 使用例
 https://github.com/WorksApplications/SudachiDict  

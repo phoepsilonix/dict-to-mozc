@@ -12,6 +12,8 @@
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
+        expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+        export CFLAGS
         ;;
       *arm*linux*)
         sudo apt-get install gcc-arm-linux-gnueabihf -y
@@ -22,6 +24,8 @@
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
+        expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+        export CFLAGS
         ;;
       *linux*)
         #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
@@ -31,6 +35,8 @@
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
+        expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+        export CFLAGS
         ;;
     esac
 
