@@ -5,7 +5,8 @@ members = ["cargo:."]
 [dist]
 build-command = ["cargo", "build"]
 # Features to pass to cargo build
-features = ["use-mimalloc-rs"]
+#features = ["use-mimalloc-rs"]
+features = ["use-auto-allocator"]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.30.0"
 # CI backends to support
