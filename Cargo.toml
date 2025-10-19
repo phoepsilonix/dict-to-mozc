@@ -23,14 +23,17 @@ argh = { version = "0.1.13", default-features = false, features = [ "help" ] }
 csv = { version = "1.3.1", default-features = true }
 kanaria = { version = "0.2.0", default-features = false }
 lazy-regex = { version = "3.4.1", default-features = false, features = [ "perf-dfa", "unicode" ] }
-indexmap = { version = "2.7.1", default-features = false, features = [] }
+indexmap = { version = "2.7.1", default-features = false, features = [ ] }
 mimalloc-rust = { version = "0.2.1", default-features = false }
 hashbrown = { version = "0.16", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
 #bitflags = "=2.7"
 #foldhash = "0.1.4"
 #fxhash = "0.2.1"
 
-mimalloc = { version = "0.1.40" }
+#auto-allocator = { version = "*", features = ["secure"], git = "https://github.com/phoepsilonix/auto-allocator.git" }
+auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
+jemallocator = "0.5.4"
+mimalloc = { version = "0.1.48" }
 snmalloc-rs = { version = "0.3.7", features = ["lto"] }
 tcmalloc = { version = "0.3.0" }
 
@@ -71,6 +74,9 @@ kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "18ca812a1f
 lib-dict-to-mozc = { workspace = true }
 argh.workspace = true
 mimalloc-rust = { workspace = true, optional = true, features = [] , default-features = false }
+jemallocator = { workspace = true, optional = true, features = [] , default-features = true }
+auto-allocator = { workspace = true, optional = true, features = [], default-features = true }
+
 #csv.workspace = true
 #foldhash.workspace = true
 #fxhash.workspace = true
@@ -96,6 +102,9 @@ default = []
 unstable = [ "unstable-mimalloc" ]
 unstable-mimalloc = [ "mimalloc-rust/unstable" ]
 use-mimalloc-rs = ["dep:mimalloc-rust"]
+
+use-jemalloc = ["dep:jemallocator"]
+use-auto-allocator = ["dep:auto-allocator"]
 
 use-mimalloc = ["dep:mimalloc"]
 use-snmalloc = ["dep:snmalloc-rs"]

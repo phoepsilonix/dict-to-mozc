@@ -32,6 +32,13 @@ static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 #[global_allocator]
 static GLOBAL: tcmalloc::TCMalloc = tcmalloc::TCMalloc;
 
+#[cfg(feature = "use-jemalloc")]
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+#[cfg(feature = "use-auto-allocator")]
+use auto_allocator;
+
 extern crate argh;
 extern crate lib_dict_to_mozc;
 
@@ -252,6 +259,13 @@ fn filter_args() -> Vec<OsString> {
 
 /// WIP_main_function_description
 pub fn main() -> ExitCode {
+    #[cfg(feature = "use-auto-allocator")]
+    {
+        let info = auto_allocator::get_allocator_info();
+        println!("使用中のアロケータ: {:?}、選択理由: {}", info.allocator_type, info.reason);
+
+    }
+
     let now = std::time::Instant::now();
     let filtered_args = filter_args();
     // OsStringを&strに変換する
