@@ -68,7 +68,8 @@ version.workspace = true
 
 [patch.crates-io]
 #cc = { git = "https://github.com/rust-lang/cc-rs.git", rev = "966183eb651b4ea473cdb32a91120e374f42ba4a" }
-kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8" }
+#kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8" }
+kanaria = { git = "https://github.com/phoepsilonix/kanaria.git", rev = "9c2a6237d5a523f372b50d956671251710d5f4ac" }
 
 [dependencies]
 lib-dict-to-mozc = { workspace = true }

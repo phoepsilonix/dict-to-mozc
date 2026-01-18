@@ -222,7 +222,7 @@ dependencies = [
 [[package]]
 name = "kanaria"
 version = "0.2.1"
-source = "git+https://github.com/samunohito/kanaria.git?rev=18ca812a1fe8c7f30a753aecc2681db1f18031e8#18ca812a1fe8c7f30a753aecc2681db1f18031e8"
+source = "git+https://github.com/phoepsilonix/kanaria.git?rev=9c2a6237d5a523f372b50d956671251710d5f4ac#9c2a6237d5a523f372b50d956671251710d5f4ac"
 dependencies = [
  "bitflags",
 ]
