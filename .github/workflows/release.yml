@@ -131,49 +131,125 @@ jobs:
         if: "runner.os == 'Linux'"
         run: |
           case "${{ join(matrix.targets) }}" in
+            *aarch64*linux*musl*)
+              sudo apt-get install -y gcc-aarch64-linux-gnu
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              hash -r
+              export RUSTFLAGS="-Clink-arg=-Bmold"
+              expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              export CC
+              export CFLAGS
+              ;;
             *aarch64*linux*)
-              sudo apt-get install gcc-aarch64-linux-gnu -y
+              sudo apt-get install -y gcc-aarch64-linux-gnu
               #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
               #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
               #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               #ls -l ~/.cargo/bin/
-              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
               expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              export CC
+              export CFLAGS
+              ;;
+            *arm*linux*musl*)
+              sudo apt-get install -y gcc-arm-linux-gnueabihf
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              hash -r
+              export RUSTFLAGS="-Clink-arg=-Bmold"
+              expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              export CC
               export CFLAGS
               ;;
             *arm*linux*)
-              sudo apt-get install gcc-arm-linux-gnueabihf -y
+              sudo apt-get install -y gcc-arm-linux-gnueabihf
               #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
               #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
               #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               #ls -l ~/.cargo/bin/
-              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
               expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              export CC
               export CFLAGS
+              ;;
+            *linux*musl*)
+              sudo apt-get install -y libgoogle-perftools-dev pkg-config
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              hash -r
+              export RUSTFLAGS="-Clink-arg=-Bmold"
+              expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              export CC
+              export CFLAGS
+              #export CXXFLAGS
               ;;
             *linux*)
               #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
+              sudo apt-get install -y libgoogle-perftools-dev pkg-config
               #curl -LO https://github.com/mozilla/sccache/releases/download/v0.9.0/sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz
               #tar -xvf sccache-v0.9.0-x86_64-unknown-linux-musl.tar.gz --strip=1 -C ~/.cargo/bin/
               #ls -l ~/.cargo/bin/
-              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.36.0/mold-2.36.0-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
+              curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
               expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              export CC
               export CFLAGS
+              export CXXFLAGS
               ;;
           esac
         shell: "sh"
+      - name: "features Setting"
+        id: "features"
+        run: |
+          case "${{ join(matrix.targets) }}" in
+            *arm*linux*musl*)
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              echo "features=" >> $GITHUB_OUTPUT
+              ;;
+            *aarch64*linux*musl*)
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              echo "features=" >> $GITHUB_OUTPUT
+              ;;
+            *linux*musl*)
+              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              ;;
+            *aarch64*linux*)
+              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              ;;
+            *arm*linux*)
+              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              ;;
+            *linux*)
+              echo "features=use-tcmalloc" >> $GITHUB_OUTPUT
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              ;;
+            *windows*)
+              echo "features=" >> $GITHUB_OUTPUT
+              echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              ;;
+          esac
+          ## backup memo
+                #${{ steps.features.outputs.cargo }} build --profile dist --target  "${{ join(matrix.targets) }}" ${{ steps.features.outputs.features }}
+                #dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} --target  "${{ join(matrix.targets) }}" > dist-manifest.json
+
+        shell: "bash"
       - name: "Install rust and rust-src"
         run: |
           # nightly -> rust 1.85.1 stable
           #sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
           #sed -i -e 's|features =.*$|features = [ "use-mimalloc-rs", "unstable" ]|' dist-workspace.toml 
-
+          rustup target add "${{ join(matrix.targets) }}"
+          rustup component add rust-src
           #rust-toolchain.tomlに記載しているので、cargoコマンドで自動で追加インストールされるため不要
           #rustup update nightly
           #rustup component add rust-src --toolchain nightly
@@ -199,6 +275,7 @@ jobs:
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
+          sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
           dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "dist ran successfully"
       - id: cargo-dist
