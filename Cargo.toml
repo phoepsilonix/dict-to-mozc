@@ -23,7 +23,7 @@ argh = { version = "0.1.14", default-features = false, features = [ "help" ] }
 csv = { version = "1.4.0", default-features = true }
 kanaria = { version = "0.2.0", default-features = false }
 lazy-regex = { version = "3.6.0", default-features = false, features = [ "perf-dfa", "unicode" ] }
-indexmap = { version = "2.13.0", default-features = false, features = [ ] }
+indexmap = { version = "2.13", default-features = false, features = [ ] }
 mimalloc-rust = { version = "0.2.1", default-features = false }
 hashbrown = { version = "0.16", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
 #bitflags = "=2.7"
@@ -100,13 +100,12 @@ name = "dict-to-mozc"
 
 [features]
 default = []
+use-tcmalloc = ["dep:tcmalloc"]
+use-jemalloc = ["dep:jemallocator"]
+use-snmalloc = ["dep:snmalloc-rs"]
+use-auto-allocator = ["dep:auto-allocator"]
+use-mimalloc-rs = ["dep:mimalloc-rust"]
 unstable = [ "unstable-mimalloc" ]
 unstable-mimalloc = [ "mimalloc-rust/unstable" ]
-use-mimalloc-rs = ["dep:mimalloc-rust"]
-
-use-jemalloc = ["dep:jemallocator"]
-use-auto-allocator = ["dep:auto-allocator"]
 
 use-mimalloc = ["dep:mimalloc"]
-use-snmalloc = ["dep:snmalloc-rs"]
-use-tcmalloc = ["dep:tcmalloc"]
