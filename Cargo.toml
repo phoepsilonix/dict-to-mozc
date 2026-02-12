@@ -23,12 +23,22 @@ argh = { version = "0.1.14", default-features = false, features = [ "help" ] }
 csv = { version = "1.4.0", default-features = true }
 kanaria = { version = "0.2.0", default-features = false }
 lazy-regex = { version = "3.6.0", default-features = false, features = [ "perf-dfa", "unicode" ] }
-indexmap = { version = "2.13", default-features = false, features = [ ] }
+indexmap = { version = "^2.13", default-features = false, features = [ ] }
+
+#indexmap = { version = "^2.4", default-features = false, features = [ ] }
+#indexmap = { version = "^2.4", default-features = false, features = [ "std" ] }
+
 mimalloc-rust = { version = "0.2.1", default-features = false }
-hashbrown = { version = "0.16", default-features = false, features = [ "allocator-api2", "default-hasher", "equivalent", "inline-more", "raw-entry"] }
+
+hashbrown = { version = "^0.16", default-features = false, features = [ "allocator-api2", "default-hasher", "raw-entry"] }
+#hashbrown = { version = "^0.16", default-features = true }
+#hashbrown = { version = "^0.15", default-features = false, features = [ "allocator-api2", "default-hasher", "raw-entry"] }
+#hashbrown = { version = "^0.14", default-features = false, features = [ "ahash", "inline-more"] }
+#hashbrown = { version = "^0.14", default-features = false, features = [ "ahash" ] }
+
 #bitflags = "=2.7"
-#foldhash = "0.1.4"
-#fxhash = "0.2.1"
+#foldhash = { version = "=0.2", default-features = false, features = [ "std" ] }
+#fxhash = { version = "^0.2", default-features = true, features = [] }
 
 #auto-allocator = { version = "*", features = ["secure"], git = "https://github.com/phoepsilonix/auto-allocator.git" }
 auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
@@ -68,8 +78,9 @@ version.workspace = true
 
 [patch.crates-io]
 #cc = { git = "https://github.com/rust-lang/cc-rs.git", rev = "966183eb651b4ea473cdb32a91120e374f42ba4a" }
-#kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "18ca812a1fe8c7f30a753aecc2681db1f18031e8" }
-kanaria = { git = "https://github.com/phoepsilonix/kanaria.git", rev = "9c2a6237d5a523f372b50d956671251710d5f4ac" }
+#kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "9c2a6237d5a523f372b50d956671251710d5f4ac" }
+# rust 2024 edition
+kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "c98ea3a9af75eb198662bc1483c32201ea3c65b6" }
 
 [dependencies]
 lib-dict-to-mozc = { workspace = true }
@@ -85,6 +96,15 @@ auto-allocator = { workspace = true, optional = true, features = [], default-fea
 #indexmap.workspace = true
 #kanaria.workspace = true
 #lazy-regex.workspace = true
+
+# 1st(best)
+indexmap = { version = "^2.13", features = [], default-features = false }
+hashbrown = { version = "^0.16" , features = [], default-features = false }
+
+# 2nd
+#indexmap = { version = "=2.5", features = [], default-features = false }
+#hashbrown = { version = "=0.14" , features = [], default-features = false }
+#hashbrown = { version = "^0.15" , features = [], default-features = false }
 
 [target.'cfg(any(not(any(target_arch = "arm", target_arch = "aarch64")),all(target_arch = "aarch64", not(target_os = "windows"))))'.dependencies]
 mimalloc = { workspace = true , optional = true }

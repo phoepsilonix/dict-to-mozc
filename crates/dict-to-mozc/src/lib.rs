@@ -22,9 +22,14 @@ use crate::utils::convert_to_hiragana;
 use crate::utils::unicode_escape_to_char;
 
 use indexmap::IndexMap;
+
 //use std::ops::{Deref, DerefMut};
 
+//^0.15
 use hashbrown::DefaultHashBuilder as RandomState;
+
+//0.14
+//use hashbrown::hash_map::DefaultHashBuilder as RandomState;
 //use fxhash::FxBuildHasher as RandomState;
 
 //use foldhash::fast::RandomState;

@@ -135,6 +135,8 @@ version = "0.6.19"
 dependencies = [
  "argh",
  "auto-allocator",
+ "hashbrown",
+ "indexmap",
  "jemallocator",
  "lib-dict-to-mozc",
  "mimalloc",
@@ -178,7 +180,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 dependencies = [
  "allocator-api2",
- "equivalent",
  "foldhash",
 ]
 
@@ -221,7 +222,7 @@ dependencies = [
 [[package]]
 name = "kanaria"
 version = "0.2.1"
-source = "git+https://github.com/phoepsilonix/kanaria.git?rev=9c2a6237d5a523f372b50d956671251710d5f4ac#9c2a6237d5a523f372b50d956671251710d5f4ac"
+source = "git+https://github.com/samunohito/kanaria.git?rev=c98ea3a9af75eb198662bc1483c32201ea3c65b6#c98ea3a9af75eb198662bc1483c32201ea3c65b6"
 dependencies = [
  "bitflags",
 ]
@@ -434,9 +435,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.114"
+version = "2.0.115"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d107df263a3013ef9b1879b0df87d706ff80f65a86ea879bd9c31f9b307c2a"
+checksum = "6e614ed320ac28113fa64972c4262d5dbc89deacdfd00c34a3e4cea073243c12"
 dependencies = [
  "proc-macro2",
  "quote",
