@@ -207,41 +207,43 @@ jobs:
           case "${{ join(matrix.targets) }}" in
             *arm*linux*musl*)
               echo "cargo=cargo" >> $GITHUB_OUTPUT
-              echo "features=" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*musl*)
               echo "cargo=cargo" >> $GITHUB_OUTPUT
-              echo "features=" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               ;;
             *linux*musl*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*)
               echo "features=use-tcmalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
+            *aarch64*windows*)
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
+              ;;
             *windows*)
-              echo "features=" >> $GITHUB_OUTPUT
+              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
           esac
           ## backup memo
-                #${{ steps.features.outputs.cargo }} build --profile dist --target  "${{ join(matrix.targets) }}" ${{ steps.features.outputs.features }}
-                #dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} --target  "${{ join(matrix.targets) }}" > dist-manifest.json
-
+                #sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
         shell: "bash"
       - name: "Install rust and rust-src"
         run: |
