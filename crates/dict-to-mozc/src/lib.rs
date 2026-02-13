@@ -60,14 +60,14 @@ mod utils {
     /// Unicode Escapeの記述が含まれる場合、それを変換する。
     pub(crate) fn unicode_escape_to_char(text: &str) -> String {
         if UNICODE_ESCAPE_RE.is_match(text) {
-            let result = UNICODE_ESCAPE_RE
+            
+            // 置換ロジック
+            UNICODE_ESCAPE_RE
                 .replace_all(text, |caps: &regex::Captures| {
                     let num = u32::from_str_radix(&caps[1], 16).unwrap();
                     std::char::from_u32(num).unwrap().to_string()
                 })
-                .into_owned();
-            // 置換ロジック
-            result
+                .into_owned()
         } else {
             text.to_string()
         }
@@ -1084,16 +1084,10 @@ impl DictionaryProcessor for UtDictProcessor {
         *_dict_values.notation = unicode_escape_to_char(_notation);
         let d: String = search_key(_dict_values.id_def, word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
-        if word_class.is_none() {
-            *_dict_values.word_class_id = id_expr(
-                &d,
-                _dict_values.id_def,
-                _dict_values.class_map,
-                *_dict_values.default_noun_id,
-            );
-        } else {
-            *_dict_values.word_class_id = *word_class.unwrap();
-        }
+        *_dict_values.word_class_id = match word_class {
+           None => id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id),
+           Some(wc) => *wc,
+        };
         let cost_str = record
             .get(_args.cost_index)
             .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
@@ -1147,16 +1141,10 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         *_dict_values.notation = unicode_escape_to_char(_notation);
         let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
-        if word_class.is_none() {
-            *_dict_values.word_class_id = id_expr(
-                &d,
-                _dict_values.id_def,
-                _dict_values.class_map,
-                *_dict_values.default_noun_id,
-            );
-        } else {
-            *_dict_values.word_class_id = *word_class.unwrap();
-        }
+        *_dict_values.word_class_id = match word_class {
+            None => id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id),
+            Some(wc) => *wc,
+        };
         //let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());
         //let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
         let cost = DEFAULT_COST;
