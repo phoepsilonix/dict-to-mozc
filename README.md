@@ -84,9 +84,27 @@ $,5969,5969,2784,$,補助記号,一般,*,*,*,*,キゴウ,$,*,A,*,*,*,*
 # ソースの取得
 git clone --filter=tree:0 https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
 cd dict-to-mozc
+
 # rustプログラムのビルド
 RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
 ```
+Linux環境でgperf関連パッケージがインストールされている環境ならtcmallocなども使えます。  
+リンクに必要なライブラリは各環境ごとに用意してください。  
+mimalloc-rustクレートの場合には、そのままビルドできるケースが多いとは思います。  
+また特にFeaturesを指定しなくても、若干パフォーマンスが落ちるだけで、問題なく動作します。
+```sh
+RUSTFLAGS="" cargo build --release
+```
+```sh
+RUSTFLAGS="" cargo build --release -F use-tcmalloc
+```
+```sh
+RUSTFLAGS="" cargo build --release -F use-jemalloc
+```
+```sh
+RUSTFLAGS="" cargo build --release -F use-snmalloc
+```
+
 ```sh
 # id.defの最新版を取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
@@ -131,7 +149,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/phoepsilonix/dict-to-mo
 ```
 
 ### ソースからビルド＆インストール
-Rustはあらかじめインストールしておいてください。  
+Rustなどはあらかじめインストールしておいてください。  
 `$HOME/.cargo/bin`にインストールされます。
 #### その１
 ```sh
@@ -145,6 +163,10 @@ cd dict-to-mozc
 RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
 ls -l target/x86_64-unknown-linux-gnu/release/dict-to-mozc
 cp target/x86_64-unknown-linux-gnu/release/dict-to-mozc ~/.cargo/bin/
+```
+私の環境だとtcmallocのほうが、若干パフォーマンスが良かったです。  
+```sh
+RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-tcmalloc
 ```
 
 #### 補足
