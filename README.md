@@ -79,32 +79,6 @@ $,5969,5969,2784,$,補助記号,一般,*,*,*,*,キゴウ,$,*,A,*,*,*,*
 .,-1,-1,0,.,名詞,普通名詞,一般,*,*,*,テン,.,*,A,*,*,*,*
 ```
 上記のようなtest.csvがあった場合、下記のような手順でユーザー辞書型式へ変換できます。
-
-```sh
-# ソースの取得
-git clone --filter=tree:0 https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
-cd dict-to-mozc
-
-# rustプログラムのビルド
-RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
-```
-Linux環境でgperf関連パッケージがインストールされている環境ならtcmallocなども使えます。  
-リンクに必要なライブラリは各環境ごとに用意してください。  
-mimalloc-rustクレートの場合には、そのままビルドできるケースが多いとは思います。  
-また特にFeaturesを指定しなくても、若干パフォーマンスが落ちるだけで、問題なく動作します。
-```sh
-RUSTFLAGS="" cargo build --release
-```
-```sh
-RUSTFLAGS="" cargo build --release -F use-tcmalloc
-```
-```sh
-RUSTFLAGS="" cargo build --release -F use-jemalloc
-```
-```sh
-RUSTFLAGS="" cargo build --release -F use-snmalloc
-```
-
 ```sh
 # id.defの最新版を取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
@@ -126,6 +100,40 @@ curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionar
 ```
 
 ## インストール
+
+```sh
+# ソースの取得
+git clone --filter=tree:0 https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
+cd dict-to-mozc
+
+# rustプログラムのビルド
+RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
+```
+mimalloc-rustクレートの場合には、そのままビルドできるケースが多いとは思います。  
+また特にFeaturesを指定しなくても、若干パフォーマンスが落ちるだけで、問題なく動作します。
+
+```sh
+RUSTFLAGS="" cargo build --release
+```
+```sh
+RUSTFLAGS="" cargo build --release -F use-tcmalloc
+```
+```sh
+RUSTFLAGS="" cargo build --release -F use-jemalloc
+```
+```sh
+RUSTFLAGS="" cargo build --release -F use-snmalloc
+```
+
+## リリース版の設定(v0.6.21)
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64 | Linux | tcmalloc |
+| aarch64 | Linux | jemalloc |
+| aarch64 | Windows | snmalloc |
+| x86_64 | Windows | mimalloc-rs |
+| x86_64, aarch64 | Mac | jemalloc |
+
 ### ダウンロード
 https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 ```sh
@@ -191,7 +199,6 @@ mold linkerを用いる場合のコマンド例。
 ```sh
 RUSTFLAGS="-Clink-arg=-Bmold" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
 ```
-
 
 ### 使用例
 https://github.com/WorksApplications/SudachiDict  
@@ -275,7 +282,8 @@ dict-to-mozc -U -u -i ./id.def -f mozcdic-ut-skk-jisyo.txt > skk-jisyo-userdict.
 データの読み込みは、[csv](https://docs.rs/csv/latest/csv/)クレートを用いてます。  
 カナや英数記号の判定の正規表現の判定に、[lazy-regex](https://docs.rs/lazy-regex/latest/lazy_regex/)を用いてます。  
 重複するエントリーを取り除くのに、[indexmap](https://docs.rs/indexmap/latest/indexmap/)を用いています。  
-Global Allocatorとしてmimallocへのバインディングを提供している[mimalloc-rust](https://docs.rs/mimalloc-rust/latest/mimalloc_rust/)を用いることで、パフォーマンスの改善が行えました。cargo distで複数のアーキテクチャ向けにビルドする際、mimalloc-rustだと、どのアーキテクチャでもビルドエラーにならなかったので、こちらを採用しました。  
+Global Allocatorとしてmimallocへのバインディングを提供している[mimalloc-rust](https://docs.rs/mimalloc-rust/latest/mimalloc_rust/)を用いることで、パフォーマンスの改善が行えました。cargo distで複数のアーキテクチャ向けにビルドする際、mimalloc-rustだと、どのアーキテクチャでもビルドエラーにならなかったので、こちらを採用しました。[現在](#%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E7%89%88%E3%81%AE%E8%A8%AD%E5%AE%9Av0621)はビルド可能なものに関しては、tcmalloc、jemalloc、snmallocなども使用しています。
+
 
 ## ユーザー辞書として
 SudachiDictをMozcユーザー辞書形式へ変換したものと、Neologdのunidic,ipadicを一つのMozcユーザー辞書形式にまとめたものの、2種類を次のサイトに公開しておきます。(Mozcのid.defに依存せずに品詞情報を含めた対応表として残せることが利点です。)  
