@@ -134,6 +134,21 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 | x86_64 | Windows | mimalloc-rs |
 | x86_64, aarch64 | Mac | jemalloc |
 
+### ライブラリインストール
+#### Ubuntu,Debian
+tcmalloc
+```sh
+sudo apt install libgoogle-perftools-dev
+```
+jemalloc
+```sh
+sudo apt install libjemalloc-dev
+```
+mimalloc
+```sh
+sudo apt install libmimalloc-dev
+```
+
 ### ダウンロード
 https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 ```sh
