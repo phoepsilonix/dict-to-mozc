@@ -155,7 +155,7 @@ https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/latest/download/dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz
 tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz --strip-components=1
 ls -l ./dict-to-mozc
-cp ./dict-to-mozc /usr/local/bin/
+sudo cp ./dict-to-mozc /usr/local/bin/
 ```
 
 ### cargo binstallでインストール
