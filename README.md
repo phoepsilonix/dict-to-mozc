@@ -115,19 +115,28 @@ mimalloc-rustクレートの場合には、そのままビルドできるケー�
 ```sh
 RUSTFLAGS="" cargo build --release
 ```
+## jemalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-jemalloc
 ```
+## tcmalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-tcmalloc
 ```
-* 実行時にtcmalloc.soが必要。
-Ubuntu `libgoogle-perftools-dev` パッケージ
-Arch `gperftools` パッケージ
-
+* 実行時にtcmalloc.soが必要。  
+  Ubuntu `libgoogle-perftools-dev` パッケージ
+  ```sh
+  sudo apt install libgoogle-perftools-dev
+  ```
+  Arch `gperftools` パッケージ
+  ```sh
+  sudo pacman install gperftools
+  ```
+## snmalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-snmalloc
 ```
+
 * ビルド時にcmakeが必要。
 
 ## リリース版の設定
@@ -159,14 +168,15 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 | x86_64, aarch64 | Mac | mimalloc-rs |
 
 ### ライブラリインストール
-#### Ubuntu,Debian
-tcmalloc
+use-tcmalloc featuresを有効にした場合。
+#### tcmalloc
+##### Ubuntu, Debian
 ```sh
 sudo apt install libgoogle-perftools-dev
 ```
-jemalloc
+##### Arch, Manjaro
 ```sh
-sudo apt install libjemalloc-dev
+sudo pacman -S gperftools
 ```
 
 ### ダウンロード

@@ -238,7 +238,7 @@ jobs:
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
           esac

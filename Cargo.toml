@@ -45,10 +45,12 @@ hashbrown = { version = "^0.16", default-features = false, features = [ "allocat
 
 #auto-allocator = { version = "*", features = ["secure"], git = "https://github.com/phoepsilonix/auto-allocator.git" }
 auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
-jemallocator = "0.5.4"
+
 mimalloc = { version = "0.1.48" }
 snmalloc-rs = { version = "0.3.8", features = ["lto"] }
 tcmalloc = { version = "0.3.0" }
+
+jemallocator = "0.5.4"
 
 [profile.release]
 debug = true
@@ -109,7 +111,7 @@ hashbrown = { version = "^0.16" , features = [], default-features = false }
 #hashbrown = { version = "=0.14" , features = [], default-features = false }
 #hashbrown = { version = "^0.15" , features = [], default-features = false }
 
-[target.'cfg(any(not(any(target_arch = "arm", target_arch = "aarch64")),all(target_arch = "aarch64", not(target_os = "windows"))))'.dependencies]
+#[target.'cfg(any(not(any(target_arch = "arm", target_arch = "aarch64")),all(target_arch = "aarch64", not(target_os = "windows"))))'.dependencies]
 mimalloc = { workspace = true , optional = true }
 snmalloc-rs = { workspace = true , optional = true }
 tcmalloc = { workspace = true , optional = true }
