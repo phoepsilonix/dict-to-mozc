@@ -125,7 +125,8 @@ RUSTFLAGS="" cargo build --release -F use-jemalloc
 RUSTFLAGS="" cargo build --release -F use-snmalloc
 ```
 
-## リリース版の設定(v0.6.21)
+## リリース版の設定
+### v0.6.21
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
 | x86_64 | Linux | tcmalloc |
@@ -133,6 +134,15 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 | aarch64 | Windows | snmalloc |
 | x86_64 | Windows | mimalloc-rs |
 | x86_64, aarch64 | Mac | jemalloc |
+
+### v0.6.19
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64 | Linux | mimalloc-rs |
+| aarch64 | Linux | mimalloc-rs |
+| aarch64 | Windows | mimalloc-rs |
+| x86_64 | Windows | |
+| x86_64, aarch64 | Mac | mimalloc-rs |
 
 ### ライブラリインストール
 #### Ubuntu,Debian
@@ -143,10 +153,6 @@ sudo apt install libgoogle-perftools-dev
 jemalloc
 ```sh
 sudo apt install libjemalloc-dev
-```
-mimalloc
-```sh
-sudo apt install libmimalloc-dev
 ```
 
 ### ダウンロード
