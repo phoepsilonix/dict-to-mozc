@@ -116,23 +116,37 @@ mimalloc-rustクレートの場合には、そのままビルドできるケー�
 RUSTFLAGS="" cargo build --release
 ```
 ```sh
-RUSTFLAGS="" cargo build --release -F use-tcmalloc
-```
-```sh
 RUSTFLAGS="" cargo build --release -F use-jemalloc
 ```
 ```sh
+RUSTFLAGS="" cargo build --release -F use-tcmalloc
+```
+* 実行時にtcmalloc.soが必要。
+Ubuntu `libgoogle-perftools-dev` パッケージ
+Arch `gperftools` パッケージ
+
+```sh
 RUSTFLAGS="" cargo build --release -F use-snmalloc
 ```
+* ビルド時にcmakeが必要。
 
 ## リリース版の設定
+### v0.6.22
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64 | Linux | jemalloc |
+| aarch64 | Linux | jemalloc |
+| aarch64 | Windows | |
+| x86_64 | Windows | |
+| x86_64, aarch64 | Mac | jemalloc |
+
 ### v0.6.21
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
 | x86_64 | Linux | tcmalloc |
 | aarch64 | Linux | jemalloc |
-| aarch64 | Windows | snmalloc |
-| x86_64 | Windows | mimalloc-rs |
+| aarch64 | Windows | |
+| x86_64 | Windows | |
 | x86_64, aarch64 | Mac | jemalloc |
 
 ### v0.6.19
@@ -140,7 +154,7 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 |----------------|----|----------------|
 | x86_64 | Linux | mimalloc-rs |
 | aarch64 | Linux | mimalloc-rs |
-| aarch64 | Windows | mimalloc-rs |
+| aarch64 | Windows | |
 | x86_64 | Windows | |
 | x86_64, aarch64 | Mac | mimalloc-rs |
 

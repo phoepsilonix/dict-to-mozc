@@ -16,7 +16,7 @@ members = ["cargo:."]
 [dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.30.3"
-features = ["use-tcmalloc"]
+features = ["use-jemalloc"]
 # CI backends to support
 ci = "github"
 allow-dirty = ["ci"]
@@ -60,10 +60,12 @@ runner = "ubuntu-24.04"
 #container = "messense/cargo-xwin:0.18.4"
 #container = "messense/cargo-xwin:0.17.1"
 container = "messense/cargo-xwin:sha-ab6a270"
+#container = "messense/cargo-xwin:sha-ab6a270"
 
 [dist.github-custom-runners.aarch64-pc-windows-msvc]
 runner = "ubuntu-24.04"
 #container = "messense/cargo-xwin:0.18.4"
 #container = "messense/cargo-xwin:0.17.1"
 container = "messense/cargo-xwin:sha-ab6a270"
+#container = "messense/cargo-xwin:sha-ab6a270"
 
