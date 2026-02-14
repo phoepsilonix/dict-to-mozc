@@ -163,6 +163,7 @@ cargo binstallをインストールしている場合。
 `$HOME/.cargo/bin`にインストールされます。
 ```sh
 cargo binstall --git https://github.com/phoepsilonix/dict-to-mozc.git dict-to-mozc
+export PATH="$PATH":"$HOME/.cargo/bin"
 ```
 
 ### cargo-distで生成されたスクリプトでインストール
