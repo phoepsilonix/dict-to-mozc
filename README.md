@@ -115,6 +115,11 @@ mimalloc-rustクレートの場合には、そのままビルドできるケー�
 ```sh
 RUSTFLAGS="" cargo build --release
 ```
+
+## mimalloc-rs
+```sh
+RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
+```
 ## jemalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-jemalloc
