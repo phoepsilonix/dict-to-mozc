@@ -1,4 +1,3 @@
-#![target.'cfg_attr(feature = "unstable", feature(unstable))']
 #cargo-features = ["profile-rustflags"]
 
 [workspace]
@@ -111,7 +110,6 @@ hashbrown = { version = "^0.16" , features = [], default-features = false }
 #hashbrown = { version = "=0.14" , features = [], default-features = false }
 #hashbrown = { version = "^0.15" , features = [], default-features = false }
 
-#[target.'cfg(any(not(any(target_arch = "arm", target_arch = "aarch64")),all(target_arch = "aarch64", not(target_os = "windows"))))'.dependencies]
 mimalloc = { workspace = true , optional = true }
 snmalloc-rs = { workspace = true , optional = true }
 tcmalloc = { workspace = true , optional = true }

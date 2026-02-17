@@ -140,6 +140,15 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 * ビルド時にcmakeが必要。
 
 ## リリース版の設定
+### v0.6.23
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64 | Linux | mimalloc-rs |
+| aarch64 | Linux | mimalloc-rs |
+| aarch64 | Windows | |
+| x86_64 | Windows | |
+| x86_64, aarch64 | Mac | mimalloc-rs |
+
 ### v0.6.22
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
@@ -157,15 +166,6 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 | aarch64 | Windows | |
 | x86_64 | Windows | |
 | x86_64, aarch64 | Mac | jemalloc |
-
-### v0.6.19
-| プラットフォーム | OS | メモリアロケータ |
-|----------------|----|----------------|
-| x86_64 | Linux | mimalloc-rs |
-| aarch64 | Linux | mimalloc-rs |
-| aarch64 | Windows | |
-| x86_64 | Windows | |
-| x86_64, aarch64 | Mac | mimalloc-rs |
 
 ### ライブラリインストール
 use-tcmalloc featuresを有効にした場合。

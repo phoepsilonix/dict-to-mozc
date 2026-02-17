@@ -1,3 +1,4 @@
+/*
 #[cfg(all(
     feature = "use-mimalloc",
     any(
@@ -6,6 +7,8 @@
         all(target_arch = "aarch64", not(target_os = "windows"))
     )
 ))]
+*/
+#[cfg(feature = "use-mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
@@ -13,17 +16,17 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiMalloc;
 
-#[cfg(all(
-    feature = "use-snmalloc",
-    any(
-        not(any(target_arch = "arm", target_arch = "aarch64")),
+//    any(
+//      not(any(target_arch = "arm", target_arch = "aarch64")),
 //    not(target_os = "windows")
-        all(target_arch = "aarch64", not(target_os = "windows"))
-    )
-))]
+//        all(target_arch = "aarch64", not(target_os = "windows"))
+//    )
+//))]
+#[cfg(feature = "use-snmalloc")]
 #[global_allocator]
 static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 
+/*
 #[cfg(all(
     feature = "use-tcmalloc",
     any(
@@ -32,6 +35,9 @@ static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 //    not(target_os = "windows")
     )
 ))]
+*/
+
+#[cfg(feature = "use-tcmalloc")]
 #[global_allocator]
 static GLOBAL: tcmalloc::TCMalloc = tcmalloc::TCMalloc;
 
