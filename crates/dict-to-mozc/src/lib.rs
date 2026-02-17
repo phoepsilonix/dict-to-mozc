@@ -4,10 +4,10 @@ extern crate indexmap;
 extern crate kanaria;
 extern crate lazy_regex;
 
-use lazy_regex::regex;
-use lazy_regex::regex_replace_all;
 use lazy_regex::Lazy;
 use lazy_regex::Regex;
+use lazy_regex::regex;
+use lazy_regex::regex_replace_all;
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
@@ -60,7 +60,6 @@ mod utils {
     /// Unicode Escapeの記述が含まれる場合、それを変換する。
     pub(crate) fn unicode_escape_to_char(text: &str) -> String {
         if UNICODE_ESCAPE_RE.is_match(text) {
-            
             // 置換ロジック
             UNICODE_ESCAPE_RE
                 .replace_all(text, |caps: &regex::Captures| {
@@ -648,18 +647,41 @@ pub trait DictionaryProcessor {
     ) -> bool;
 }
 
-fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> bool {
-    let _pronunciation = match record.get(_args.pronunciation_index) {
+// DictType という enum を定義
+#[derive(Copy, Clone, PartialEq)]
+enum DictType {
+    Default,
+    Sudachi,
+    Neologd,
+    UtDict,
+    MozcUserDict,
+}
+
+fn should_skip_common(
+    _dict_values: &mut DictValues,
+    record: &StringRecord,
+    config: &Config,
+    dict_type: DictType,
+) -> bool {
+    let pronunciation = match record.get(config.pronunciation_index) {
         Some(p) => p,
         None => return false,
     };
-    let _notation = match record.get(_args.notation_index) {
+    if !is_kana(pronunciation) {
+        return true;
+    }
+
+    let notation = match record.get(config.notation_index) {
         Some(n) => n,
         None => return false,
     };
+    if notation.is_empty() {
+        return true;
+    }
+
     let mut word_class_parts = Vec::new();
-    let start_index = _args.word_class_index;
-    let end_index = std::cmp::min(start_index + _args.word_class_numbers, record.len());
+    let start_index = config.word_class_index;
+    let end_index = std::cmp::min(start_index + config.word_class_numbers, record.len());
 
     for i in start_index..end_index {
         if let Some(part) = record.get(i) {
@@ -668,168 +690,169 @@ fn skip_analyze(record: &StringRecord, _args: &Config, _dict_values: &mut DictVa
             break;
         }
     }
+    if word_class_parts.first() == Some(&"空白") {
+        return true;
+    }
 
-    if _args.sudachi {
-        process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts)
-    } else if _args.neologd {
-        process_neologd_skip(_args, _pronunciation, _notation, &word_class_parts)
-    } else if _args.utdict {
-        process_utdict_skip(
-            _args,
-            _dict_values,
-            _pronunciation,
-            _notation,
-            &word_class_parts,
-        )
-    } else if _args.mozcuserdict {
-        process_mozcuserdict_skip(
-            _args,
-            _dict_values,
-            _pronunciation,
-            _notation,
-            &word_class_parts,
-        )
-    } else {
-        process_sudachi_skip(_args, _pronunciation, _notation, &word_class_parts)
+    match dict_type {
+        DictType::Sudachi | DictType::Default => {
+            if !config.symbols && pronunciation == "キゴウ" && word_class_parts[0].contains("記号")
+            {
+                return true;
+            }
+            if word_class_parts.len() > 1
+                && !config.symbols
+                && is_kigou(notation)
+                && word_class_parts.get(1) != Some(&"固有名詞")
+            {
+                return true;
+            }
+            if word_class_parts.len() > 2
+                && !config.places
+                && is_japanese(notation)
+                && word_class_parts[2].contains("地名")
+            {
+                return true;
+            }
+            false
+        }
+
+        DictType::Neologd => {
+            if !config.symbols && pronunciation == "キゴウ" && word_class_parts[0].contains("記号")
+            {
+                return true;
+            }
+            if word_class_parts.len() > 1
+                && !config.symbols
+                && is_kigou(notation)
+                && word_class_parts.get(1) != Some(&"固有名詞")
+            {
+                return true;
+            }
+            // Neologd特有の条件
+            if word_class_parts.len() > 2 && !config.places && word_class_parts[2].contains("地域")
+            {
+                return true;
+            }
+            if word_class_parts.len() > 2
+                && word_class_parts[0] == "名詞"
+                && word_class_parts[1] == "固有名詞"
+                && word_class_parts[2] == "一般"
+                && is_start_suuji(notation)
+            {
+                return true;
+            }
+            // 共通部分は上と同じなので重複を避けるなら抽出しても良い
+            false
+        }
+
+        DictType::UtDict => {
+            if (!config.symbols)
+                && is_kigou(notation)
+                && !search_key(_dict_values.id_def, *_dict_values.word_class_id)
+                    .contains("固有名詞")
+            {
+                return true;
+            };
+            if (!config.places)
+                && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            {
+                return true;
+            }
+            false
+        }
+
+        DictType::MozcUserDict => {
+            // ユーザー辞書の品詞からID.defの品詞文字列へ
+            let word_class = u_search_word_class(
+                _dict_values.mapping,
+                _dict_values.id_def,
+                word_class_parts.join(""),
+            );
+            *_dict_values.word_class_id = id_expr(
+                &word_class,
+                _dict_values.id_def,
+                _dict_values.class_map,
+                *_dict_values.default_noun_id,
+            );
+            if (!config.symbols)
+                && is_kigou(notation)
+                && !search_key(_dict_values.id_def, *_dict_values.word_class_id)
+                    .contains("固有名詞")
+            {
+                return true;
+            };
+            if (!config.places)
+                && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            {
+                return true;
+            }
+            false
+        }
     }
 }
 
-fn process_sudachi_skip(
-    _args: &Config,
-    _pronunciation: &str,
-    _notation: &str,
-    word_class: &[&str],
-) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
-
-    if !is_kana(_pronunciation) {
-        return true;
-    };
-    if _notation.is_empty() {
-        return true;
-    };
-    if _parts[0] == "空白" {
-        return true;
-    };
-    if (!_args.symbols) && _pronunciation == "キゴウ" && _parts[0].contains("記号") {
-        return true;
-    };
-    if _parts.len() > 1 && (!_args.symbols) && is_kigou(_notation) && _parts[1] != "固有名詞" {
-        return true;
-    };
-    if _parts.len() > 2 && (!_args.places) && is_japanese(_notation) && _parts[2].contains("地名")
-    {
-        return true;
-    };
-    false
-}
-
-fn process_neologd_skip(
-    _args: &Config,
-    _pronunciation: &str,
-    _notation: &str,
-    word_class: &[&str],
-) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
-
-    if !is_kana(_pronunciation) {
-        return true;
-    };
-    if _notation.is_empty() {
-        return true;
-    };
-    if _parts[0] == "空白" {
-        return true;
-    };
-    if (!_args.symbols) && _pronunciation == "キゴウ" && _parts[0].contains("記号") {
-        return true;
-    };
-    if _parts.len() > 1 && (!_args.symbols) && is_kigou(_notation) && _parts[1] != "固有名詞" {
-        return true;
-    };
-    if _parts.len() > 2 && (!_args.places) && _parts[2].contains("地域") {
-        return true;
-    };
-    if _parts.len() > 2
-        && _parts[0] == "名詞"
-        && _parts[1] == "固有名詞"
-        && _parts[2] == "一般"
-        && is_start_suuji(_notation)
-    {
-        return true;
-    };
-    false
-}
-
-fn process_utdict_skip(
-    _args: &Config,
+fn word_class_analyze_common(
     _dict_values: &mut DictValues,
-    _pronunciation: &str,
-    _notation: &str,
-    word_class: &[&str],
+    record: &StringRecord,
+    config: &Config,
+    dict_type: DictType,
 ) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
-
-    if !is_kana(_pronunciation) {
-        return true;
+    let _pronunciation: String = match record.get(config.pronunciation_index) {
+        Some(p) => convert_to_hiragana(p),
+        None => return false,
     };
-    if _notation.is_empty() {
-        return true;
+    let _notation = match record.get(config.notation_index) {
+        Some(n) => n,
+        None => return false,
     };
-    *_dict_values.word_class_id = _parts[0].parse::<i32>().unwrap();
-    if *_dict_values.word_class_id == -1 || *_dict_values.word_class_id == 0 {
-        *_dict_values.word_class_id = *_dict_values.default_noun_id;
+    match dict_type {
+        DictType::Sudachi | DictType::Default => {
+            *_dict_values.word_class_id = process_word_class(record, config, _dict_values);
+            if (!config.places)
+                && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+                && is_japanese(_dict_values.notation)
+            {
+                return false;
+            }
+        }
+        DictType::Neologd => {
+            *_dict_values.word_class_id = process_word_class(record, config, _dict_values);
+            if (!config.places)
+                && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
+            {
+                return false;
+            }
+        }
+        DictType::UtDict => {
+            let data = &record;
+            let word_class = &data[config.word_class_index];
+            let mut word_class_id = word_class.parse::<i32>().unwrap();
+            if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
+                word_class_id = *_dict_values.default_noun_id;
+            }
+            let d: String = search_key(_dict_values.id_def, word_class_id).to_owned();
+            let word_class = _dict_values.class_map.get(&d);
+            *_dict_values.word_class_id = match word_class {
+                None => id_expr(
+                    &d,
+                    _dict_values.id_def,
+                    _dict_values.class_map,
+                    *_dict_values.default_noun_id,
+                ),
+                Some(wc) => *wc,
+            };
+        }
+        DictType::MozcUserDict => todo!(),
     }
-    if (!_args.symbols)
-        && is_kigou(_notation)
-        && !search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
-    {
-        return true;
-    };
-    if (!_args.places)
-        && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-    {
-        return true;
-    }
-    false
-}
-
-fn process_mozcuserdict_skip(
-    _args: &Config,
-    _dict_values: &mut DictValues,
-    _pronunciation: &str,
-    _notation: &str,
-    word_class: &[&str],
-) -> bool {
-    let mut _parts: Vec<String> = word_class.iter().map(|&s| s.to_owned()).collect();
-
-    if !is_kana(_pronunciation) {
-        return true;
-    };
-    if _notation.is_empty() {
-        return true;
-    };
-    // ユーザー辞書の品詞からID.defの品詞文字列へ
-    let word_class =
-        u_search_word_class(_dict_values.mapping, _dict_values.id_def, _parts.join(""));
-    *_dict_values.word_class_id = id_expr(
-        &word_class,
-        _dict_values.id_def,
-        _dict_values.class_map,
-        *_dict_values.default_noun_id,
-    );
-    if (!_args.symbols)
-        && is_kigou(_notation)
-        && !search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("固有名詞")
-    {
-        return true;
-    };
-    if (!_args.places)
-        && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-    {
-        return true;
-    }
-    false
+    *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
+    *_dict_values.notation = unicode_escape_to_char(_notation);
+    let cost_str = record
+        .get(config.cost_index)
+        .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
+    let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
+    *_dict_values.cost = adjust_cost(cost);
+    true
 }
 
 fn process_word_class(record: &StringRecord, _args: &Config, _dict_values: &mut DictValues) -> i32 {
@@ -926,7 +949,7 @@ impl DictionaryProcessor for DefaultProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        should_skip_common(_dict_values, record, _args, DictType::Default)
     }
 
     fn word_class_analyze(
@@ -935,29 +958,7 @@ impl DictionaryProcessor for DefaultProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let _pronunciation: String = match record.get(_args.pronunciation_index) {
-            Some(p) => convert_to_hiragana(p),
-            None => return false,
-        };
-        let _notation = match record.get(_args.notation_index) {
-            Some(n) => n,
-            None => return false,
-        };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
-        if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-            && is_japanese(_dict_values.notation)
-        {
-            return false;
-        }
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
-        let cost_str = record
-            .get(_args.cost_index)
-            .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
-        let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
-        true
+        word_class_analyze_common(_dict_values, record, _args, DictType::Default)
     }
 }
 
@@ -970,7 +971,7 @@ impl DictionaryProcessor for SudachiProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        should_skip_common(_dict_values, record, _args, DictType::Sudachi)
     }
 
     fn word_class_analyze(
@@ -979,29 +980,7 @@ impl DictionaryProcessor for SudachiProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let _pronunciation: String = match record.get(_args.pronunciation_index) {
-            Some(p) => convert_to_hiragana(p),
-            None => return false,
-        };
-        let _notation = match record.get(_args.notation_index) {
-            Some(n) => n,
-            None => return false,
-        };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
-        if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-            && is_japanese(_dict_values.notation)
-        {
-            return false;
-        }
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
-        let cost_str = record
-            .get(_args.cost_index)
-            .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
-        let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
-        true
+        word_class_analyze_common(_dict_values, record, _args, DictType::Sudachi)
     }
 }
 
@@ -1014,7 +993,7 @@ impl DictionaryProcessor for NeologdProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        should_skip_common(_dict_values, record, _args, DictType::Neologd)
     }
 
     fn word_class_analyze(
@@ -1023,28 +1002,7 @@ impl DictionaryProcessor for NeologdProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let _pronunciation: String = match record.get(_args.pronunciation_index) {
-            Some(p) => convert_to_hiragana(p),
-            None => return false,
-        };
-        let _notation = match record.get(_args.notation_index) {
-            Some(n) => n,
-            None => return false,
-        };
-        *_dict_values.word_class_id = process_word_class(record, _args, _dict_values);
-        if (!_args.places)
-            && search_key(_dict_values.id_def, *_dict_values.word_class_id).contains("地名")
-        {
-            return false;
-        }
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
-        let cost_str = record
-            .get(_args.cost_index)
-            .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
-        let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
-        true
+        word_class_analyze_common(_dict_values, record, _args, DictType::Neologd)
     }
 }
 
@@ -1057,7 +1015,7 @@ impl DictionaryProcessor for UtDictProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        should_skip_common(_dict_values, record, _args, DictType::UtDict)
     }
 
     fn word_class_analyze(
@@ -1066,34 +1024,7 @@ impl DictionaryProcessor for UtDictProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        let data = &record;
-        let word_class = &data[_args.word_class_index];
-        let mut word_class_id = word_class.parse::<i32>().unwrap();
-        if word_class == "0000" || word_class_id == -1 || word_class_id == 0 {
-            word_class_id = *_dict_values.default_noun_id;
-        }
-        let _pronunciation: String = match record.get(_args.pronunciation_index) {
-            Some(p) => convert_to_hiragana(p),
-            None => return false,
-        };
-        let _notation = match record.get(_args.notation_index) {
-            Some(n) => n,
-            None => return false,
-        };
-        *_dict_values.pronunciation = unicode_escape_to_char(&_pronunciation);
-        *_dict_values.notation = unicode_escape_to_char(_notation);
-        let d: String = search_key(_dict_values.id_def, word_class_id).to_owned();
-        let word_class = _dict_values.class_map.get(&d);
-        *_dict_values.word_class_id = match word_class {
-           None => id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id),
-           Some(wc) => *wc,
-        };
-        let cost_str = record
-            .get(_args.cost_index)
-            .map_or(DEFAULT_COST.to_string(), |s| s.to_string());
-        let cost = cost_str.parse::<i32>().unwrap_or(DEFAULT_COST);
-        *_dict_values.cost = adjust_cost(cost);
-        true
+        word_class_analyze_common(_dict_values, record, _args, DictType::UtDict)
     }
 }
 
@@ -1106,7 +1037,7 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         record: &StringRecord,
         _args: &Config,
     ) -> bool {
-        skip_analyze(record, _args, _dict_values)
+        should_skip_common(_dict_values, record, _args, DictType::MozcUserDict)
     }
 
     fn word_class_analyze(
@@ -1142,7 +1073,12 @@ impl DictionaryProcessor for MozcUserDictProcessor {
         let d: String = search_key(_dict_values.id_def, *_dict_values.word_class_id).to_owned();
         let word_class = _dict_values.class_map.get(&d);
         *_dict_values.word_class_id = match word_class {
-            None => id_expr(&d, _dict_values.id_def, _dict_values.class_map, *_dict_values.default_noun_id),
+            None => id_expr(
+                &d,
+                _dict_values.id_def,
+                _dict_values.class_map,
+                *_dict_values.default_noun_id,
+            ),
             Some(wc) => *wc,
         };
         //let cost_str = record.get(_args.cost_index).map_or(DEFAULT_COST.to_string(), |s| s.to_string());

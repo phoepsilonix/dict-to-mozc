@@ -9,10 +9,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[cfg(all(
-    feature = "use-mimalloc-rs",
-//    not(target_os = "windows")
-))]
+#[cfg(feature = "use-mimalloc-rs")]
 #[global_allocator]
 static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiMalloc;
 
@@ -268,8 +265,10 @@ pub fn main() -> ExitCode {
     #[cfg(feature = "use-auto-allocator")]
     {
         let info = auto_allocator::get_allocator_info();
-        println!("使用中のアロケータ: {:?}、選択理由: {}", info.allocator_type, info.reason);
-
+        println!(
+            "使用中のアロケータ: {:?}、選択理由: {}",
+            info.allocator_type, info.reason
+        );
     }
 
     let now = std::time::Instant::now();
