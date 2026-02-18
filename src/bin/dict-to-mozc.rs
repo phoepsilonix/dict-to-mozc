@@ -20,6 +20,10 @@ static GLOBAL_MIMALLOC: mimalloc_rust::GlobalMiMalloc = mimalloc_rust::GlobalMiM
 #[global_allocator]
 static ALLOC: smmalloc::Smalloc = smmalloc::Smalloc::new();
 
+#[cfg(feature = "use-rpmalloc")]
+#[global_allocator]
+static ALLOC: rpmalloc::RpMalloc = rpmalloc::RpMalloc;
+
 //    any(
 //      not(any(target_arch = "arm", target_arch = "aarch64")),
 //    not(target_os = "windows")
