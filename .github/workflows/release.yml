@@ -230,11 +230,11 @@ jobs:
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*windows*)
-              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *windows*)
-              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
