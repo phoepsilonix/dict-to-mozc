@@ -207,38 +207,38 @@ jobs:
           case "${{ join(matrix.targets) }}" in
             *arm*linux*musl*)
               echo "cargo=cargo" >> $GITHUB_OUTPUT
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*musl*)
               echo "cargo=cargo" >> $GITHUB_OUTPUT
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               ;;
             *linux*musl*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*windows*)
-              echo "features=" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *windows*)
-              echo "features=" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
           esac
