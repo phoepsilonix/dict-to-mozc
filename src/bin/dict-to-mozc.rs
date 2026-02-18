@@ -48,9 +48,9 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 #[cfg(feature = "use-auto-allocator")]
 use auto_allocator;
 
-#[cfg(windows)]
-#[link(name = "advapi32")]
-unsafe extern "C" {}
+//#[cfg(windows)]
+//#[link(name = "advapi32")]
+//unsafe extern "C" {}
 
 extern crate argh;
 extern crate lib_dict_to_mozc;
