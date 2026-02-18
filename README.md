@@ -116,7 +116,7 @@ mimalloc-rustクレートの場合には、そのままビルドできるケー�
 RUSTFLAGS="" cargo build --release
 ```
 
-## mimalloc-rs
+## mimalloc-rust
 ```sh
 RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
 ```
