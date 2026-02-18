@@ -80,38 +80,38 @@
     case "${{ join(matrix.targets) }}" in
       *arm*linux*musl*)
         echo "cargo=cargo" >> $GITHUB_OUTPUT
-        echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         ;;
       *aarch64*linux*musl*)
         echo "cargo=cargo" >> $GITHUB_OUTPUT
-        echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         ;;
       *linux*musl*)
-        echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *aarch64*linux*)
-        echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *arm*linux*)
-        echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *linux*)
-        echo "features=use-mimalloc-rs" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *aarch64*windows*)
-        echo "features=" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
         ;;
       *windows*)
-        echo "features=" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
         ;;
       *)
-        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
     esac
@@ -123,7 +123,6 @@
   run: |
     # nightly -> rust 1.85.1 stable
     #sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
-    #sed -i -e 's|features =.*$|features = [ "use-mimalloc-rs", "unstable" ]|' dist-workspace.toml 
     rustup target add "${{ join(matrix.targets) }}"
     rustup component add rust-src
     #rust-toolchain.tomlに記載しているので、cargoコマンドで自動で追加インストールされるため不要
