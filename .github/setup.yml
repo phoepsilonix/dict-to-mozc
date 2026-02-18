@@ -4,7 +4,7 @@
   run: |
     case "${{ join(matrix.targets) }}" in
       *aarch64*linux*musl*)
-        sudo apt-get install -y gcc-aarch64-linux-gnu
+        sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -26,7 +26,7 @@
         export CFLAGS
         ;;
       *arm*linux*musl*)
-        sudo apt-get install -y gcc-arm-linux-gnueabihf
+        sudo apt-get install -y gcc-arm-linux-gnueabihf musl-tools
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -48,7 +48,7 @@
         export CFLAGS
         ;;
       *linux*musl*)
-        sudo apt-get install -y libgoogle-perftools-dev pkg-config
+        sudo apt-get install -y libgoogle-perftools-dev pkg-config musl-tools
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"

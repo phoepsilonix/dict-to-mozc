@@ -16,7 +16,7 @@ members = ["cargo:."]
 [dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.30.3"
-features = ["use-snmalloc"]
+features = ["use-snmalloc-cc"]
 # CI backends to support
 ci = "github"
 allow-dirty = ["ci"]

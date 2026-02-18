@@ -132,7 +132,7 @@ jobs:
         run: |
           case "${{ join(matrix.targets) }}" in
             *aarch64*linux*musl*)
-              sudo apt-get install -y gcc-aarch64-linux-gnu
+              sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
               curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -154,7 +154,7 @@ jobs:
               export CFLAGS
               ;;
             *arm*linux*musl*)
-              sudo apt-get install -y gcc-arm-linux-gnueabihf
+              sudo apt-get install -y gcc-arm-linux-gnueabihf musl-tools
               curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -176,14 +176,16 @@ jobs:
               export CFLAGS
               ;;
             *linux*musl*)
-              sudo apt-get install -y libgoogle-perftools-dev pkg-config
+              sudo apt-get install -y libgoogle-perftools-dev pkg-config musl-tools
               curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
               expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
+              CXX=musl-gcc
               export CC
+              export CXX
               export CFLAGS
-              #export CXXFLAGS
+              export CXXFLAGS
               ;;
             *linux*)
               #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
@@ -218,11 +220,11 @@ jobs:
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-cc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-cc" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*)

@@ -132,6 +132,7 @@ use-tcmalloc-static = ["tcmalloc/bundled"]
 
 use-jemalloc = ["dep:jemallocator"]
 use-snmalloc = ["dep:snmalloc-rs"]
+use-snmalloc-cc = ["snmalloc-rs/build_cc"]
 use-smmalloc = ["dep:smmalloc"]
 use-rpmalloc = ["dep:rpmalloc"]
 use-auto-allocator = ["dep:auto-allocator"]
