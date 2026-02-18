@@ -131,7 +131,7 @@ checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
 name = "dict-to-mozc"
-version = "0.6.25-beta1"
+version = "0.6.25"
 dependencies = [
  "argh",
  "auto-allocator",
@@ -252,7 +252,7 @@ dependencies = [
 
 [[package]]
 name = "lib-dict-to-mozc"
-version = "0.6.25-beta1"
+version = "0.6.25"
 dependencies = [
  "csv",
  "hashbrown",
