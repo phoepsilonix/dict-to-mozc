@@ -47,6 +47,7 @@ auto-allocator = { version = "*", features = [], git = "https://github.com/phoep
 
 mimalloc = { version = "0.1.48" }
 snmalloc-rs = { version = "0.3.8", features = ["lto"] }
+smmalloc = { version = "7.6.4" }
 tcmalloc = { version = "0.3.0" }
 
 jemallocator = "0.5.4"
@@ -113,6 +114,7 @@ hashbrown = { version = "^0.16" , features = [], default-features = false }
 mimalloc = { workspace = true , optional = true }
 snmalloc-rs = { workspace = true , optional = true }
 tcmalloc = { workspace = true , optional = true }
+smmalloc = { workspace = true , optional = true }
 
 [package.metadata.release]
 tag = true
@@ -126,6 +128,7 @@ default = []
 use-tcmalloc = ["dep:tcmalloc"]
 use-jemalloc = ["dep:jemallocator"]
 use-snmalloc = ["dep:snmalloc-rs"]
+use-smmalloc = ["dep:smmalloc"]
 use-auto-allocator = ["dep:auto-allocator"]
 use-mimalloc-rs = ["dep:mimalloc-rust"]
 unstable = [ "unstable-mimalloc" ]
