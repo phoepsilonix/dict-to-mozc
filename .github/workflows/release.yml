@@ -312,7 +312,7 @@ jobs:
               
               cd target/distrib
               # 一時ディレクトリに展開
-              tar xf dict-to-mozc-x86_64-unknown-linux-musl.tar.xz
+              tar xf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz
               # 新しい dict-to-mozc を上書きコピー
               cp -avf ../${{ join(matrix.targets) }}/dist/dict-to-mozc dict-to-mozc-${{ join(matrix.targets) }}/dict-to-mozc
               # 更新した内容で再圧縮
