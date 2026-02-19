@@ -255,8 +255,8 @@ RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-tcma
 ```
 
 #### 補足
-gcc15などの場合、mimallocを有効にすると、cc-rsのビルドで失敗する場合があります。  
-その場合、下記のような環境変数をCFLAGSに設定することで、gcc15でもmimallocを有効にしたままビルド可能です。
+gcc15などの場合、mimalloc-rustを有効にすると、cc-rsのビルドで失敗する場合があります。  
+その場合、下記のような環境変数をCFLAGSに設定することで、gcc15でもmimalloc-rustを有効にしたままビルド可能です。
 ```sh
 #環境変数CCにgccが含まれる場合、CFLAGSを設定する。
 expr "$CC" : ".*gcc" >/dev/null && {
