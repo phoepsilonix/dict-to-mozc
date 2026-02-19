@@ -137,7 +137,7 @@ RUSTFLAGS="" cargo build --release -F use-jemalloc
 RUSTFLAGS="" cargo build --release -F use-tcmalloc
 ```
 * 実行時にtcmalloc.soが必要。
-* 実行時にliblzma.so, libunwind.soが必要。
+* 実行時にliblzma.so, libunwind.soが必要。  
   Ubuntu `libgoogle-perftools-dev`, `liblzma-dev`, `libunwind-dev`
   ```sh
   sudo apt install libgoogle-perftools-dev liblzma-dev libunwind-dev
