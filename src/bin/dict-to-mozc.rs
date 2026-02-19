@@ -30,7 +30,7 @@ static ALLOC: rpmalloc::RpMalloc = rpmalloc::RpMalloc;
 //        all(target_arch = "aarch64", not(target_os = "windows"))
 //    )
 //))]
-#[cfg(feature = "use-snmalloc")]
+#[cfg(any(feature = "use-snmalloc", feature = "use-snmalloc-cc"))]
 #[global_allocator]
 static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 
@@ -45,7 +45,7 @@ static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 ))]
 */
 
-#[cfg(feature = "use-tcmalloc")]
+#[cfg(any(feature = "use-tcmalloc", feature = "use-tcmalloc-static"))]
 #[global_allocator]
 static GLOBAL: tcmalloc::TCMalloc = tcmalloc::TCMalloc;
 

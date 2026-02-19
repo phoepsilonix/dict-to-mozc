@@ -99,7 +99,7 @@
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *linux*)
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "features=use-tcmalloc-static" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *aarch64*windows*)

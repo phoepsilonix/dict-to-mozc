@@ -132,7 +132,7 @@ jobs:
         run: |
           case "${{ join(matrix.targets) }}" in
             *aarch64*linux*musl*)
-              sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
+              sudo apt-get install -y gcc-aarch64-linux-gnu
               curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -154,7 +154,7 @@ jobs:
               export CFLAGS
               ;;
             *arm*linux*musl*)
-              sudo apt-get install -y gcc-arm-linux-gnueabihf musl-tools
+              sudo apt-get install -y gcc-arm-linux-gnueabihf
               curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -176,12 +176,11 @@ jobs:
               export CFLAGS
               ;;
             *linux*musl*)
-              sudo apt-get install -y libgoogle-perftools-dev pkg-config musl-tools
+              sudo apt-get install -y libgoogle-perftools-dev pkg-config
               curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
               hash -r
               export RUSTFLAGS="-Clink-arg=-Bmold"
               expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
-              CXX=musl-gcc
               export CC
               export CXX
               export CFLAGS
@@ -209,39 +208,47 @@ jobs:
           case "${{ join(matrix.targets) }}" in
             *arm*linux*musl*)
               echo "features=use-snmalloc" >> $GITHUB_OUTPUT
-              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "cargo=zigbuild" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*musl*)
               echo "features=use-snmalloc" >> $GITHUB_OUTPUT
-              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *linux*musl*)
               echo "features=use-snmalloc" >> $GITHUB_OUTPUT
-              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-snmalloc-cc" >> $GITHUB_OUTPUT
-              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-snmalloc-cc" >> $GITHUB_OUTPUT
-              echo "cargo=cargo" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *linux*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-tcmalloc-static" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*windows*)
               echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *windows*)
               echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
           esac
@@ -281,7 +288,14 @@ jobs:
         run: |
           # Actually do builds and make zips and whatnot
           sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
-          dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          ${{ steps.features.outputs.cargo }} build -r --profile dist --workspace -F ${{ steps.features.outputs.features }}
+          mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
+          cp -af target/${{ join(matrix.targets) }}/dist/dict-to-mozc target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
+          #-rwxr-xr-x 2 phoepsilonix phoepsilonix  1639696  2月 19 19:21 target/x86_64-unknown-linux-musl/dist/dict-to-mozc
+          #-rwxr-xr-x 1 phoepsilonix phoepsilonix  1639696  2月 19 19:21 target/distrib/dict-to-mozc-x86_64-unknown-linux-musl/dict-to-mozc
+
+          #dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "dist ran successfully"
       - id: cargo-dist
         name: Post-build

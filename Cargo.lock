@@ -48,7 +48,7 @@ checksum = "5127f8a5bc1cfb0faf1f6248491452b8a5b6901068d8da2d47cbb285986ae683"
 [[package]]
 name = "auto-allocator"
 version = "0.1.0"
-source = "git+https://github.com/phoepsilonix/auto-allocator.git#8546dae3ce2d860db3644b177e8f67df1dd7fce5"
+source = "git+https://github.com/phoepsilonix/auto-allocator.git?rev=8546dae3ce2d860db3644b177e8f67df1dd7fce5#8546dae3ce2d860db3644b177e8f67df1dd7fce5"
 dependencies = [
  "embedded-alloc",
  "libc",
@@ -67,9 +67,9 @@ checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
 name = "bumpalo"
-version = "3.19.1"
+version = "3.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dd9dc738b7a8311c7ade152424974d8115f2cdad61e8dab8dac9f2362298510"
+checksum = "5c6f81257d10a0f602a294ae4182251151ff97dbb504ef9afcdda4a64b24d9b4"
 
 [[package]]
 name = "cc"
@@ -501,8 +501,7 @@ dependencies = [
 [[package]]
 name = "snmalloc-rs"
 version = "0.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb317153089fdfa4d8a2eec059d40a5a23c3bde43995ea23b19121c3f621e74a"
+source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=0f2059bdd5f736a56a1ee0021924dd1e056dfdc2#0f2059bdd5f736a56a1ee0021924dd1e056dfdc2"
 dependencies = [
  "snmalloc-sys",
 ]
@@ -510,8 +509,7 @@ dependencies = [
 [[package]]
 name = "snmalloc-sys"
 version = "0.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "065fea53d32bb77bc36cca466cb191f2e5216ebfd0ed360b1d64889ee6e559ea"
+source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=0f2059bdd5f736a56a1ee0021924dd1e056dfdc2#0f2059bdd5f736a56a1ee0021924dd1e056dfdc2"
 dependencies = [
  "cc",
  "cmake",

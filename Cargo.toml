@@ -16,9 +16,6 @@ documentation = "https://github.com/phoepsilonix/dict-to-mozc"
 repository = "https://github.com/phoepsilonix/dict-to-mozc"
 license = "MIT"
 
-#[package.metadata.dist]
-#build-command = ["sh", "./custom-build.sh"]
-
 [workspace.dependencies]
 lib-dict-to-mozc = { path = "./crates/dict-to-mozc" }
 argh = { version = "0.1.14", default-features = false, features = [ "help" ] }
@@ -43,10 +40,12 @@ hashbrown = { version = "^0.16", default-features = false, features = [ "allocat
 #fxhash = { version = "^0.2", default-features = true, features = [] }
 
 #auto-allocator = { version = "*", features = ["secure"], git = "https://github.com/phoepsilonix/auto-allocator.git" }
-auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
+#auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
+auto-allocator = { version = "*", features = [] }
 
+snmalloc-rs = { version = "0.3", features = ["lto"] }
 mimalloc = { version = "0.1.48" }
-snmalloc-rs = { version = "0.3.8", features = ["lto"] }
+
 smmalloc = { version = "7.6.4" }
 tcmalloc = { version = "0.3.0" }
 rpmalloc = "0.2.2"
@@ -87,6 +86,12 @@ version.workspace = true
 #kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "9c2a6237d5a523f372b50d956671251710d5f4ac" }
 # rust 2024 edition
 kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "c98ea3a9af75eb198662bc1483c32201ea3c65b6" }
+#snmalloc-sys = { path = "./snmalloc-sys" }
+# mimalloc
+#auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "e21cf29fb2b8a9bd885c6b30086d9e1bd86755ef" } # mimalloc
+# mimalloc-rust
+auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "8546dae3ce2d860db3644b177e8f67df1dd7fce5" } # mimalloc-rust
+snmalloc-rs = { git = "https://github.com/phoepsilonix/snmalloc-rs.git", rev = "0f2059bdd5f736a56a1ee0021924dd1e056dfdc2" }
 
 [dependencies]
 lib-dict-to-mozc = { workspace = true }
@@ -113,10 +118,12 @@ hashbrown = { version = "^0.16" , features = [], default-features = false }
 #hashbrown = { version = "^0.15" , features = [], default-features = false }
 
 mimalloc = { workspace = true , optional = true }
-snmalloc-rs = { workspace = true , optional = true }
 tcmalloc = { workspace = true , optional = true }
 smmalloc = { workspace = true , optional = true }
 rpmalloc = { workspace = true , optional = true }
+
+snmalloc-rs = { workspace = true, optional = true }
+
 
 [package.metadata.release]
 tag = true
@@ -131,8 +138,7 @@ use-tcmalloc = ["dep:tcmalloc"]
 use-tcmalloc-static = ["tcmalloc/bundled"]
 
 use-jemalloc = ["dep:jemallocator"]
-use-snmalloc = ["dep:snmalloc-rs"]
-use-snmalloc-cc = ["snmalloc-rs/build_cc"]
+
 use-smmalloc = ["dep:smmalloc"]
 use-rpmalloc = ["dep:rpmalloc"]
 use-auto-allocator = ["dep:auto-allocator"]
@@ -140,4 +146,10 @@ use-mimalloc-rs = ["dep:mimalloc-rust"]
 unstable = [ "unstable-mimalloc" ]
 unstable-mimalloc = [ "mimalloc-rust/unstable" ]
 
+use-snmalloc = ["snmalloc-rs/lto"]
+use-snmalloc-cc = ["snmalloc-rs/build_cc"]
 use-mimalloc = ["dep:mimalloc"]
+
+#[package.metadata.dist]
+#zig = true
+#targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "aarch64-unknown-linux-gnu"]

@@ -1,27 +1,25 @@
 [workspace]
 members = ["cargo:."]
 
-
-# Config for 'dist'
-#[workspace.metadata.dist]
-#cargo-dist-version = "0.30.3"
-#ci = "github"
-#installers = ["shell"]
-#github-build-setup = "../setup.yml"
-#install-path = "CARGO_HOME"
-#install-updater = false
-#targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl", "aarch64-pc-windows-msvc", "armv7-unknown-linux-gnueabihf", "armv7-unknown-linux-musleabihf", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
-
 # Config for 'dist'
 [dist]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.30.3"
-features = ["use-snmalloc-cc"]
+cargo-dist-version = "0.30.4"
+# Features to pass to cargo build
+#features = ["use-auto-allocator"]
+#features = ["use-tcmalloc-static"]
+#features = ["use-mimalloc"]
+#features = ["use-mimalloc-rs"]
+features = ["use-snmalloc"]
+
 # CI backends to support
 ci = "github"
+# Skip checking whether the specified configuration files are up to date
 allow-dirty = ["ci"]
 github-build-setup = "../setup.yml"
+# Path that installers should place binaries in
 install-path = "CARGO_HOME"
+# Whether to install an updater program
 install-updater = false
 # The installers to generate for each app
 installers = ["shell"]
