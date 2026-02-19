@@ -99,7 +99,7 @@ rustflags = [
 "-C", "codegen-units=1",
 "-C", "opt-level=3",
 "-C", "link-arg=-mcpu=cortex-a9",
-"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 
 [target.armv7-unknown-linux-musleabihf]
@@ -118,7 +118,7 @@ rustflags = [
 "-C", "codegen-units=1",
 "-C", "opt-level=3",
 "-C", "link-arg=-mcpu=cortex-a9",
-"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 
 [target.x86_64-pc-windows-gnu]

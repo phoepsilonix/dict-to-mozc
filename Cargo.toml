@@ -7,7 +7,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.6.25"
+version = "0.6.26"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2024"
 rust-version = "1.90.0"
@@ -88,9 +88,9 @@ version.workspace = true
 kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "c98ea3a9af75eb198662bc1483c32201ea3c65b6" }
 #snmalloc-sys = { path = "./snmalloc-sys" }
 # mimalloc
-#auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "e21cf29fb2b8a9bd885c6b30086d9e1bd86755ef" } # mimalloc
+auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "e21cf29fb2b8a9bd885c6b30086d9e1bd86755ef" } # mimalloc
 # mimalloc-rust
-auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "8546dae3ce2d860db3644b177e8f67df1dd7fce5" } # mimalloc-rust
+#auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "8546dae3ce2d860db3644b177e8f67df1dd7fce5" } # mimalloc-rust
 snmalloc-rs = { git = "https://github.com/phoepsilonix/snmalloc-rs.git", rev = "0f2059bdd5f736a56a1ee0021924dd1e056dfdc2" }
 
 [dependencies]

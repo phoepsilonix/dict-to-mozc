@@ -120,6 +120,14 @@ RUSTFLAGS="" cargo build --release
 ```sh
 RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
 ```
+## mimalloc
+```sh
+RUSTFLAGS="" cargo build --release -F use-mimalloc
+```
+## auto-allocator
+```sh
+RUSTFLAGS="" cargo build --release -F use-auto-allocator
+```
 ## jemalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-jemalloc
@@ -128,23 +136,47 @@ RUSTFLAGS="" cargo build --release -F use-jemalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-tcmalloc
 ```
-* 実行時にtcmalloc.soが必要。`liblzma-dev`,`libunwind-dev`
-  Ubuntu `libgoogle-perftools-dev` パッケージ
+* 実行時にtcmalloc.soが必要。
+* 実行時にliblzma.so, libunwind.soが必要。
+  Ubuntu `libgoogle-perftools-dev`, `liblzma-dev`, `libunwind-dev`
   ```sh
-  sudo apt install libgoogle-perftools-dev
+  sudo apt install libgoogle-perftools-dev liblzma-dev libunwind-dev
   ```
-  Arch `gperftools` パッケージ,`xz`, `libunwind`
+  Arch `gperftools`, `xz`, `libunwind`
   ```sh
-  sudo pacman install gperftools
+  sudo pacman install gperftools xz libunwind --needed
   ```
+## tcmalloc(static)
+* 実行時にliblzma.so, libunwind.soが必要。
+```sh
+RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
+```
 ## snmalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-snmalloc
 ```
+cargo-zigbuildとziglangがある場合の一例
+```sh
+RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
+```
+
+
+
 
 * ビルド時にcmakeが必要。
 
 ## リリース版の設定
+### v0.6.26
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64(gnu) | Linux | tcmalloc(static) |
+| x86_64(musl) | Linux | auto-allocator(mimalloc) |
+| aarch64(gnu) | Linux | jemalloc |
+| aarch64(musl) | Linux | snmalloc |
+| armv7 | Linux | jemalloc |
+| x86_64, aarch64 | Windows | snmalloc |
+| x86_64, aarch64 | Mac | snmalloc |
+
 ### v0.6.24
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
@@ -166,24 +198,16 @@ RUSTFLAGS="" cargo build --release -F use-snmalloc
 | x86_64, aarch64 | Windows | |
 | x86_64, aarch64 | Mac | jemalloc |
 
-### v0.6.21
-| プラットフォーム | OS | メモリアロケータ |
-|----------------|----|----------------|
-| x86_64 | Linux | tcmalloc |
-| aarch64 | Linux | jemalloc |
-| x86_64, aarch64 | Windows | |
-| x86_64, aarch64 | Mac | jemalloc |
-
 ### ライブラリインストール
 use-tcmalloc featuresを有効にした場合。
 #### tcmalloc
 ##### Ubuntu, Debian
 ```sh
-sudo apt install libgoogle-perftools-dev
+sudo apt install libgoogle-perftools-dev liblzma-dev libunwind-dev
 ```
 ##### Arch, Manjaro
 ```sh
-sudo pacman -S gperftools
+sudo pacman -S gperftools xz libunwind --needed
 ```
 
 ### ダウンロード
@@ -227,7 +251,7 @@ cp target/x86_64-unknown-linux-gnu/release/dict-to-mozc ~/.cargo/bin/
 ```
 私の環境だとtcmallocのほうが、若干パフォーマンスが良かったです。  
 ```sh
-RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-tcmalloc
+RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-tcmalloc-static
 ```
 
 #### 補足
@@ -246,6 +270,10 @@ expr "$CC" : ".*gcc" >/dev/null && {
 export CFLAGS
 echo "$CFLAGS"
 RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+```
+clangを用いて回避。
+```sh
+RUSTFLAGS="" CC=clang cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
 ```
 #### 補足２
 mold linkerを用いる場合のコマンド例。

@@ -323,7 +323,7 @@ pub fn main() -> ExitCode {
         #[cfg(feature = "use-auto-allocator")]
         {
             let info = auto_allocator::get_allocator_info();
-            println!(
+            eprintln!(
                 "使用中のアロケータ: {:?}、選択理由: {}",
                 info.allocator_type, info.reason
             );
