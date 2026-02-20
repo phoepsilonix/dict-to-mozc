@@ -90,8 +90,7 @@ fn link_mimalloc_windows() {
 }
 
 fn link_mimalloc_linux() {
-    {
-        let lib = "atomic";
-        println!("cargo:rustc-link-lib={}", lib);
-    }
+    // for lib in ["atomic"] {
+    //    println!("cargo:rustc-link-lib={}", lib);
+    //}
 }

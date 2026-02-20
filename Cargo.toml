@@ -7,7 +7,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.6.26"
+version = "0.6.27"
 authors = ["Masato TOYOSHIMA", "phoepsilonix <phoepsilonix@gmail.com>"]
 edition = "2024"
 rust-version = "1.90.0"
@@ -136,20 +136,16 @@ name = "dict-to-mozc"
 default = []
 use-tcmalloc = ["dep:tcmalloc"]
 use-tcmalloc-static = ["tcmalloc/bundled"]
+use-auto-allocator = ["dep:auto-allocator"]
+use-snmalloc = ["snmalloc-rs/lto"]
+use-snmalloc-cc = ["snmalloc-rs/build_cc"]
+
+use-mimalloc = ["dep:mimalloc"]
+use-mimalloc-rs = ["dep:mimalloc-rust"]
+unstable = [ "unstable-mimalloc-rs" ]
+unstable-mimalloc-rs = [ "mimalloc-rust/unstable" ]
 
 use-jemalloc = ["dep:jemallocator"]
 
 use-smmalloc = ["dep:smmalloc"]
 use-rpmalloc = ["dep:rpmalloc"]
-use-auto-allocator = ["dep:auto-allocator"]
-use-mimalloc-rs = ["dep:mimalloc-rust"]
-unstable = [ "unstable-mimalloc" ]
-unstable-mimalloc = [ "mimalloc-rust/unstable" ]
-
-use-snmalloc = ["snmalloc-rs/lto"]
-use-snmalloc-cc = ["snmalloc-rs/build_cc"]
-use-mimalloc = ["dep:mimalloc"]
-
-#[package.metadata.dist]
-#zig = true
-#targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "aarch64-unknown-linux-gnu"]
