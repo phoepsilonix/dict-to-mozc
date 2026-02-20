@@ -6,8 +6,8 @@ members = ["cargo:."]
 # The preferred dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.30.4"
 # Features to pass to cargo build
-#features = ["use-auto-allocator"]
-features = ["use-tcmalloc-static"]
+features = ["use-auto-allocator"]
+#features = ["use-tcmalloc-static"]
 #features = ["use-snmalloc"]
 # CI backends to support
 ci = "github"
