@@ -222,11 +222,13 @@ jobs:
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
+              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
+              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
@@ -247,8 +249,8 @@ jobs:
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
-              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
           esac
@@ -300,23 +302,28 @@ jobs:
         run: |
           # Actually do builds and make zips and whatnot
           sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
-          dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
+              dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
               ${{ steps.features.outputs.cargo }} build --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
-              #mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
+              mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
               
               cd target/distrib
               # 一時ディレクトリに展開
-              tar xf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz
+              #tar xf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz
               # 新しい dict-to-mozc を上書きコピー
               cp -avf ../${{ join(matrix.targets) }}/dist/dict-to-mozc dict-to-mozc-${{ join(matrix.targets) }}/dict-to-mozc
+              cp -avf ../../README.md dict-to-mozc-${{ join(matrix.targets) }}/
+              cp -avf ../../LICENSE dict-to-mozc-${{ join(matrix.targets) }}/
               # 更新した内容で再圧縮
               tar cJf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz dict-to-mozc-${{ join(matrix.targets) }}
+              # check
+              tar tvf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz
+              # sha256sum
               sha256sum dict-to-mozc-${{ join(matrix.targets) }}.tar.xz > dict-to-mozc-${{ join(matrix.targets) }}.tar.xz.sha256
               cd ../..
               dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-          #else
-          #    dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+          else
+              dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           fi
           #-rwxr-xr-x 2 phoepsilonix phoepsilonix  1639696  2月 19 19:21 target/x86_64-unknown-linux-musl/dist/dict-to-mozc
           #-rwxr-xr-x 1 phoepsilonix phoepsilonix  1639696  2月 19 19:21 target/distrib/dict-to-mozc-x86_64-unknown-linux-musl/dict-to-mozc

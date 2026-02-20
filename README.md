@@ -166,6 +166,18 @@ RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
 * ビルド時にcmakeが必要。
 
 ## リリース版の設定
+### v0.6.27
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64(gnu) | Linux | tcmalloc(static) |
+| x86_64(musl) | Linux | snmalloc |
+| aarch64(gnu) | Linux | auto-allocator(mimalloc) |
+| aarch64(musl) | Linux | snmalloc |
+| armv7(gnu) | Linux | auto-allocator(mimalloc) |
+| armv7(musl) | Linux | snmalloc |
+| x86_64, aarch64 | Windows | snmalloc |
+| x86_64, aarch64 | Mac | snmalloc |
+
 ### v0.6.26
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
