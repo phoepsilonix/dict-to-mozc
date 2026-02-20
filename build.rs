@@ -71,8 +71,8 @@ fn link_snmalloc_linux(target_env: &str) {
         println!("cargo:rustc-link-lib=atomic");
         println!("cargo:rustc-link-lib=stdc++");
     } else {
-        println!("cargo:rustc-link-lib=static=snmallocshim-rust");
-        println!("cargo:rustc-link-lib=stdc++");
+//        println!("cargo:rustc-link-lib=static=snmallocshim-rust");
+//        println!("cargo:rustc-link-lib=snmallocshim-rust");
     }
 }
 

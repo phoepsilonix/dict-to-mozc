@@ -501,7 +501,7 @@ dependencies = [
 [[package]]
 name = "snmalloc-rs"
 version = "0.3.8"
-source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=0f2059bdd5f736a56a1ee0021924dd1e056dfdc2#0f2059bdd5f736a56a1ee0021924dd1e056dfdc2"
+source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=bbf6d19d5465b8daf85d32d2fdc0eb0ee3226106#bbf6d19d5465b8daf85d32d2fdc0eb0ee3226106"
 dependencies = [
  "snmalloc-sys",
 ]
@@ -509,7 +509,7 @@ dependencies = [
 [[package]]
 name = "snmalloc-sys"
 version = "0.3.8"
-source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=0f2059bdd5f736a56a1ee0021924dd1e056dfdc2#0f2059bdd5f736a56a1ee0021924dd1e056dfdc2"
+source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=bbf6d19d5465b8daf85d32d2fdc0eb0ee3226106#bbf6d19d5465b8daf85d32d2fdc0eb0ee3226106"
 dependencies = [
  "cc",
  "cmake",

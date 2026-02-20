@@ -55,8 +55,9 @@ rustflags = [
 ]
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
-#linker = "gcc"
+#linker = "zig"
 rustflags = [
+#"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=aarch64-linux-gnu",
 "-C", "panic=abort",
 "-C", "strip=symbols",
 "-C", "lto=fat",

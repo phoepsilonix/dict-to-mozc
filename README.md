@@ -170,12 +170,12 @@ RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
 | x86_64(gnu) | Linux | tcmalloc(static) |
-| x86_64(musl) | Linux | snmalloc |
-| aarch64(gnu) | Linux | auto-allocator(mimalloc) |
-| aarch64(musl) | Linux | snmalloc |
-| armv7(gnu) | Linux | auto-allocator(mimalloc) |
-| armv7(musl) | Linux | snmalloc |
-| x86_64, aarch64 | Windows | snmalloc |
+| x86_64(musl) | Linux | snmalloc(zigbuild) |
+| aarch64(gnu) | Linux | snmalloc(zigbuild) |
+| aarch64(musl) | Linux | snmalloc(zigbuild) |
+| armv7(gnu) | Linux | snmalloc(zigbuild) |
+| armv7(musl) | Linux | snmalloc(zigbuild) |
+| x86_64, aarch64 | Windows | snmalloc(cargo-xwin) |
 | x86_64, aarch64 | Mac | snmalloc |
 
 ### v0.6.26
@@ -211,8 +211,7 @@ RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
 | x86_64, aarch64 | Mac | jemalloc |
 
 ### ライブラリインストール
-use-tcmalloc featuresを有効にした場合。
-#### tcmalloc
+#### use-tcmalloc features
 ##### Ubuntu, Debian
 ```sh
 sudo apt install libgoogle-perftools-dev liblzma-dev libunwind-dev
@@ -222,11 +221,21 @@ sudo apt install libgoogle-perftools-dev liblzma-dev libunwind-dev
 sudo pacman -S gperftools xz libunwind --needed
 ```
 
+#### use-tcmalloc-static features
+##### Ubuntu, Debian
+```sh
+sudo apt install liblzma-dev libunwind-dev
+```
+##### Arch, Manjaro
+```sh
+sudo pacman -S xz libunwind --needed
+```
+
 ### ダウンロード
 https://github.com/phoepsilonix/dict-to-mozc/releases からダウンロード
 ```sh
-curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/latest/download/dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz
-tar xf dict-to-mozc-x86_64-unknown-linux-gnu.tar.xz --strip-components=1
+curl -LO https://github.com/phoepsilonix/dict-to-mozc/releases/latest/download/dict-to-mozc-x86_64-unknown-linux-musl.tar.xz
+tar xf dict-to-mozc-x86_64-unknown-linux-musl.tar.xz --strip-components=1
 ls -l ./dict-to-mozc
 sudo cp ./dict-to-mozc /usr/local/bin/
 ```
@@ -257,7 +266,7 @@ which dict-to-mozc
 ```sh
 git clone https://github.com/phoepsilonix/dict-to-mozc.git
 cd dict-to-mozc
-RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-auto-allocator
 ls -l target/x86_64-unknown-linux-gnu/release/dict-to-mozc
 cp target/x86_64-unknown-linux-gnu/release/dict-to-mozc ~/.cargo/bin/
 ```

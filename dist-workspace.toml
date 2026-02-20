@@ -8,7 +8,7 @@ cargo-dist-version = "0.30.4"
 # Features to pass to cargo build
 #features = ["use-auto-allocator"]
 #features = ["use-tcmalloc-static"]
-features = ["use-snmalloc"]
+features = ["use-snmalloc-cc"]
 # CI backends to support
 ci = "github"
 # Skip checking whether the specified configuration files are up to date
