@@ -4,7 +4,7 @@
   run: |
     case "${{ join(matrix.targets) }}" in
       *aarch64*linux*musl*)
-        sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
+        sudo apt-get install -y gcc-aarch64-linux-gnu
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-aarch64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -26,7 +26,7 @@
         export CFLAGS
         ;;
       *arm*linux*musl*)
-        sudo apt-get install -y gcc-arm-linux-gnueabihf musl-tools
+        sudo apt-get install -y gcc-arm-linux-gnueabihf
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-arm-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -48,7 +48,7 @@
         export CFLAGS
         ;;
       *linux*musl*)
-        sudo apt-get install -y libgoogle-perftools-dev pkg-config musl-tools
+        sudo apt-get install -y libgoogle-perftools-dev pkg-config
         curl -Ls -o- https://github.com/rui314/mold/releases/download/v2.40.3/mold-2.40.3-x86_64-linux.tar.gz|sudo tar --strip=1 -xzf - -C/usr/local/
         hash -r
         export RUSTFLAGS="-Clink-arg=-Bmold"
@@ -73,45 +73,54 @@
         ;;
     esac
 
-- name: features Setting
-  id: features
-  shell: bash
+- name: "features Setting"
+  id: "features"
+  shell: "bash"
   run: |
     case "${{ join(matrix.targets) }}" in
       *arm*linux*musl*)
+        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         ;;
       *aarch64*linux*musl*)
-        echo "cargo=cargo" >> $GITHUB_OUTPUT
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
         ;;
       *linux*musl*)
         echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
-        echo "cargo=cargo" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
         ;;
       *aarch64*linux*)
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
-        echo "cargo=cargo" >> $GITHUB_OUTPUT
+        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
         ;;
       *arm*linux*)
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *linux*)
+        #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
         echo "features=use-tcmalloc-static" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *aarch64*windows*)
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
         ;;
       *windows*)
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
         ;;
       *)
-        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
     esac
