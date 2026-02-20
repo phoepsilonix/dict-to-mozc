@@ -48,7 +48,7 @@ checksum = "5127f8a5bc1cfb0faf1f6248491452b8a5b6901068d8da2d47cbb285986ae683"
 [[package]]
 name = "auto-allocator"
 version = "0.1.0"
-source = "git+https://github.com/phoepsilonix/auto-allocator.git?rev=e21cf29fb2b8a9bd885c6b30086d9e1bd86755ef#e21cf29fb2b8a9bd885c6b30086d9e1bd86755ef"
+source = "git+https://github.com/phoepsilonix/auto-allocator.git?rev=c0c9fbb23dbe2cb49f22f532ae9793fc1703353b#c0c9fbb23dbe2cb49f22f532ae9793fc1703353b"
 dependencies = [
  "embedded-alloc",
  "libc",

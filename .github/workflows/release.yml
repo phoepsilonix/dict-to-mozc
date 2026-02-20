@@ -182,9 +182,8 @@ jobs:
               export RUSTFLAGS="-Clink-arg=-Bmold"
               expr "$CC" : ".*gcc" >/dev/null && : "${CFLAGS:=-std=c11 -Bmold -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration}"
               export CC
-              export CXX
               export CFLAGS
-              export CXXFLAGS
+              #export CXXFLAGS
               ;;
             *linux*)
               #sed -i -e 's|^#rustc-wrapper|rustc-wrapper|' .cargo/config.toml
@@ -207,8 +206,8 @@ jobs:
         run: |
           case "${{ join(matrix.targets) }}" in
             *arm*linux*musl*)
-              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*musl*)
@@ -217,18 +216,19 @@ jobs:
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *linux*musl*)
+              # x86_64 musl zigbuild is best.
               echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*)
@@ -247,8 +247,8 @@ jobs:
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
           esac
@@ -259,7 +259,6 @@ jobs:
         run: |
           # nightly -> rust 1.85.1 stable
           #sed -i -e 's|channel.*=.*|channel = "nightly"|' rust-toolchain.toml
-          #sed -i -e 's|features =.*$|features = [ "use-mimalloc-rs", "unstable" ]|' dist-workspace.toml 
           rustup target add "${{ join(matrix.targets) }}"
           rustup component add rust-src
           #rust-toolchain.tomlに記載しているので、cargoコマンドで自動で追加インストールされるため不要
@@ -272,7 +271,6 @@ jobs:
           rm -f ~/.cargo/config*
           cp -f .cargo/config.toml ~/.cargo/config.toml
         shell: "bash"
-
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
@@ -282,12 +280,10 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
-
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
-
-      - name: Install dependencies cargo zigbuild
+      - name: "Install dependencies cargo zigbuild"
         run: |
           if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
             sudo apt-get update
@@ -300,8 +296,7 @@ jobs:
               pip3 install cargo-zigbuild
             fi
           fi
-      - name: Build artifacts
-        shell: "bash"
+      - name: "Build artifacts"
         run: |
           # Actually do builds and make zips and whatnot
           sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
@@ -329,6 +324,7 @@ jobs:
           #dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
 
           echo "dist ran successfully"
+        shell: "bash"
       - id: cargo-dist
         name: Post-build
         # We force bash here just because github makes it really hard to get values up

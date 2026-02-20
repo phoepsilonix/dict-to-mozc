@@ -79,8 +79,8 @@
   run: |
     case "${{ join(matrix.targets) }}" in
       *arm*linux*musl*)
-        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *aarch64*linux*musl*)
@@ -89,18 +89,19 @@
         echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
         ;;
       *linux*musl*)
+        # x86_64 musl zigbuild is best.
         echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
         ;;
       *aarch64*linux*)
-        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
         ;;
       *arm*linux*)
-        echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *linux*)
@@ -119,8 +120,8 @@
         echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
         ;;
       *)
-        echo "features=use-snmalloc" >> $GITHUB_OUTPUT
-        #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+        #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+        echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
         echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
     esac
@@ -143,3 +144,47 @@
     mkdir -p ~/.cargo/
     rm -f ~/.cargo/config*
     cp -f .cargo/config.toml ~/.cargo/config.toml
+
+- name: Install dependencies cargo zigbuild
+  run: |
+    if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
+      sudo apt-get update
+      sudo apt-get install musl-tools
+      if ! command -v cargo-zigbuild > /dev/null 2>&1; then
+        if ! command -v pip3 > /dev/null 2>&1; then
+          dnf install --assumeyes python3-pip
+          pip3 install --upgrade pip
+        fi
+        pip3 install cargo-zigbuild
+      fi
+    fi
+
+- name: Build artifacts
+  shell: "bash"
+  run: |
+    # Actually do builds and make zips and whatnot
+    sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
+    dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+    if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
+        ${{ steps.features.outputs.cargo }} build --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
+        #mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
+        
+        cd target/distrib
+        # 一時ディレクトリに展開
+        tar xf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz
+        # 新しい dict-to-mozc を上書きコピー
+        cp -avf ../${{ join(matrix.targets) }}/dist/dict-to-mozc dict-to-mozc-${{ join(matrix.targets) }}/dict-to-mozc
+        # 更新した内容で再圧縮
+        tar cJf dict-to-mozc-${{ join(matrix.targets) }}.tar.xz dict-to-mozc-${{ join(matrix.targets) }}
+        sha256sum dict-to-mozc-${{ join(matrix.targets) }}.tar.xz > dict-to-mozc-${{ join(matrix.targets) }}.tar.xz.sha256
+        cd ../..
+        dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+    #else
+    #    dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+    fi
+    #-rwxr-xr-x 2 phoepsilonix phoepsilonix  1639696  2月 19 19:21 target/x86_64-unknown-linux-musl/dist/dict-to-mozc
+    #-rwxr-xr-x 1 phoepsilonix phoepsilonix  1639696  2月 19 19:21 target/distrib/dict-to-mozc-x86_64-unknown-linux-musl/dict-to-mozc
+
+    #dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+
+    echo "dist ran successfully"
