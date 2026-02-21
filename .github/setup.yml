@@ -172,7 +172,12 @@
     sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
     if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
         dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-        ${{ steps.features.outputs.cargo }} build --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
+        if [[ "${{ join(matrix.targets) }}" == "${TARGET:=$(rustc -vV | sed -n 's/^host: //p')}" ]];then
+        ${{ steps.features.outputs.cargo }} zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }}
+          else
+        ${{ steps.features.outputs.cargo }} zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
+        fi
+  
         mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
         
         cd target/distrib
