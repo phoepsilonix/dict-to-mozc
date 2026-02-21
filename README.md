@@ -116,25 +116,9 @@ mimalloc-rustクレートの場合には、そのままビルドできるケー�
 RUSTFLAGS="" cargo build --release
 ```
 
-## mimalloc-rust
+## tcmalloc(static)
 ```sh
-RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
-```
-## mimalloc
-```sh
-RUSTFLAGS="" cargo build --release -F use-mimalloc
-```
-## auto-allocator
-```sh
-RUSTFLAGS="" cargo build --release -F use-auto-allocator
-```
-## jemalloc
-```sh
-RUSTFLAGS="" cargo build --release -F use-jemalloc
-```
-## tcmalloc
-```sh
-RUSTFLAGS="" cargo build --release -F use-tcmalloc
+RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```
 * 実行時にtcmalloc.soが必要。
 * 実行時にliblzma.so, libunwind.soが必要。  
@@ -152,6 +136,7 @@ RUSTFLAGS="" cargo build --release -F use-tcmalloc
 RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```
 ## snmalloc(static)
+* ビルド時にcmakeが必要。
 ```sh
 RUSTFLAGS="" cargo build --release -F use-snmalloc-static
 ```
@@ -160,10 +145,22 @@ cargo-zigbuildとziglangがある場合の一例
 RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc-static
 ```
 
-
-
-
-* ビルド時にcmakeが必要。
+## mimalloc-rust
+```sh
+RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
+```
+## mimalloc
+```sh
+RUSTFLAGS="" cargo build --release -F use-mimalloc
+```
+## auto-allocator
+```sh
+RUSTFLAGS="" cargo build --release -F use-auto-allocator
+```
+## jemalloc
+```sh
+RUSTFLAGS="" cargo build --release -F use-jemalloc
+```
 
 ## リリース版の設定
 ### v0.6.27
