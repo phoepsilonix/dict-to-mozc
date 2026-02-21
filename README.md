@@ -151,13 +151,13 @@ RUSTFLAGS="" cargo build --release -F use-tcmalloc
 ```sh
 RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```
-## snmalloc
+## snmalloc(static)
 ```sh
 RUSTFLAGS="" cargo build --release -F use-snmalloc
 ```
 cargo-zigbuildとziglangがある場合の一例
 ```sh
-RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
+RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc-static
 ```
 
 
@@ -170,11 +170,8 @@ RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
 | x86_64(gnu) | Linux | tcmalloc(static) |
-| x86_64(musl) | Linux | snmalloc(zigbuild) |
-| aarch64(gnu) | Linux | snmalloc(zigbuild) |
-| aarch64(musl) | Linux | snmalloc(zigbuild) |
-| armv7(gnu) | Linux | snmalloc(zigbuild) |
-| armv7(musl) | Linux | snmalloc(zigbuild) |
+| x86_64(musl) | Linux | snmalloc(static)(zigbuild) |
+| aarch64,armv7 | Linux | snmalloc(static)(zigbuild) |
 | x86_64, aarch64 | Windows | snmalloc(cargo-xwin) |
 | x86_64, aarch64 | Mac | snmalloc |
 

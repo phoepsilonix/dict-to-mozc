@@ -1,18 +1,20 @@
 fn main() {
     // === Target Information (for cargo build, zigbuild, cargo-xwin) ===
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-    let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
+    //let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
     // let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
 
     // === Feature Flags ===
     let use_snmalloc = std::env::var("CARGO_FEATURE_USE_SNMALLOC").is_ok()
-        || std::env::var("CARGO_FEATURE_USE_SNMALLOC_CC").is_ok();
+        || std::env::var("CARGO_FEATURE_USE_SNMALLOC_CC").is_ok()
+        || std::env::var("CARGO_FEATURE_USE_SNMALLOC_STATIC_LINK").is_ok();
     let use_tcmalloc_static = std::env::var("CARGO_FEATURE_USE_TCMALLOC_STATIC").is_ok();
     let use_mimalloc = std::env::var("CARGO_FEATURE_USE_MIMALLOC").is_ok();
 
     // === Dispatch ===
     match target_os.as_str() {
-        "linux" => handle_linux(&target_env, use_snmalloc, use_tcmalloc_static, use_mimalloc),
+        //"linux" => handle_linux(&target_env, use_snmalloc, use_tcmalloc_static, use_mimalloc),
+        "linux" => handle_linux(use_snmalloc, use_tcmalloc_static, use_mimalloc),
         "windows" => handle_windows(use_snmalloc),
         _ => {} // ignore other platforms
     }
@@ -20,7 +22,7 @@ fn main() {
 
 // === Linux-specific linker options ===
 fn handle_linux(
-    target_env: &str,
+    //target_env: &str,
     use_snmalloc: bool,
     use_tcmalloc_static: bool,
     use_mimalloc: bool,
@@ -28,7 +30,7 @@ fn handle_linux(
     if use_tcmalloc_static {
         link_tcmalloc_static();
     } else if use_snmalloc {
-        link_snmalloc_linux(target_env);
+        link_snmalloc_linux();
     } else if use_mimalloc {
         link_mimalloc_linux();
     }
@@ -64,15 +66,15 @@ fn link_tcmalloc_static() {
     }
 }
 
-fn link_snmalloc_linux(target_env: &str) {
+fn link_snmalloc_linux() {
     // snmalloc (for Linux)
-    if target_env == "musl" {
+    let static_link = std::env::var("CARGO_FEATURE_USE_SNMALLOC_STATIC_LINK").is_ok();
+    //if target_env == "musl" {
+    if static_link {
         println!("cargo:rustc-link-lib=static=snmallocshim-rust");
-        println!("cargo:rustc-link-lib=atomic");
-        println!("cargo:rustc-link-lib=stdc++");
     } else {
 //        println!("cargo:rustc-link-lib=static=snmallocshim-rust");
-//        println!("cargo:rustc-link-lib=snmallocshim-rust");
+        println!("cargo:rustc-link-lib=snmallocshim-rust");
     }
 }
 

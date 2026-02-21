@@ -206,37 +206,37 @@ jobs:
         run: |
           case "${{ join(matrix.targets) }}" in
             *arm*linux*musl*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               # cargo-dist=cargo
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*musl*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               # cargo-dist=cargo
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*musl*)
               # x86_64 musl zigbuild is best.(snmalloc or mimalloc or auto-allocator)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*)
-              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              #echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               echo "features=use-tcmalloc-static" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
@@ -251,7 +251,7 @@ jobs:
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
@@ -306,7 +306,12 @@ jobs:
           sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
           if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
               dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-              ${{ steps.features.outputs.cargo }} build --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
+              if [[ "${{ join(matrix.targets) }}" == "${TARGET:=$(rustc -vV | sed -n 's/^host: //p')}" ]];then
+              ${{ steps.features.outputs.cargo }} zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }}
+                else
+              ${{ steps.features.outputs.cargo }} zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
+              fi
+
               mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
               
               cd target/distrib
