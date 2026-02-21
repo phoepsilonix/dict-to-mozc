@@ -153,7 +153,7 @@ RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```
 ## snmalloc(static)
 ```sh
-RUSTFLAGS="" cargo build --release -F use-snmalloc
+RUSTFLAGS="" cargo build --release -F use-snmalloc-static
 ```
 cargo-zigbuildとziglangがある場合の一例
 ```sh
