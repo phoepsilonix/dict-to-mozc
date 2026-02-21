@@ -73,7 +73,7 @@ fn link_snmalloc_linux() {
     if static_link {
         println!("cargo:rustc-link-lib=static=snmallocshim-rust");
     } else {
-//        println!("cargo:rustc-link-lib=static=snmallocshim-rust");
+        //        println!("cargo:rustc-link-lib=static=snmallocshim-rust");
         println!("cargo:rustc-link-lib=snmallocshim-rust");
     }
 }
