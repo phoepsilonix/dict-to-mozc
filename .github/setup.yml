@@ -112,8 +112,8 @@
         echo "features=use-snmalloc" >> $GITHUB_OUTPUT
         #echo "features=use-tcmalloc-static" >> $GITHUB_OUTPUT
         # cargo-dist=cargo
-        echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
-        #echo "cargo=cargo" >> $GITHUB_OUTPUT
+        #echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
+        echo "cargo=cargo" >> $GITHUB_OUTPUT
         ;;
       *aarch64*windows*)
         echo "features=use-snmalloc" >> $GITHUB_OUTPUT
@@ -173,10 +173,13 @@
     sed -i -e "s/features = .*/features = [\"${{ steps.features.outputs.features }}\"]/" dist-workspace.toml
     if [[ "${{ steps.features.outputs.cargo }}" == "cargo-zigbuild" ]];then
         dist manifest ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
-        if [[ "${{ join(matrix.targets) }}" == "${TARGET:=$(rustc -vV | sed -n 's/^host: //p')}" ]];then
-        ${{ steps.features.outputs.cargo }} zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }}
-          else
-        ${{ steps.features.outputs.cargo }} zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
+        TARGET="$(rustc -vV | sed -n 's/^host: //p')"
+        if [[ "${{ join(matrix.targets) }}" == "$TARGET" ]];then
+          echo "1:$TARGET"
+          cargo zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }}
+        else
+          echo "2:$TARGET"
+          cagro zigbuild --profile dist --workspace -F ${{ steps.features.outputs.features }} --target ${{ join(matrix.targets) }}
         fi
   
         mkdir -p target/distrib/dict-to-mozc-${{ join(matrix.targets) }}/
