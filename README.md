@@ -130,8 +130,7 @@ RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
   ```sh
   sudo pacman install gperftools xz libunwind --needed
   ```
-## tcmalloc(static)
-* 実行時にliblzma.so, libunwind.soが必要。
+## tcmalloc(static,minimal)
 ```sh
 RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```
@@ -163,12 +162,13 @@ RUSTFLAGS="" cargo build --release -F use-jemalloc
 ```
 
 ## リリース版の設定
-### v0.6.27
+### v0.6.28
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
-| x86_64(gnu) | Linux | tcmalloc(static) |
-| x86_64(musl) | Linux | snmalloc(static)(zigbuild) |
-| aarch64,armv7 | Linux | snmalloc(static)(zigbuild) |
+| x86_64(gnu) | Linux | tcmalloc(static,minimal) |
+| x86_64(musl) | Linux | snmalloc(zigbuild) |
+| aarch64,armv7(gnu) | Linux | auto-allocator(mimalloc)(zigbuild) |
+| aarch64,armv7(musl) | Linux | snmalloc(zigbuild) |
 | x86_64, aarch64 | Windows | snmalloc(cargo-xwin) |
 | x86_64, aarch64 | Mac | snmalloc |
 
@@ -213,16 +213,6 @@ sudo apt install libgoogle-perftools-dev liblzma-dev libunwind-dev
 ##### Arch, Manjaro
 ```sh
 sudo pacman -S gperftools xz libunwind --needed
-```
-
-#### use-tcmalloc-static features
-##### Ubuntu, Debian
-```sh
-sudo apt install liblzma-dev libunwind-dev
-```
-##### Arch, Manjaro
-```sh
-sudo pacman -S xz libunwind --needed
 ```
 
 ### ダウンロード

@@ -206,33 +206,33 @@ jobs:
         run: |
           case "${{ join(matrix.targets) }}" in
             *arm*linux*musl*)
-              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               # cargo-dist=cargo
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*musl*)
-              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               # cargo-dist=cargo
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*musl*)
               # x86_64 musl zigbuild is best.(snmalloc or mimalloc or auto-allocator)
-              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo-zigbuild" >> $GITHUB_OUTPUT
               ;;
             *aarch64*linux*)
-              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
+              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *arm*linux*)
-              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
+              #echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-jemalloc" >> $GITHUB_OUTPUT
-              #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
+              echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;
             *linux*)
@@ -251,7 +251,7 @@ jobs:
               echo "cargo=cargo-xwin" >> $GITHUB_OUTPUT
               ;;
             *)
-              echo "features=use-snmalloc-static" >> $GITHUB_OUTPUT
+              echo "features=use-snmalloc" >> $GITHUB_OUTPUT
               #echo "features=use-auto-allocator" >> $GITHUB_OUTPUT
               echo "cargo=cargo" >> $GITHUB_OUTPUT
               ;;

@@ -11,8 +11,8 @@ build-std-features = ["panic_immediate_abort"]
 #CXX_x86_64_unknown_linux_musl = "zig c++"
 #CC_x86_64_unknown_linux_musl="zig cc"
 #AR_x86_64_unknown_linux_musl="zig ar"
-CC_x86_64_unknown_linux_musl="clang"
-CXX_x86_64_unknown_linux_musl = "clang++"
+#CC_x86_64_unknown_linux_musl="clang"
+#CXX_x86_64_unknown_linux_musl = "clang++"
 
 [target.x86_64-unknown-linux-gnu]
 #linker = "gcc"
@@ -33,7 +33,7 @@ rustflags = [
 "-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 [target.x86_64-unknown-linux-musl]
-#linker = "zig"
+#linker = "musl-gcc"
 rustflags = [
 #"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=x86_64-linux-musl",
 "-Ctarget-feature=+crt-static",
@@ -49,6 +49,7 @@ rustflags = [
 "-C", "embed-bitcode=y",
 "-C", "codegen-units=1",
 "-C", "opt-level=3",
+#"-C", "link-args=-fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 "-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 #"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 #"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
@@ -88,6 +89,7 @@ rustflags = [
 "-C", "codegen-units=1",
 "-C", "opt-level=3",
 "-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+#"-C", "link-args=-fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 #"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
 

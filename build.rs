@@ -57,17 +57,24 @@ fn link_tcmalloc_static() {
     // println!("cargo:rustc-link-lib=static=unwind");
 
     // Static link
+
     {
-        let lib = "tcmalloc";
+        let lib = "tcmalloc_minimal";
         println!("cargo:rustc-link-lib=static={}", lib);
     }
-    for lib in ["stdc++", "unwind", "lzma"] {
+
+    //for lib in ["stdc++", "unwind", "lzma"] {
+
+    {
+        let lib = "stdc++";
+        //for lib in ["stdc++"] {
         println!("cargo:rustc-link-lib={}", lib);
     }
 }
 
 fn link_snmalloc_linux() {
     // snmalloc (for Linux)
+    /*
     let static_link = std::env::var("CARGO_FEATURE_USE_SNMALLOC_STATIC_LINK").is_ok();
     //if target_env == "musl" {
     if static_link {
@@ -76,6 +83,7 @@ fn link_snmalloc_linux() {
         //        println!("cargo:rustc-link-lib=static=snmallocshim-rust");
         println!("cargo:rustc-link-lib=snmallocshim-rust");
     }
+    */
 }
 
 fn link_snmalloc_windows() {
