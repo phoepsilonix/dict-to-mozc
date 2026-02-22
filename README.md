@@ -134,14 +134,14 @@ RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```sh
 RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
 ```
-## snmalloc(static)
+## snmalloc
 * ビルド時にcmakeが必要。
 ```sh
-RUSTFLAGS="" cargo build --release -F use-snmalloc-static
+RUSTFLAGS="" cargo build --release -F use-snmalloc
 ```
 cargo-zigbuildとziglangがある場合の一例
 ```sh
-RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc-static
+RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
 ```
 
 ## mimalloc-rust
@@ -162,6 +162,16 @@ RUSTFLAGS="" cargo build --release -F use-jemalloc
 ```
 
 ## リリース版の設定
+### v0.6.29
+| プラットフォーム | OS | メモリアロケータ |
+|----------------|----|----------------|
+| x86_64(gnu) | Linux | snmalloc |
+| x86_64(musl) | Linux | snmalloc(zigbuild) |
+| aarch64,armv7(gnu) | Linux | auto-allocator(mimalloc)(zigbuild) |
+| aarch64,armv7(musl) | Linux | snmalloc(zigbuild) |
+| x86_64, aarch64 | Windows | snmalloc(cargo-xwin) |
+| x86_64, aarch64 | Mac | snmalloc |
+
 ### v0.6.28
 | プラットフォーム | OS | メモリアロケータ |
 |----------------|----|----------------|
@@ -170,17 +180,6 @@ RUSTFLAGS="" cargo build --release -F use-jemalloc
 | aarch64,armv7(gnu) | Linux | auto-allocator(mimalloc)(zigbuild) |
 | aarch64,armv7(musl) | Linux | snmalloc(zigbuild) |
 | x86_64, aarch64 | Windows | snmalloc(cargo-xwin) |
-| x86_64, aarch64 | Mac | snmalloc |
-
-### v0.6.26
-| プラットフォーム | OS | メモリアロケータ |
-|----------------|----|----------------|
-| x86_64(gnu) | Linux | tcmalloc(static) |
-| x86_64(musl) | Linux | auto-allocator(mimalloc) |
-| aarch64(gnu) | Linux | jemalloc |
-| aarch64(musl) | Linux | snmalloc |
-| armv7 | Linux | jemalloc |
-| x86_64, aarch64 | Windows | snmalloc |
 | x86_64, aarch64 | Mac | snmalloc |
 
 ### v0.6.24

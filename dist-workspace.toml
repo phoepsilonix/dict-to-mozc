@@ -7,7 +7,7 @@ members = ["cargo:."]
 cargo-dist-version = "0.30.4"
 # Features to pass to cargo build
 #features = ["use-auto-allocator"]
-features = ["use-tcmalloc-static"]
+features = ["use-mimalloc-rs"]
 #features = ["use-snmalloc-static"]
 #features = ["use-snmalloc"]
 # CI backends to support

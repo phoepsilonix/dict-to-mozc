@@ -48,7 +48,7 @@ checksum = "5127f8a5bc1cfb0faf1f6248491452b8a5b6901068d8da2d47cbb285986ae683"
 [[package]]
 name = "auto-allocator"
 version = "0.1.0"
-source = "git+https://github.com/phoepsilonix/auto-allocator.git?rev=c0c9fbb23dbe2cb49f22f532ae9793fc1703353b#c0c9fbb23dbe2cb49f22f532ae9793fc1703353b"
+source = "git+https://github.com/phoepsilonix/auto-allocator.git?rev=e5eb446d54963ade5bc12c2846225bac60616bec#e5eb446d54963ade5bc12c2846225bac60616bec"
 dependencies = [
  "embedded-alloc",
  "libc",
@@ -501,6 +501,7 @@ dependencies = [
 [[package]]
 name = "snmalloc-rs"
 version = "0.3.8"
+source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=a4a31eb3436a2183c0ed4da95f578c0f570ce02a#a4a31eb3436a2183c0ed4da95f578c0f570ce02a"
 dependencies = [
  "snmalloc-sys",
 ]
@@ -508,6 +509,7 @@ dependencies = [
 [[package]]
 name = "snmalloc-sys"
 version = "0.3.8"
+source = "git+https://github.com/phoepsilonix/snmalloc-rs.git?rev=a4a31eb3436a2183c0ed4da95f578c0f570ce02a#a4a31eb3436a2183c0ed4da95f578c0f570ce02a"
 dependencies = [
  "cc",
  "cmake",

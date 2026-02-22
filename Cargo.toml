@@ -41,9 +41,11 @@ hashbrown = { version = "^0.16", default-features = false, features = [ "allocat
 
 #auto-allocator = { version = "*", features = ["secure"], git = "https://github.com/phoepsilonix/auto-allocator.git" }
 #auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
-auto-allocator = { version = "*", features = ["_no_info"] }
 
-snmalloc-rs = { version = "0.3", features = ["default", "lto"] }
+auto-allocator = { version = "*", default-features = false, features = ["_mimalloc", "_no_info"] }
+#auto-allocator = { version = "*", default-features = false, features = ["_mimalloc_rust", "_no_info"] }
+
+snmalloc-rs = { version = "0.3", default-features = true, features = ["lto"] }
 mimalloc = { version = "0.1.48" }
 
 smmalloc = { version = "7.6.4" }
@@ -87,21 +89,24 @@ version.workspace = true
 # rust 2024 edition
 kanaria = { git = "https://github.com/samunohito/kanaria.git", rev = "c98ea3a9af75eb198662bc1483c32201ea3c65b6" }
 #snmalloc-sys = { path = "./snmalloc-sys" }
-# mimalloc
-#auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "e21cf29fb2b8a9bd885c6b30086d9e1bd86755ef" } # mimalloc
-auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "c0c9fbb23dbe2cb49f22f532ae9793fc1703353b" } # mimalloc(_no_info)
-#auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "8546dae3ce2d860db3644b177e8f67df1dd7fce5" } # mimalloc-rust
+
+# _mimalloc or _mimalloc_rust features
+#auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "cba62f6e2723cadc2f87026dcfea07dcce630ac7" }
+
+auto-allocator = { git = "https://github.com/phoepsilonix/auto-allocator.git", rev = "e5eb446d54963ade5bc12c2846225bac60616bec" }
+
 snmalloc-rs = { git = "https://github.com/phoepsilonix/snmalloc-rs.git", rev = "a4a31eb3436a2183c0ed4da95f578c0f570ce02a" }
 tcmalloc = { git = "https://github.com/phoepsilonix/tcmalloc-rs.git", rev = "7c38e8db98472e5860caa0ca6c30ad88df19f6e6" }
 #tcmalloc = { path = "../tcmalloc-rs" }
 #snmalloc-rs = { path = "../snmalloc-rs" }
+#auto-allocator = { path = "../auto-allocator" }
 
 [dependencies]
 lib-dict-to-mozc = { workspace = true }
 argh.workspace = true
 mimalloc-rust = { workspace = true, optional = true, features = [] , default-features = false }
 jemallocator = { workspace = true, optional = true, features = [] , default-features = true }
-auto-allocator = { workspace = true, optional = true, features = [], default-features = true }
+auto-allocator = { workspace = true, optional = true, features = [], default-features = false }
 
 #csv.workspace = true
 #foldhash.workspace = true
@@ -139,10 +144,12 @@ name = "dict-to-mozc"
 default = []
 use-tcmalloc = ["dep:tcmalloc"]
 use-tcmalloc-static = ["tcmalloc/bundled"]
-use-auto-allocator = ["dep:auto-allocator"]
+use-auto-allocator = ["dep:auto-allocator", "auto-allocator/_mimalloc", "auto-allocator/_embedded"]
+#use-auto-allocator-rs = ["dep:auto-allocator", "auto-allocator/_mimalloc_rust", "auto-allocator/_embedded"]
+#use-auto-allocator-asm = ["dep:auto-allocator", "auto-allocator/_mimalloc_rust", "auto-allocator/_embedded", "auto-allocator/_mimalloc_asm"]
 use-snmalloc = ["snmalloc-rs/lto"]
-use-snmalloc-static = ["snmalloc-rs", "snmalloc-rs/lto", "snmalloc-rs/static-link"]
-use-snmalloc-cc = ["snmalloc-rs/lto", "snmalloc-rs/build_cc"]
+use-snmalloc-static = ["snmalloc-rs/lto", "snmalloc-rs/build_cc", "snmalloc-rs/static-link"]
+use-snmalloc-cc = ["snmalloc-rs/lto", "snmalloc-rs/build_cc" ]
 
 use-mimalloc = ["dep:mimalloc"]
 use-mimalloc-rs = ["dep:mimalloc-rust"]
