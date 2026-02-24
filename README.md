@@ -107,18 +107,18 @@ git clone --filter=tree:0 https://github.com/phoepsilonix/dict-to-mozc.git dict-
 cd dict-to-mozc
 
 # rustプログラムのビルド
-RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
+cargo build --release -F use-mimalloc-rs
 ```
 mimalloc-rustクレートの場合には、そのままビルドできるケースが多いとは思います。  
 また特にFeaturesを指定しなくても、若干パフォーマンスが落ちるだけで、問題なく動作します。
 
 ```sh
-RUSTFLAGS="" cargo build --release
+cargo build --release
 ```
 
 ## tcmalloc
 ```sh
-RUSTFLAGS="" cargo build --release -F use-tcmalloc
+cargo build --release -F use-tcmalloc
 ```
 * 実行時にtcmalloc.soが必要。
 * 実行時にliblzma.so, libunwind.soが必要。  
@@ -132,33 +132,33 @@ RUSTFLAGS="" cargo build --release -F use-tcmalloc
   ```
 ## tcmalloc(static,minimal)
 ```sh
-RUSTFLAGS="" cargo build --release -F use-tcmalloc-static
+cargo build --release -F use-tcmalloc-static
 ```
 ## snmalloc
 * ビルド時にcmakeが必要。
 ```sh
-RUSTFLAGS="" cargo build --release -F use-snmalloc
+cargo build --release -F use-snmalloc
 ```
 cargo-zigbuildとziglangがある場合の一例
 ```sh
-RUSTFLAGS="" cargo zigbuild --release -F use-snmalloc
+cargo zigbuild --release -F use-snmalloc
 ```
 
 ## auto-allocator
 ```sh
-RUSTFLAGS="" cargo build --release -F use-auto-allocator
+cargo build --release -F use-auto-allocator
 ```
 ## mimalloc
 ```sh
-RUSTFLAGS="" cargo build --release -F use-mimalloc
+cargo build --release -F use-mimalloc
 ```
 ## mimalloc-rust
 ```sh
-RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
+cargo build --release -F use-mimalloc-rs
 ```
 ## jemalloc
 ```sh
-RUSTFLAGS="" cargo build --release -F use-jemalloc
+cargo build --release -F use-jemalloc
 ```
 
 ## リリース版の設定
@@ -249,13 +249,13 @@ which dict-to-mozc
 ```sh
 git clone https://github.com/phoepsilonix/dict-to-mozc.git
 cd dict-to-mozc
-RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-auto-allocator
+cargo build --release --target x86_64-unknown-linux-gnu -F use-auto-allocator
 ls -l target/x86_64-unknown-linux-gnu/release/dict-to-mozc
 cp target/x86_64-unknown-linux-gnu/release/dict-to-mozc ~/.cargo/bin/
 ```
 私の環境だとtcmallocのほうが、若干パフォーマンスが良かったです。  
 ```sh
-RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-tcmalloc-static
+cargo build --release --target x86_64-unknown-linux-gnu -F use-tcmalloc-static
 ```
 
 #### 補足
@@ -273,11 +273,11 @@ expr "$CC" : ".*gcc" >/dev/null && {
 }
 export CFLAGS
 echo "$CFLAGS"
-RUSTFLAGS="" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
 ```
 clangを用いて回避。
 ```sh
-RUSTFLAGS="" CC=clang cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+CC=clang cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
 ```
 
 ### 使用例
@@ -306,7 +306,7 @@ cat small_lex.csv core_lex.csv notcore_lex.csv > sudachi.csv
 # id.defの最新版を取得
 curl -LO https://github.com/google/mozc/raw/refs/heads/master/src/data/dictionary_oss/id.def
 # rustプログラムのビルド
-RUSTFLAGS="" cargo build --release -F use-mimalloc-rs
+cargo build --release -F use-mimalloc-rs
 # Mozcシステム辞書型式への変換
 dict-to-mozc -s -i ./id.def -f sudachi.csv > sudachi-dict.txt
 # Mozcユーザー辞書型式への変換
