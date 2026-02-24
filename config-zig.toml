@@ -1,0 +1,210 @@
+[build]
+target = "x86_64-unknown-linux-gnu"
+#rustc-wrapper = "sccache"
+
+[unstable]
+build-std = ["std", "panic_abort"]
+build-std-features = ["panic_immediate_abort"]
+#profile-rustflags = true
+
+[env]
+CC="zig cc"
+CXX = "zig c++"
+LD="zig cc"
+AR="zig ar"
+RANLIB="zig ranlib"
+CC_x86_64_unknown_linux_gnu="zig cc"
+CXX_x86_64_unknown_linux_gnu = "zig c++"
+LD_x86_64_unknown_linux_gnu="zig cc"
+AR_x86_64_unknown_linux_gnu="zig ar"
+RANLIB_x86_64_unknown_linux_gnu="zig ranlib"
+CC_x86_64_unknown_linux_musl="zig cc"
+CXX_x86_64_unknown_linux_musl = "zig c++"
+LD_x86_64_unknown_linux_musl="zig cc"
+AR_x86_64_unknown_linux_musl="zig ar"
+RANLIB_x86_64_unknown_linux_musl="zig ranlib"
+#CC_x86_64_unknown_linux_musl="clang"
+#CXX_x86_64_unknown_linux_musl = "clang++"
+
+[target.x86_64-unknown-linux-gnu]
+#linker = "musl-gcc"
+rustflags = [
+#"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=x86_64-linux-musl",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+# normal build
+#"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+# zigbuild
+"-C", "link-args=-Bmold -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.x86_64-unknown-linux-musl]
+#linker = "musl-gcc"
+rustflags = [
+#"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=x86_64-linux-musl",
+"-Ctarget-feature=+crt-static",
+"-Clink-self-contained=y",
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+#"-C", "panic=immediate-abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+#"-C", "link-args=-fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+"-C", "link-args=-Bmold -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+#"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+#"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+#linker = "zig"
+rustflags = [
+#"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=aarch64-linux-gnu",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+#"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-gnu-gcc"
+#linker = "gcc"
+rustflags = [
+"-Ctarget-feature=+crt-static",
+"-Clink-self-contained=y",
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+#"-C", "link-args=-fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+#"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
+rustflags = [
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-arg=-mcpu=cortex-a9",
+"-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.armv7-unknown-linux-musleabihf]
+linker = "arm-linux-gnueabihf-gcc"
+rustflags = [
+"-Ctarget-feature=+crt-static",
+"-Clink-self-contained=y",
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-arg=-mcpu=cortex-a9",
+"-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
+]
+
+[target.x86_64-pc-windows-gnu]
+#linker = "clang"
+rustflags = [
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed",
+]
+
+[target.aarch64-pc-windows-gnu]
+#linker = "clang"
+rustflags = [
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed",
+]
+
+[target.x86_64-apple-darwin]
+#linker = "x86_64-apple-darwin22.4-clang"
+#ar = "x86_64-apple-darwin22.4-ar"
+rustflags = [
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie",
+]
+
+[target.aarch64-apple-darwin]
+#linker = "aarch64-apple-darwin22.4-clang"
+#ar = "aarch64-apple-darwin22.4-ar"
+rustflags = [
+"-C", "lto=fat",
+"-C", "incremental=y",
+"-C", "panic=abort",
+"-C", "strip=symbols",
+"-C", "no-redzone=y",
+"-C", "overflow-checks=n",
+"-C", "control-flow-guard=y",
+"-C", "embed-bitcode=y",
+"-C", "codegen-units=1",
+"-C", "opt-level=3",
+"-C", "link-args=-Wp,-D_FORTIFY_SOURCE=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie",
+]
