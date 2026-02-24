@@ -27,9 +27,9 @@ RANLIB_x86_64_unknown_linux_musl="zig ranlib"
 #CXX_x86_64_unknown_linux_musl = "clang++"
 
 [target.x86_64-unknown-linux-gnu]
-#linker = "musl-gcc"
+linker = "zigcc"
 rustflags = [
-#"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=x86_64-linux-musl",
+"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=x86_64-linux-musl",
 "-C", "panic=abort",
 "-C", "strip=symbols",
 "-C", "lto=fat",
@@ -47,7 +47,7 @@ rustflags = [
 ]
 
 [target.x86_64-unknown-linux-musl]
-#linker = "musl-gcc"
+#linker = "zigcc"
 rustflags = [
 #"-C", "linker-flavor=gcc", "-C", "link-arg=-target", "-C", "link-arg=x86_64-linux-musl",
 "-Ctarget-feature=+crt-static",
