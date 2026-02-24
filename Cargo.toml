@@ -29,6 +29,7 @@ indexmap = { version = "^2.13", default-features = false, features = [ ] }
 
 mimalloc-rust = { version = "0.2.1", default-features = false }
 
+rustc-hash = { version = "2.1", default-features = false }
 hashbrown = { version = "^0.16", default-features = false, features = [ "allocator-api2", "default-hasher", "raw-entry"] }
 #hashbrown = { version = "^0.16", default-features = true }
 #hashbrown = { version = "^0.15", default-features = false, features = [ "allocator-api2", "default-hasher", "raw-entry"] }
@@ -119,6 +120,7 @@ auto-allocator = { workspace = true, optional = true, features = [], default-fea
 # 1st(best)
 indexmap = { version = "^2.13", features = [], default-features = false }
 hashbrown = { version = "^0.16" , features = [], default-features = false }
+rustc-hash = { version = "^2.1" , features = [], default-features = false }
 
 # 2nd
 #indexmap = { version = "=2.5", features = [], default-features = false }

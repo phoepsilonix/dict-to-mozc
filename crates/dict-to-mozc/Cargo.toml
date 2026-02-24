@@ -9,10 +9,11 @@ license.workspace = true
 
 [dependencies]
 csv = { workspace = true }
-hashbrown = { workspace = true }
 indexmap = { workspace = true }
 kanaria = { workspace = true }
 lazy-regex = { workspace = true }
+#hashbrown = { workspace = true }
+rustc-hash = { workspace = true }
 
 #bitflags = { workspace = true }
 #foldhash = { workspace = true }
