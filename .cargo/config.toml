@@ -32,7 +32,6 @@ rustflags = [
 # zigbuild
 "-C", "link-args=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fpic -fPIE -fpie -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--gc-sections",
 ]
-
 [target.x86_64-unknown-linux-musl]
 #linker = "musl-gcc"
 rustflags = [

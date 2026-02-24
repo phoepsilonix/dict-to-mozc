@@ -1,6 +1,5 @@
 extern crate csv;
-//extern crate hashbrown;
-extern crate rustc_hash;
+extern crate hashbrown;
 extern crate indexmap;
 extern crate kanaria;
 extern crate lazy_regex;
@@ -27,10 +26,7 @@ use indexmap::IndexMap;
 //use std::ops::{Deref, DerefMut};
 
 //^0.15
-//use hashbrown::DefaultHashBuilder as RandomState;
-
-//^2.1
-use rustc_hash::FxBuildHasher as RandomState;
+use hashbrown::DefaultHashBuilder as RandomState;
 
 //0.14
 //use hashbrown::hash_map::DefaultHashBuilder as RandomState;

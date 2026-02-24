@@ -279,6 +279,11 @@ clangを用いて回避。
 ```sh
 RUSTFLAGS="" CC=clang cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
 ```
+#### 補足２
+mold linkerを用いる場合のコマンド例。
+```sh
+RUSTFLAGS="-Clink-arg=-Bmold" cargo build --release --target x86_64-unknown-linux-gnu -F use-mimalloc-rs
+```
 
 ### 使用例
 https://github.com/WorksApplications/SudachiDict  
