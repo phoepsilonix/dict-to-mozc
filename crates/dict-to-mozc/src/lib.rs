@@ -25,15 +25,24 @@ use indexmap::IndexMap;
 
 //use std::ops::{Deref, DerefMut};
 
+use foldhash::fast::RandomState;
+
 //^0.15
-use hashbrown::DefaultHashBuilder as RandomState;
+//use hashbrown::DefaultHashBuilder as RandomState;
+//use hashbrown::HashMap;
 
 //0.14
 //use hashbrown::hash_map::DefaultHashBuilder as RandomState;
+
+//FxHash
 //use fxhash::FxBuildHasher as RandomState;
 
-//use foldhash::fast::RandomState;
 //use std::hash::RandomState;
+//
+//use rustc_hash::FxBuildHasher as RandomState;
+//use wyhash::WyHasherBuilder as RandomState;
+//use rustc_hash::FxBuildHasher as RandomState;
+//use ahash::RandomState;
 
 mod utils {
     use super::*;

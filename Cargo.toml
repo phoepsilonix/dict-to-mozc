@@ -30,14 +30,19 @@ indexmap = { version = "^2.13", default-features = false, features = [ ] }
 mimalloc-rust = { version = "0.2.1", default-features = false }
 
 hashbrown = { version = "^0.16", default-features = false, features = [ "allocator-api2", "default-hasher", "raw-entry"] }
+#hashbrown = { version = "^0.16", default-features = false, features = [ "allocator-api2", "raw-entry"] }
 #hashbrown = { version = "^0.16", default-features = true }
 #hashbrown = { version = "^0.15", default-features = false, features = [ "allocator-api2", "default-hasher", "raw-entry"] }
 #hashbrown = { version = "^0.14", default-features = false, features = [ "ahash", "inline-more"] }
 #hashbrown = { version = "^0.14", default-features = false, features = [ "ahash" ] }
 
 #bitflags = "=2.7"
-#foldhash = { version = "=0.2", default-features = false, features = [ "std" ] }
+foldhash = { version = "=0.2", default-features = false, features = [ "std" ] }
+#foldhash = { version = "=0.2", default-features = false, features = [ ] }
 #fxhash = { version = "^0.2", default-features = true, features = [] }
+#rustc-hash = "2.1.1"
+#wyhash = { version = "0.6.0", features = [ "mum32bit" ] }
+#ahash = "0.8.12"
 
 #auto-allocator = { version = "*", features = ["secure"], git = "https://github.com/phoepsilonix/auto-allocator.git" }
 #auto-allocator = { version = "*", features = [], git = "https://github.com/phoepsilonix/auto-allocator.git" }
@@ -109,12 +114,15 @@ jemallocator = { workspace = true, optional = true, features = [] , default-feat
 auto-allocator = { workspace = true, optional = true, features = [], default-features = false }
 
 #csv.workspace = true
-#foldhash.workspace = true
+foldhash.workspace = true
 #fxhash.workspace = true
 #hashbrown.workspace = true
 #indexmap.workspace = true
 #kanaria.workspace = true
 #lazy-regex.workspace = true
+#rustc-hash.workspace = true
+#wyhash.workspace = true
+#ahash.workspace = true
 
 # 1st(best)
 indexmap = { version = "^2.13", features = [], default-features = false }

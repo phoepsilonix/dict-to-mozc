@@ -15,9 +15,12 @@ kanaria = { workspace = true }
 lazy-regex = { workspace = true }
 
 #bitflags = { workspace = true }
-#foldhash = { workspace = true }
+foldhash = { workspace = true }
 #fxhash = { workspace = true }
 #allocator-api2 = { workspace = true }
+#rustc-hash = { workspace = true }
+#ahash = { workspace = true }
+#wyhash = { workspace = true }
 
 [package.metadata.release]
 tag = true
